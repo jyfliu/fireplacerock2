@@ -1,0 +1,87 @@
+{
+    "magikarp": {
+        "name": "Magikarp",
+        "mana": 0,
+        "attack": 0,
+        "health": 200,
+        "description": "Magikarp is a pathetic excuse for a Pokémon that is only capable of flopping and splashing. This behavior prompted scientists to undertake research into it."
+    },
+    "pikachu": {
+        "name": "Pikachu",
+        "mana": 1,
+        "attack": 200,
+        "health": 100,
+        "description": "It lives in forests with others. It stores electricity in the pouches on its cheeks."
+    },
+    "mudkip": {
+        "name": "Mudkip",
+        "mana": 1,
+        "attack": 100,
+        "health": 200,
+        "description": "To alert it, the fin on its head senses the flow of water. It has the strength to lift boulders."
+    },
+    "grovyle": {
+        "name": "Grovyle",
+        "mana": 2,
+        "attack": 200,
+        "health": 300,
+        "description": "It lives in dense jungles. While closing in on its prey, it leaps from branch to branch."
+    },
+    "ampharos": {
+        "name": "Ampharos",
+        "mana": 3,
+        "attack": 300,
+        "health": 400,
+        "description": "The bright light on its tail can be seen far away. It has been treasured since ancient times as a beacon."
+    },
+    "blastoise": {
+        "name": "Blastoise",
+        "mana": 4,
+        "attack": 400,
+        "health": 500,
+        "description": "The rocket cannons on its shell fire jets of water capable of punching holes through thick steel."
+    },
+    "wailord": {
+        "name": "Wailord",
+        "mana": 4,
+        "attack": 200,
+        "health": 600,
+        "description": "It can sometimes knock out opponents with the shock created by breaching and crashing its big body onto the water."
+    },
+    "snorlax": {
+        "name": "Snorlax",
+        "mana": 5,
+        "attack": 400,
+        "health": 700,
+        "description": "Very lazy. Just eats and sleeps. As its rotund bulk builds, it becomes steadily more slothful."
+    },
+    "garchomp": {
+        "name": "Garchomp",
+        "mana": 6,
+        "attack": 600,
+        "health": 700,
+        "description": "It flies at speeds equal to a jet fighter plane. It never allows its prey to escape."
+    },
+    "jirachi": {
+        "name": "Jirachi",
+        "mana": 6,
+        "attack": 500,
+        "health": 800,
+        "description": "Once Jeffrey got iron head-flinched 5 times in a row: “skill diff”"
+    },
+    "hooh": {
+        "name": "Ho-oh",
+        "mana": 7,
+        "attack": 300,
+        "health": 400,
+        "description": "It will reveal itself before a pure-hearted trainer by shining its bright rainbow-colored wings."
+    },
+    "megalopunny": {
+        "name": "Mega Lopunny",
+        "mana": 3,
+        "attack": 400,
+        "health": 200,
+        "description": "When this card is summoned, you can target one opponent monster on the field; deal 100 damage to it, and if you do, it is silenced until the end of your turn.",
+        "on_summon": "card = target_other_field();card.health -= 100;card.status.append(('SILENCE', 0, 'END'))"
+    }
+}
