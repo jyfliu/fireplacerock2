@@ -1,5 +1,5 @@
 # Fireplace Rock 2
-Deceptively simple and insanely fun, Fireplace Rock 2 is a fast-paced strategy card game
+Deceptively simple and insanely fun. Welcome to fireplacerock2, the strategy card game that's easy to learn and satisfying to master!
 
 ## How to play
 
