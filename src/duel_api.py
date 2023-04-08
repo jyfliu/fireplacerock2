@@ -2,10 +2,13 @@ import random
 from callbacks import *
 
 
-class Graveyard():
+class CardList:
 
-  def __init__(self):
-    self.cards = []
+  def __init__(self, cards=None):
+    if cards:
+      self.cards = cards
+    else:
+      self.cards = []
 
   def __contains__(self, card):
     return card in self.cards
@@ -13,18 +16,57 @@ class Graveyard():
   def __len__(self):
     return len(self.cards)
 
+  def __getitem__(self, *args):
+    return self.cards.__getitem__(*args)
+
   def filter(self, fn):
-    return [card for card in self.cards if fn(card)]
+    return CardList([card for card in self.cards if card is not None and fn(card)])
 
   def contains(self, fn):
-    return len(self.filter(fn)) > 0
+    for card in self.cards:
+      if card is None:
+        continue
+      if fn(card):
+        return True
+    return False
 
   def add(self, card):
     self.cards.append(card)
+    return self
+
+  def append(self, card):
+    self.cards.append(card)
+    return self
+
+  def extend(self, lst2):
+    if type(lst2) == lst:
+      self.cards.extend(lst2)
+    else:
+      self.cards.extend(lst2.cards)
+    return self
+
+  def pop(self, amount=1):
+    if amount == 1:
+      to_pop = self.cards[-1]
+      self.cards = self.cards[:-1]
+      return to_pop
+    to_pop = self.cards[-amount:]
+    self.cards = self.cards[:-amount]
+    return to_pop
+
+  def shuffle(self):
+    self.cards = random.sample(self.cards, k=len(self.cards))
+    return self
+
+  def sort(self):
+    sort(self.cards, key=lambda card: (card.type, card.cost, card.name))
+    return self
 
   def remove(self, card):
-    # TODO
-    pass
+    self.cards = [c for c in self.cards if c != card]
+
+  def delete(self, card):
+    self.cards = [c if c != card else None for c in self.cards]
 
 
 class Player():
@@ -34,10 +76,10 @@ class Player():
     self.mana = 0
     self.mana_max = 0
     self.life = 1000
-    self.hand = []
-    self.deck = []
-    self.board = [None] * 5
-    self.graveyard = Graveyard()
+    self.hand = CardList()
+    self.deck = CardList()
+    self.board = CardList([None] * 5)
+    self.graveyard = CardList()
 
   @property
   def field(self):
@@ -67,17 +109,19 @@ class Player():
 
 class Duel():
 
-  def __init__(self, deck1, deck2, io):
+  def __init__(self, deck1, deck2, p1_io, p2_io):
     self.p1 = Player()
     self.p2 = Player()
 
     deck1 = [card.create_instance(self.p1, self.p2, self) for card in deck1]
-    self.p1.deck = random.sample(deck1, k=len(deck1))
+    self.p1.deck = CardList(deck1).shuffle()
     self.p1.id = 1
+    self.p1.io = p1_io
 
     deck2 = [card.create_instance(self.p2, self.p1, self) for card in deck2]
+    self.p2.deck = CardList(deck2).shuffle()
     self.p2.id = 2
-    self.p2.deck = random.sample(deck2, k=len(deck2))
+    self.p2.io = p2_io
 
     self.io = io
 
@@ -110,83 +154,131 @@ class Duel():
     p1 = self.turn_p
     p2 = self.other_p
 
-    p1.hand = p1.deck[-3:]
-    p1.deck = p1.deck[:-3]
-    p2.hand = p2.deck[-3:]
-    p2.deck = p2.deck[:-3]
+    # both players draw 3
+    p1.hand.extend(p1.deck.pop(3)).sort()
+    p2.hand.extend(p2.deck.pop(3)).sort()
 
+    # first player's turn
+    self.turn(first=True)
 
-  def end_turn(self):
+    while True:
+      self.turn()
+
+  def turn(self, first=False):
+    self.start_turn(first)
+
+    self.draw_phase(first)
+    self.standby_phase()
+
+    self.main_phase()
+
+    if not first:
+      self.battle_phase()
+      self.main_phase(main_phase_2=True)
+
     self.end_phase()
 
+    self.end_turn()
+
+  def start_turn(self, first=False):
+    self.turn_p.mana_max += 1
+    self.turn_p.mana = self.turn_p.mana_max
+
+  def end_turn(self):
     for card in self.turn_p.board:
       if card:
-        card.end_turn()
+        card.on_end_turn()
     for card in self.other_p.board:
       if card:
-        card.end_turn()
+        card.on_end_turn()
 
     self.cur_turn = 3 - self.cur_turn
     self.turn_p = self.p1 if self.cur_turn == 1 else self.p2
     self.other_p = self.p2 if self.cur_turn == 1 else self.p1
 
 
-  def start_turn(self, first=False):
-    self.turn_p.mana_max += 1
-    self.turn_p.mana = self.turn_p.mana_max
-
-    self.draw_phase(first)
-    self.standby_phase()
-
-
   def draw_phase(self, first):
     self.cur_phase = "draw"
+
+    # draw card
     if not first:
       if not self.turn_p.deck:
         raise GameOver(3 - self.cur_turn)
-      self.turn_p.hand += self.turn_p.deck[-1:]
-      self.turn_p.deck = self.turn_p.deck[:-1]
+      self.turn_p.hand.append(self.turn_p.deck.pop()).sort()
 
-    for card in self.turn_p.board:
-      if card:
-        card.on_draw()
+    self.phase_effects()
 
-    for card in self.other_p.board:
-      if card:
-        card.on_draw()
 
   def standby_phase(self):
     self.cur_phase = "standby"
-    for card in self.turn_p.board:
-      if card:
-        card.on_standby()
+    self.phase_effects()
 
-    for card in self.other_p.board:
-      if card:
-        card.on_standby()
 
-  def main_phase(self):
-    self.cur_phase = "main"
+  def main_phase(self, main_phase_2=False):
+    if main_phase_2:
+      self.cur_phase = "main_2"
+    else:
+      self.cur_phase = "main"
+    self.phase_effects()
+
+    while True:
+      response = self.turn_p.io.main_phase_prompt(main_phase_2)
+      match response:
+        case ("pass"):
+          break
+        case ("summon", hand_idx, board_idx):
+          card = self.play_hand(hand_idx)
+          self.summon(card, board_idx)
+        case ("activate_hand", hand_idx):
+          pass
+          # TODO
+        case ("activate_board", board_idx):
+          pass
+          # TODO
+        case (other, *args):
+          raise UnrecognizedCommand(other)
+      self.check_field()
+    self.phase_effects("end")
+
+
+  def battle_phase(self):
+    self.cur_phase = "battle"
+    self.phase_effects()
+
+    while True:
+      response = self.turn_p.io.battle_phase_prompt()
+      match response:
+        case ("pass"):
+          break
+        case ("attack", attacker_idx, attackee_idx):
+          self.attack(attacker_idx, attackee_idx)
+        case ("attack_directly", attacker_idx):
+          self.attack_directly(attacker_idx)
+          # TODO
+        # QUICK EFFECTS ONLY
+        # case ("activate_hand", hand_idx):
+        #   pass
+          # TODO
+        # case ("activate_board", board_idx):
+         #  pass
+          # TODO
+        case (other, *args):
+          raise UnrecognizedCommand(other)
+      self.check_field()
+    self.phase_effects("end")
 
   def end_phase(self):
     self.cur_phase = "end"
-    for card in self.turn_p.board:
-      if card:
-        card.on_end()
-    for card in self.other_p.board:
-      if card:
-        card.on_end()
+    self.phase_effects()
 
 
-  def update_board(self):
+  def check_game_over(self):
     if self.turn_p.life <= 0:
       raise GameOver(self.turn_p.id)
     if self.other_p.life <= 0:
       raise GameOver(self.other_p.id)
 
-    # activate on destroy effects
-    to_remove_turn = []
-    to_remove_other = []
+  def check_field(self):
     for i, card in enumerate(self.turn_p.board):
       if card is None:
         continue
@@ -213,18 +305,68 @@ class Duel():
 
     # send cards to graveyard
     for card in turn_removed:
-      self.send_graveyard(card, player="turn", update_board=False)
+      self.turn_p.graveyard.append(card)
     for card in other_removed:
-      self.send_graveyard(card, player="other", update_board=False)
+      self.other_p.graveyard.append(card)
 
-    if self.turn_p.life <= 0:
-      raise GameOver(self.turn_p.id)
-    if self.other_p.life <= 0:
-      raise GameOver(self.other_p.id)
+    for card in turn_removed:
+      card.effect("if_send_graveyard")
+    for card in other_removed:
+      card.effect("if_send_graveyard")
+
+    for card in turn_removed:
+      card.effect("opt_if_send_graveyard")
+    for card in other_removed:
+      card.effect("opt_if_send_graveyard")
+
+
+
+  def phase_effects(self, timing="begin"):
+    phase = self.cur_phase
+    # mandatory standby phase effects
+    for card in self.turn_p.board:
+      if card:
+        card.effect(f"{timing}_phase_{phase}")
+        self.check_field()
+
+    for card in self.other_p.board:
+      if card:
+        card.effect(f"{timing}_phase_{phase}")
+        self.check_field()
+
+    # optional standby phase effects
+    for card in self.turn_p.board:
+      if card:
+        card.effect(f"opt_{timing}_phase_{phase}")
+        self.check_field()
+
+    for card in self.other_p.board:
+      if card:
+        card.effect(f"opt_{timing}_phase_{phase}")
+        self.check_field()
 
 
   ### IO ###
-  # stuff the frontend must implement
+  def push_board(self):
+    active = self.get_active_player(turn)
+    inactive = self.get_inactive_player(turn)
+
+    active.io.update_board(
+        inactive.board.cards,
+        active.board.cards,
+        active.hand,
+        active.graveyard,
+        active.field,
+    )
+
+    inactive.io.update_board(
+        active.board.cards,
+        inactive.board.cards,
+        inactive.hand,
+        inactive.graveyard,
+        inactive.field,
+    )
+
 
   def can_target_other_field(self, player="turn"):
     inactive = self.get_inactive_player(player)
@@ -281,8 +423,8 @@ class Duel():
 
     card = active.hand[hand_idx]
 
-    if card.cost <= active.mana:
-      active.mana -= card.cost
+    if active.can_pay(card.cost):
+      active.pay(card.cost)
     else:
       raise InvalidMove("Not enough mana")
 
@@ -302,9 +444,11 @@ class Duel():
       raise InvalidMove("Cannot summon; board occupied")
 
     active.board[board_idx] = card
-    card.on_summon()
 
-    self.update_board()
+    card.effect("if_summon_cost")
+    card.effect("if_summon")
+    card.effect("opt_if_summon_cost")
+    card.effect("opt_if_summon")
 
   def remove_field(self, card, player="turn"):
     if card is None:
@@ -319,24 +463,26 @@ class Duel():
       active.board[i] = None
 
 
-  def send_graveyard(self, card, player="turn", update_board=True):
+  def send_graveyard(self, card, player="turn"):
     if card is None:
       return
 
     player = self.get_active_player(player)
     player.graveyard.append(card)
-    card.on_send_graveyard()
+    card.effect("if_send_graveyard")
+    card.effect("opt_if_send_graveyard")
 
-    if update_board:
-      self.update_board()
 
   def activate_on_board(self, board_idx, player="turn"):
     active = self.get_active_player(player)
     card = active.board[board_idx]
 
-    card.on_activate()
+    if not attacker.can("activate"):
+      raise InvalidMove("Selected monster can't activate its effect")
 
-    self.update_board()
+    card.effect("on_activate_cost")
+    card.effect("on_activate_effect")
+
 
   def attack_directly(self, attacker_idx, player="turn"):
     active = self.get_active_player(player)
@@ -355,15 +501,14 @@ class Duel():
 
     attacker = active.board[attacker_idx]
 
-    if not attacker.can_attack():
+    if not attacker.can("attack_directly"):
       raise InvalidMove("Selected monster can't attack")
 
-    attacker.on_attack_directly()
+    attacker.effect("if_attack_directly")
+    attacker.effect("opt_if_attack_directly")
     inactive.life -= attacker.attack
 
     attacker.status.append(("CANNOT_ATTACK", 0, "END"))
-
-    self.update_board()
 
 
   def attack(self, attacker_idx, attackee_idx, player="turn"):
@@ -386,30 +531,76 @@ class Duel():
     attacker = active.board[attacker_idx]
     attackee = inactive.board[attackee_idx]
 
-    if not attacker.can_attack():
+    if not attacker.can("attack"):
       raise InvalidMove("Selected monster can't attack")
 
-    amount = attacker.on_attack(attackee)
-    amount = attackee.on_attacked(attacker, amount)
+    # start step
+    attacker.effect("if_attack", attackee)
+    attackee.effect("if_attacked", attacker)
 
-    attackee.health -= amount
+    # enter damage step
+    # TODO
 
-    amount = attacker.on_take_battle_damage(attackee.attack)
-    amount = attacker.on_take_damage(amount)
-    attacker.health -= amount
+    # damage calculation
+    forward = attacker.effect("attacker_damage_calc", attackee)
+    forward = attackee.effect("attackee_damage_calc", attacker, forward)
 
-    attacker.end_attack(attackee)
-    attackee.end_attacked(attacker)
+    backward = attackee.effect("defender_damage_calc", attacker)
+    backward = attacker.effect("defendee_damage_calc", attackee, backward)
 
-    if attackee.health <= 0:
-      attacker.on_destroy_battle()
-      attackee.on_destroyed_battle()
-    if attacker.health <= 0:
-      attackee.on_destroy_battle()
-      attacker.on_destroyed_battle()
+    attackee.take_damage("battle", forward)
+    attacker.take_damage("battle", backward)
+
+    # exit damage step
+    # TODO
+
+    # check if things are destroyed
+    # (do this bc even if a party heals)
+    attackee_destroyed = attackee.health <= 0
+    attacker_destroyed = attacker.health <= 0
+
+    # attacker effects
+    if attackee_destroyed:
+      attacker.effect("if_destroy_battle", attackee)
+    if attacker_destroyed:
+      attacker.effect("if_destroyed_battle", attackee)
+      attacker.effect("if_destroyed")
+    # attackee effects
+    if attacker_destroyed:
+      attackee.effect("if_destroy_battle", attacker)
+    if attackee_destroyed:
+      attackee.effect("if_destroyed_battle", attacker)
+      attackee.effect("if_destroyed", attackee)
+    # optional attacker effects
+    if attackee_destroyed:
+      attacker.effect("opt_if_destroy_battle", attackee)
+    if attacker_destroyed:
+      attacker.effect("opt_if_destroyed_battle", attackee)
+      attacker.effect("opt_if_destroyed")
+    # optional attackee effects
+    if attacker_destroyed:
+      attackee.effect("opt_if_destroy_battle", attacker)
+    if attackee_destroyed:
+      attackee.effect("opt_if_destroyed_battle", attacker)
+      attackee.effect("opt_if_destroyed", attackee)
+
+    # remove cards from field
+    active.board.delete(attacker)
+    inactive.board.delete(attackee)
+
+    # send cards to graveyard
+    for card in turn_removed:
+      self.send_graveyard(attacker, player="turn")
+    for card in other_removed:
+      self.send_graveyard(attackee, player="other")
+
+    attacker.effect("end_attack", attackee)
+    attackee.effect("end_attacked", attacker)
+
+    attacker.effect("opt_end_attack", attackee)
+    attackee.effect("opt_end_attacked", attacker)
 
     attacker.status.append(("CANNOT_ATTACK", 0, "END"))
 
-    self.update_board()
 
 

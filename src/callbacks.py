@@ -1,4 +1,12 @@
+class UnrecognizedCommand(BaseException):
+  # internal syntax error (shouldn't happen)
+  def __init__(self, message=""):
+    self.message = message
+  def __str__(self):
+    return self.message
+
 class InvalidMove(BaseException):
+  # illegal move (front end allowed something which shouldnt be allowed)
   def __init__(self, message=""):
     self.message = message
   def __str__(self):

@@ -5,25 +5,25 @@ from callbacks import *
 
 triggers = [
   # MANDATORY TURN EFFECTS
-  "on_draw_phase", # after turn player draws a card
-  "on_standby_phase", # "in your standby phase"
-  "begin_main_phase", # "at the beginning of main phase"
-  "end_main_phase", # "at the end of main phase"
-  "begin_battle_phase", # "at the beginning of battle phase"
-  "end_battle_phase", # "at the end of battle phase"
-  "begin_main_phase_2", # "at the beginning of main phase 2"
-  "end_main_phase_2", # "at the end of main phase 2"
-  "on_end_phase", # "in your end phase"
+  "begin_phase_draw", # after turn player draws a card
+  "begin_phase_standby", # "in your standby phase"
+  "begin_phase_main", # "at the beginning of main phase"
+  "end_phase_main", # "at the end of main phase"
+  "begin_phase_battle", # "at the beginning of battle phase"
+  "end_phase_battle", # "at the end of battle phase"
+  "begin_phase_main_2", # "at the beginning of main phase 2"
+  "end_phase_main_2", # "at the end of main phase 2"
+  "begin_phase_end", # "in your end phase"
   # OPTIONAL TURN EFFCTS
-  "opt_on_draw_phase", # "in your draw phase you can"
-  "opt_on_standby_phase", # "in your standby phase you can"
-  "opt_begin_main_phase", # "at the beginning of main phase you can"
-  "opt_end_main_phase", # "at the end of main phase you can"
-  "opt_begin_battle_phase", # "at the beginning of battle phase you can"
-  "opt_end_battle_phase", # "at the end of battle phase you can"
-  "opt_begin_main_phase_2", # "at the beginning of main phase 2 you can"
-  "opt_end_main_phase_2", # "at the end of main phase 2 you can"
-  "opt_on_end_phase", # "in your end phase you can"
+  "opt_begin_phase_draw", # "in your draw phase you can"
+  "opt_begin_phase_standby", # "in your standby phase you can"
+  "opt_begin_phase_main", # "at the beginning of main phase you can"
+  "opt_end_phase_main", # "at the end of main phase you can"
+  "opt_begin_phase_battle", # "at the beginning of battle phase you can"
+  "opt_end_phase_battle", # "at the end of battle phase you can"
+  "opt_begin_phase_main_2", # "at the beginning of main phase 2 you can"
+  "opt_end_phase_main_2", # "at the end of main phase 2 you can"
+  "opt_end_phase_end", # "in your end phase you can"
   # CARD EFFECTS
   "can_summon",
   "on_summon", # summoning conditions (eg., tribute), doesn't start chain
@@ -37,30 +37,32 @@ triggers = [
   "opt_if_destroyed", # "if this card is destroyed"
   "opt_if_send_graveyard", # "if this card is sent to the graveyard"
   "can_activate",
-  "on_activate", # "you can ..."
+  "on_activate_cost", # "you can ..." cost
+  "on_activate", # "you can ..." effect
   # BATTLE EFFECTS
-  "if_destroy_battle", # if this destroys another by battle
-  "if_destroyed_battle",
+  "if_destroy_battle", # (other) if this destroys another by battle
+  "if_destroyed_battle", # (other)
   "can_attack",
+  "can_attack_directly",
   "if_attack", # if this monster is about to attack another monster
   "if_attack_directly", # if this monster is about to attack directly
   "if_attacked", # if this monster is selected for an attack
   "attacker_damage_calc", # (other) => attack damage done
   "attackee_damage_calc", # (other, amount) => attack damage done
-  "if_take_damage", # if this monster takes damage
-  "if_take_battle_damage", # if this monster takes damage from battle
-  "end_attack",
-  "end_attacked",
+  "defender_damage_calc", # (other) => recoil damage done
+  "defendee_damage_calc", # (other, amount) => recoil damage done
+  "on_take_damage", # if this monster takes damage
+  "on_take_battle_damage", # if this monster takes damage from battle
+  "end_attack", # (other, damage_dealt)
+  "end_attacked", # (other, damage_dealt)
   # OPTIONAL BATTLE EFFECTS
   "opt_if_destroy_battle", # if this destroys another by battle
   "opt_if_destroyed_battle",
   "opt_if_attack", # if this monster is about to attack another monster
   "opt_if_attack_directly", # if this monster is about to attack directly
   "opt_if_attacked", # if this monster is selected for an attack
-  "opt_if_take_damage", # if this monster takes damage
-  "opt_if_take_battle_damage", # if this monster takes damage from battle
-  "opt_end_attack",
-  "opt_end_attacked",
+  "opt_end_attack", # (other, damage_dealt)
+  "opt_end_attacked", # (other, damage_dealt)
   # SPELL EFFECTS
   "spell_can_activate",
   "spell_on_activate",
@@ -171,7 +173,7 @@ class Card:
   def apply_status(self, source, status, duration=0, expiry="end"):
     self.status.append((status, duration, expiry))
 
-  def end_turn(self):
+  def on_end_turn(self):
     new_status = []
     for st in self.status:
       if st[1] < 0:
@@ -205,20 +207,27 @@ class Card:
 
   def take_damage(self, source, amount):
     if amount > 0:
-      amount = self.on_take_damage(amount)
+      if source == "battle":
+        amount = self.effect("on_take_battle_damage", amount)
+    if amount > 0:
+      amount = self.effect("on_take_damage", amount)
       self.health -= amount
-
 
   def set(self, source, attack=0, health=0):
     pass
 
-  def try_activate_effect(self, trigger, *args):
+  def effect(self, trigger, *args):
     try:
       return self.interp(getattr(self.template, trigger), *args)
     except:
       return self.default(trigger)
 
-  def can(self, trigger, *args):
+  def can(self, action, *args):
+    """
+    action in ["attack", "summon"]
+    """
+
+    trigger = f"can_{action}"
     try:
       return self.interp(getattr(self.template, trigger), *args)
     except:
@@ -229,9 +238,21 @@ class Card:
       return True
     elif trigger == "can_attack":
       return not self.has_status("CANNOT_ATTACK")
+    elif trigger == "can_activate":
+      return (
+        hasattr(self.template, "on_activate")
+        and not self.has_status("SILENCE")
+      )
+    elif trigger == "can_attack_directly":
+      return not self.has_status("CANNOT_ATTACK")
     elif trigger == "attacker_damage_calc":
       return self.attack
     elif trigger == "attackee_damage_calc":
+      other, amount = args
+      return amount
+    elif trigger == "defender_damage_calc":
+      return self.attack
+    elif trigger == "defendee_damage_calc":
       other, amount = args
       return amount
     else:
