@@ -1,120 +1,120 @@
-Set,ID,Rarity,Name,Type,Cost,Attack,Health,Flavour,Description
-Fireplacerock,0,UR,Mew,Monster,2,200,200,"Apparently, it appears only to those people who are pure of heart and have a strong desire to see it.","Once per turn, you can pay 1 mana, this card’s effect becomes another face-up monster’s effect for rest this turn."
-Fireplacerock,1,R,Unown,Monster,1,0,100,"Unown is just like Man; it dies to Pokemon with move. But for those who are unprepared for Man's—or rather, Unown's, for they are one and the same—unpredictability, they too will fall.","When this card is summoned, its name changes randomly."
-Fireplacerock,2,UR,Spright Elf,Monster,2,200,200,,"When this card is summoned, you can pay 1 mana; summon a 2 cost monster from your graveyard to your field. While this card is on your field, adjacent 2-cost monsters on your field cannot be targeted."
-Fireplacerock,3,C,Magikarp,Monster,0,0,200,Magikarp is a pathetic excuse for a Pokémon that is only capable of flopping and splashing. This behavior prompted scientists to undertake research into it.,
-Fireplacerock,4,C,Mudkip,Monster,1,100,200,"To alert it, the fin on its head senses the flow of water. It has the strength to lift boulders.",
-Fireplacerock,5,R,Pikachu,Monster,1,200,100,It lives in forests with others. It stores electricity in the pouches on its cheeks.,
-Fireplacerock,6,C,Grovyle,Monster,2,200,300,"It lives in dense jungles. While closing in on its prey, it leaps from branch to branch.",
-Fireplacerock,7,C,Ampharos,Monster,3,300,400,The bright light on its tail can be seen far away. It has been treasured since ancient times as a beacon.,
-Fireplacerock,8,C,Blastoise,Monster,4,400,500,The rocket cannons on its shell fire jets of water capable of punching holes through thick steel.,
-Fireplacerock,9,R,Wailord,Monster,4,200,600,It can sometimes knock out opponents with the shock created by breaching and crashing its big body onto the water.,
-Fireplacerock,10,C,Snorlax,Monster,5,400,700,"Very lazy. Just eats and sleeps. As its rotund bulk builds, it becomes steadily more slothful.",
-Fireplacerock,11,C,Garchomp,Monster,6,600,700,It flies at speeds equal to a jet fighter plane. It never allows its prey to escape.,
-Fireplacerock,12,R,Jirachi,Monster,6,500,800,Once Jeffrey got iron head-flinched 5 times in a row: “skill diff”,
-Fireplacerock,13,SR,Ho-oh,Monster,7,700,800,It will reveal itself before a pure-hearted trainer by shining its bright rainbow-colored wings.,
-Fireplacerock,14,R,Kyogre,Monster,8,800,1000,It is said to have widened the seas by causing downpours. It had been asleep in a marine trench.,When this card is summoned: Change both player’s field spells to Rainy Day.
-Fireplacerock,15,R,Groudon,Monster,8,800,1000,It had been asleep in underground magma ever since it fiercely fought Kyogre long ago.,When this card is summoned: Change both player’s field spells to Harsh Sunlight.
-Fireplacerock,16,R,Giratina,Monster,9,800,1200,It was banished for its violence. It silently gazed upon the old world from the Distortion World.,"When a card would be destroyed as a result of battle with this card, banish it instead."
-Fireplacerock,17,SR,Arceus,Monster,10,1200,1200,"It emerged from an egg in a place where there was nothing, then shaped the world.",Once while face-up on the field: Send all other cards on the field to the graveyard.
-Fireplacerock,18,C,Gallade,Monster,2,200,300,"A master of courtesy and swordsmanship, it fights using the extending swords on its elbows.","On attack declaration, flip a coin: if heads, this attack will deal 2x the attack of this monster."
-Fireplacerock,19,C,Heracross,Monster,3,500,300,"It loves sweet honey. To keep all the honey to itself, it hurls rivals away with its prized horn.","On attack declaration, flip a coin: if tails, this attack misses and deals no damage (this card still takes recoil)."
-Fireplacerock,20,C,Shuckle,Monster,2,100,400,"It stores Berries inside its shell. To avoid attacks, it hides beneath rocks and remains completely still.",
-Fireplacerock,21,C,Breloom,Monster,3,500,100,It scatters poisonous spores and throws powerful punches while its foe is hampered by inhaled spores,"Target a monster, silence it and it cannot attack until its next turn."
-Fireplacerock,22,C,Chansey,Monster,3,100,600,,At the start of each turn: Heal adjacent friendly characters 200 health.
-Fireplacerock,23,R,Tyranitar,Monster,7,700,700,,At the end phase of each turn: Deal 100 to everything except “Tyranitar”.
-Fireplacerock,24,C,Gengar,Monster,4,700,200,,"When this card is destroyed by battle, target a monster, silence it."
-Fireplacerock,25,SR,Dragonite,Monster,7,700,700,,When this card is at full health and takes damage: Half the damage taken.
-Fireplacerock,26,SR,Gyarados,Monster,4,700,500,,"This card can only be summoned by destroying a “Magikarp” you control. When this card is summoned, reduce the attack of each of your opponent’s monsters by 100."
-Fireplacerock,27,R,Salamence,Monster,7,700,700,,"When this card destroys another by battle, increase this card’s attack by 300."
-Fireplacerock,28,SR,Lugia,Monster,8,500,1200,,Once per turn: When this card is about to take damage: Half the damage taken.
-Fireplacerock,29,R,Lapras,Monster,3,100,200,,"When this card is summoned, place a “Perish” counter on all face-up monsters on the field. During the end phase of the next turn, destroy all monsters with a Perish counter."
-Fireplacerock,30,C,Turtwig,Monster,1,100,200,"Made from soil, the shell on its back hardens when it drinks water. It lives along lakes.",At the end of each turn: Gain 50 health.
-Fireplacerock,31,C,Pokemon Safari,Field Spell,2,,,,At the beginning of each turn: Add a random 3 mana or lower Pokemon to your hand.
-Fireplacerock,32,R,Lavender Town,Field Spell,2,,,,"Once per turn: When a pokemon dies, summon a 100/100 ghost."
-Fireplacerock,33,C,Switch Out!,Spell,2,,,,Return one of your Pokemon on the field to your hand. Summon a Pokemon from your deck with equal or lesser cost.
-Fireplacerock,34,R,Ultraball,Spell,4,,,,Banish a monster on the field. You can’t attack directly this turn.
-Fireplacerock,35,R,Repel,Spell,3,,,,Return an enemy monster to the opponent’s hand
-Fireplacerock,36,C,Squirt Bottle,Spell,2,,,,Silence a monster on the field
-Fireplacerock,37,R,Technical Machine,Spell,1,,,,Grant a monster +100/+100
-Fireplacerock,38,SR,Pokemon Trade,Spell,2,,,,Send as many Pokemon as you’d like from your field to the graveyard. Summon a random Pokemon with cost equal to their total cost.
-Fireplacerock,39,UR,Pokemon Shuffle,Spell,2,,,,Shuffle as many Pokemon as you’d like from the graveyard into your deck. Summon a random Pokemon with cost equal to the number of unique names sent.
-Fireplacerock,40,SR,Spright Jet,Monster,2,200,100,,If this card is summoned: you can add 1 spell card from your deck to your hand that costs exactly 2 mana.
-Fireplacerock,41,UR,Spright Blue,Monster,2,100,200,,If this card is summoned: you can add 1 monster card from your deck to your hand that costs exactly 2 mana.
-Fireplacerock,42,R,Spright Pixie,Monster,2,0,100,,You can tribute this card. Adjacent 2-cost monsters gain 100/100.
-Fireplacerock,43,R,Spright Starter,Spell,2,,,,Summon a 2 cost monster from your deck. Take damage equal to 2x its attack.
-Fireplacerock,44,UR,Wind Up Kitten,Monster,2,0,100,,Once while on the field: you can pay 1 mana; return a monster from the field to the hand
-Fireplacerock,45,R,Live Twin Lil-la,Monster,2,100,100,,"When this card is summoned, and you control a “Ki-sikil” monster, destroy a random card on your opponent’s side of the field"
-Fireplacerock,46,R,Live Twin Ki-sikil,Monster,2,100,100,,"When this card is summoned, and you control a “Lil-la” monster, draw a card."
-Fireplacerock,47,UR,Live Twin Trouble Sunny,Monster,6,400,400,,You can send this card to the graveyard to summon up to one “Live Twin Lil-la” and up to one “Live Twin Ki-sikil” from your graveyard simultaneously.
-Fireplacerock,48,SR,Live Twin’s Moonlit Snitch,Field Spell,2,,,,"When this card is activated: You can add 1 ""Live Twin"" monster from your Deck to your hand. While you control a ""Live Twin"" monster, each time your opponent Normal Summons, you gain 100 LP, and if you do, inflict 100 damage to your opponent."
-Fireplacerock,49,R,Omen,Monster,4,400,400,,Target a monster: give it stealth.
-Fireplacerock,50,C,Brimstone,Monster,4,200,200,,Give adjacent monsters +200 ATK
-Fireplacerock,51,R,Viper,Monster,,,,,Opponent monsters in the 3 spaces in front of this monster lose 200 health (min. 1).
-Fireplacerock,52,R,Reyna,Monster,6,400,600,,When this card destroys another minion: heal 200 hp
-Fireplacerock,53,R,Cypher,Monster,4,200,400,,The opposing monster and adjacent monsters to this card can’t attack.
-Fireplacerock,54,SR,Kiljoy,Monster,2,200,200,,"Add a 1-cost ""Kiljoy Turret"" to hand"
-Fireplacerock,55,C,Neon,Monster,2,100,200,,"If an attack is directed at this monster: Flip a coin, if tails, the attack is negated"
-Fireplacerock,56,UR,Jett,Monster,5,500,500,,"Once per summon: when this card is about to take lethal damage, halve the damage it takes."
-Fireplacerock,57,R,Phoenix,Monster,4,600,200,,"When this attacks, the opposing monster has 0 attack."
-Fireplacerock,58,SR,1-Tap,Spell,3,,,,Target a monster: deal 500 damage
-Fireplacerock,59,R,Shorty Angle,Spell,2,,,,Target a friendly monster: deal 500 damage to the opposing monster.
-Fireplacerock,60,UR,Cloud Burst,Spell,1,,,,Target a monster: give it stealth. Add another “Cloud burst” to your hand.
-Fireplacerock,61,R,Odin Spam,Spell,,,,,Deal damage to all opponent monsters equal to 150 x the number of monsters they control.
-Fireplacerock,62,C,Haven,Field Spell,2,,,,
-Fireplacerock,63,SR,Bind,Field Spell,2,,,,
-Fireplacerock,64,C,Dart Monkey,Monster,1,100,100,,"When this card is summoned, you can deal 100 damage to a monster on the field. If you do, add a 2 mana dart monkey to your hand."
-Fireplacerock,65,SR,Super Monkey,Monster,6,600,600,,"At the beginning of your turn: this card turns into ""Sun Avatar."""
-Fireplacerock,66,R,Super Monkey Fan Club,Spell,3,,,,"Convert all monkeys on your side of the field to Super Monkeys. At the end of this turn, convert them back."
-Fireplacerock,67,C,Johnny Wyles,Monster,,,,,
-Fireplacerock,68,C,River Wyles,Monster,,,,,
-Fireplacerock,69,C,Emergency Button,Spell,,,,,
-Fireplacerock,70,C,Red Amogus,Monster,,,,,
-Fireplacerock,71,C,League Placeholder 1,,,,,,
-Fireplacerock,72,R,League Placeholder 2,,,,,,
-Fireplacerock,73,SR,League Placeholder 3,,,,,,
-Fireplacerock,74,C,League Placeholder 4,,,,,,
-Fireplacerock,75,SR,League Placeholder 5,,,,,,
-Fireplacerock,76,UR,League Placeholder 6,,,,,,
-Fireplacerock,77,UR,League Placeholder 7,,,,,,
-Fireplacerock,78,UR,League Placeholder 8,,,,,,
-Fireplacerock,79,R,Ancient Ruins,Spell,2,,,,Summon as many Unown as you can to your side of the field.
-Fireplacerock,80,C,Lopunny,Monster,2,300,100,"The ears appear to be delicate. If they are touched roughly, it kicks with its graceful legs.","When this card is summoned, target one monster on the field; deal 100 damage to it."
-Fireplacerock,81,UR,Mega Lopunny,Monster,3,400,200,,"When this card is summoned, target one monster on the field; deal 100 damage to it, and if you do, it is silenced and cannot attack until the end of the next turn. You cannot summon any “Mega” for the rest of this duel, except Mega Lopunny."
-Fireplacerock,82,C,Beedrill,Monster,2,100,100,Flies at high speed and attacks using its large venomous stingers on its forelegs and tail. ,"When this card attacks a monster, that monster takes 100 damage at the end of your turn."
-Fireplacerock,83,SR,Mega Beedrill,Monster,2,300,100,,"When this card attacks a monster, all of your “Beedrill” cards everywhere gain 100/100. When this card attacks directly, reduce its cost to 0, return it to your hand. You cannot summon any “Mega” for the rest of this duel, except Mega Beedrill."
-Fireplacerock,84,C,Charizard,Monster,3,400,300,"Charizard flies around the sky in search of powerful opponents. It breathes fire of such great heat that it melts anything. However, it never turns its fiery breath on any opponent weaker than itself.",
-Fireplacerock,85,UR,Mega Charizard X,Monster,5,300,500,,"This card gains 300 attack. You cannot summon any “Mega” for the rest of this duel, except “Mega Charizard”."
-Fireplacerock,86,UR,Mega Charizard Y,Monster,5,600,300,,"This card does not take battle damage when attacking. You cannot summon any “Mega” for the rest of this duel, except “Mega Charizard”."
-Fireplacerock,87,SR,Mega Heracross,Monster,8,800,800,,This card cannot attack. At the end of your turn deal 100 damage 8 times randomly to opponent monsters.
-Fireplacerock,88,SR,Mega Snorlax,Monster,10,500,1500,,Opponent minions must attack this monster first. Spells do half damage to this monster.
-Fireplacerock,89,C,Scizor,Monster,3,300,300,,
-Fireplacerock,90,SR,Mega Scizor,Monster,5,400,400,,"When this card is summoned, do 250 damage to the lowest health enemy monster. If it dies, do this again."
-Fireplacerock,91,C,Kangaskhan,Monster,3,300,400,,
-Fireplacerock,92,R,Mega Kangaskhan,Monster,7,800,600,,This card can attack twice. The second attack does half damage.
-Fireplacerock,93,C,Sableye,Monster,1,0,200,,"If this card is summoned, target an enemy monster: Reduce its attack by half."
-Fireplacerock,94,R,Mega Sableye,Monster,5,0,1000,,Your monsters are unaffected by opponent’s card effects.
-Fireplacerock,95,SR,Ditto,Monster,3,100,100,,"When Ditto is summoned, target one monster on the field. This card becomes that card, except for the HP stat."
-Fireplacerock,96,SR,Eevee,Monster,3,200,200,,"Choose one: Gain +200 attack, Gain +200 health, Gain Stealth"
-Fireplacerock,97,R,Ambertwo,Monster,2,200,300,"Both Mew and Amber were successfully cloned, and while they were growing inside test tubes, Mewtwo became friends with Ambertwo telepathically. As Ambertwo disappears, she thanks Mewtwo for caring about her and tells him “life is wonderful"".","When this card is summoned, you can send one of your cards from your field to the graveyard. Heal life points equal to 3 times that card’s attack."
-Fireplacerock,98,SR,Mega Mewtwo X,Monster,10,600,1000,,"When this card is summoned, deal 600 damage to yourself, then you can deal 1000 damage to your opponent. If this card is destroyed, draw 3 cards."
-Fireplacerock,99,SR,Mega Mewtwo Y,Monster,10,1000,600,,"When this card is summoned, deal 1000 damage to yourself, then you can take control of up to two enemy monsters until the end of the turn. If this card is destroyed, draw 3 cards."
-Fireplacerock,100,UR,Mewtwo,Monster,7,600,600,,"When this card is summoned, deal 600 damage to yourself. If this card is destroyed, you can add one “Mewtwo” card from your deck to your hand. Reduce its mana cost by 2."
-Fireplacerock,--,--,Pokemon Ghost,Monster,0,100,100,"Many years ago, this was a beloved Pokemon. It wanders the Earth searching for its former master.",
-Fireplacerock,--,--,Rainy Day,Field Spell,2,,,,It is raining. Groudon’s attack is reduced by 200.
-Fireplacerock,--,--,Harsh Sunlight,Field Spell,2,,,,The sunlight is harsh. Kyogre’s attack is reduced by 200.
-Fireplacerock,--,--,Kiljoy Turret,Monster,1,100,100,,Once per turn: deal 100 damage to the opposing monster and the monsters adjacent to it.
-Fireplacerock,--,--,Sun Avatar,Monster,6,600,1000,,At the beginning of your turn: this card turns into True Sun God.
-Fireplacerock,--,--,True Sun God,Monster,10,?,?,There can be only one.,"When this card is summoned, send all monsters from either side of the field to the graveyard. This card’s original attack and health becomes their total attack and health, plus 600/1000."
-Fireplacerock,101,XR,`Mew`. the First Pokemon,Monster,2,200,200,So rare that it is still said to be a mirage by many experts. Only a few people have seen it worldwide.,"Once per turn, you can pay 1 mana, this card’s effect becomes another face-up monster’s effect for rest this turn."
-Fireplacerock,102,XR,Lake of Rage `Gyarados`,Monster,4,700,500,"This Gyarados was forced to evolve by Team Rocket. The Magikarp it evolves from retains its red color, having no time to change its scale color to blue.","This card can only be summoned by destroying a “Magikarp” you control. When this card is summoned, reduce the attack of each of your opponent’s monsters by 100."
-Fireplacerock,103,XR,"`Arceus`, the Creator",Monster,10,1200,1200,It is the heavenly fount from which pours the light that shines across the world. Its luminance guides and protects all Pokémon. Hisuian mythology states that Arceus is the creator of all things.,Once while face-up on the field: Send all other cards on the field to the graveyard.
-Fireplacerock,104,XR,`Mewtwo` Strikes Back,Monster,7,600,600,The circumstances of one's birth are irrelevant: it is what one does with life that determines one's destiny,"When this card is summoned, deal 600 damage to yourself. If this card is destroyed, you can add one “Mewtwo” card from your deck to your hand. Reduce its mana cost by 2."
-Fireplacerock,105,XR,Placeholder XR 1,,,,,,
-Fireplacerock,106,XR,Placeholder XR 2,,,,,,
-Fireplacerock,107,XR,Placeholder XR 3,,,,,,
-Fireplacerock,108,XR,Placeholder XR 4,,,,,,
-Fireplacerock,109,XR,Placeholder XR 5,,,,,,
-Fireplacerock,110,XR,Placeholder XR 6,,,,,,
-,,C,R,SR,UR,XR,,,
-,,34,31,22,15,10,,,
+Set,ID,Rarity,Name,Type,Cost,Attack,Health,Flavour,Description,on_summon,on_attack,on_attacked,on_attack_directly,on_activate,on_draw,on_standby,on_main,on_battle,on_main_2,on_end,on_destroyed,on_destroy_battle,on_destroyed_battle,on_send_graveyard,on_take_damage,on_take_battle_damage,end_attack,end_attacked
+Fireplacerock,0,UR,Mew,Monster,2,200,200,"Apparently, it appears only to those people who are pure of heart and have a strong desire to see it.","Once per turn, you can pay 1 mana, this card’s effect becomes another face-up monster’s effect for rest this turn.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,1,R,Unown,Monster,1,0,100,"Unown is just like Man; it dies to Pokemon with move. But for those who are unprepared for Man's—or rather, Unown's, for they are one and the same—unpredictability, they too will fall.","When this card is summoned, its name changes randomly.","c = random.randrange(28)\nif c == 26: self.name = ""Unown !""\nelif c == 27: self.name = ""Unown ?""\nelse: self.name = ""Unown "" + chr(c+ord(""A""))",,,,,,,,,,,,,,,,,,
+Fireplacerock,2,UR,Spright Elf,Monster,2,200,200,,"When this card is summoned, you can pay 1 mana; summon a 2 cost monster from your graveyard to your field. While this card is on your field, adjacent 2-cost monsters on your field cannot be targeted.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,3,C,Magikarp,Monster,0,0,200,Magikarp is a pathetic excuse for a Pokémon that is only capable of flopping and splashing. This behavior prompted scientists to undertake research into it.,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,4,C,Mudkip,Monster,1,100,200,"To alert it, the fin on its head senses the flow of water. It has the strength to lift boulders.",,,,,,,,,,,,,,,,,,,,
+Fireplacerock,5,R,Pikachu,Monster,1,200,100,It lives in forests with others. It stores electricity in the pouches on its cheeks.,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,6,C,Grovyle,Monster,2,300,200,"It lives in dense jungles. While closing in on its prey, it leaps from branch to branch.",,,,,,,,,,,,,,,,,,,,
+Fireplacerock,7,C,Ampharos,Monster,3,300,400,The bright light on its tail can be seen far away. It has been treasured since ancient times as a beacon.,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,8,C,Blastoise,Monster,4,400,500,The rocket cannons on its shell fire jets of water capable of punching holes through thick steel.,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,9,R,Wailord,Monster,4,200,600,It can sometimes knock out opponents with the shock created by breaching and crashing its big body onto the water.,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,10,C,Snorlax,Monster,5,400,700,"Very lazy. Just eats and sleeps. As its rotund bulk builds, it becomes steadily more slothful.",,,,,,,,,,,,,,,,,,,,
+Fireplacerock,11,C,Garchomp,Monster,6,600,700,It flies at speeds equal to a jet fighter plane. It never allows its prey to escape.,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,12,R,Jirachi,Monster,6,400,800,Once Jeffrey got iron head-flinched 5 times in a row: “skill diff”,When this card is about to attack a monster: Flip two coins. If both are heads then the monster can no longer attack.,,"c1 = flip_coin()\nc2 = flip_coin()\nif c1 and c2: args[0].status.append((""CANNOT_ATTACK"", -1))",,,,,,,,,,,,,,,,,
+Fireplacerock,13,SR,Ho-oh,Monster,7,700,700,It will reveal itself before a pure-hearted trainer by shining its bright rainbow-colored wings.,When this card is about to attack a monster: Half the other monster's attack,,args[0].attack //= 2,,,,,,,,,,,,,,,,,
+Fireplacerock,14,R,Kyogre,Monster,8,800,1000,It is said to have widened the seas by causing downpours. It had been asleep in a marine trench.,When this card is summoned: Change both player’s field spells to Rainy Day.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,15,R,Groudon,Monster,8,800,1000,It had been asleep in underground magma ever since it fiercely fought Kyogre long ago.,When this card is summoned: Change both player’s field spells to Harsh Sunlight.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,16,R,Giratina,Monster,9,800,1200,It was banished for its violence. It silently gazed upon the old world from the Distortion World.,"When a card would be destroyed as a result of battle with this card, banish it instead.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,17,SR,Arceus,Monster,10,1200,1200,"It emerged from an egg in a place where there was nothing, then shaped the world.",Once while face-up on the field: Send all other cards on the field to the graveyard.,,,,,"if not self.has_status(""ACTIVATED_EFFECT""):\n  for card in owner.board:\n    if card != self:\n      io.send_graveyard(card, player=""turn"", update_board=False)\n  for card in other.board:\n    io.send_graveyard(card, player=""other"", update_board=False)\n  self.status.append((""ACTIVATED_EFFECT"", -1))",,,,,,,,,,,,,,
+Fireplacerock,18,C,Gallade,Monster,2,200,300,"A master of courtesy and swordsmanship, it fights using the extending swords on its elbows.","On attack declaration, flip a coin: if heads, this attack will deal 2x the attack of this monster.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,19,C,Heracross,Monster,3,500,300,"It loves sweet honey. To keep all the honey to itself, it hurls rivals away with its prized horn.","On attack declaration, flip a coin: if tails, this attack misses and deals no damage (this card still takes recoil).",,,,,,,,,,,,,,,,,,,
+Fireplacerock,20,C,Shuckle,Monster,2,100,400,"It stores Berries inside its shell. To avoid attacks, it hides beneath rocks and remains completely still.",,,,,,,,,,,,,,,,,,,,
+Fireplacerock,21,C,Breloom,Monster,3,500,100,It scatters poisonous spores and throws powerful punches while its foe is hampered by inhaled spores,"When this card is summoned: You can target an opponent's monster, silence it and it cannot attack until after its next turn","card = target_other_field()\ncard.status.append((""SILENCE"", 1, ""END""))\ncard.status.append((""CANNOT_ATTACK"", 1, ""END""))",,,,,,,,,,,,,,,,,,
+Fireplacerock,22,C,Chansey,Monster,3,100,600,,At the start of each turn: Heal adjacent friendly characters 200 health.,,,,,,,adjs = get_adjacent(self)\nfor adj in adjs:\n  if adj.health < adj.original_health - 200:\n    adj.health += 200\n  elif adj.health <= adj.original_health:\n    adj.health = adj.original_health,,,,,,,,,,,,
+Fireplacerock,23,R,Tyranitar,Monster,7,700,700,,At the end phase of each turn: Deal 100 to everything except “Tyranitar”.,,,,,,,,,,,"for card in owner.board:\n    if ""tyranitar"" not in card.name.lower():\n      io.send_graveyard(card, player=""turn"", update_board=False)\n  for card in other.board:\n    io.send_graveyard(card, player=""other"", update_board=False)",,,,,,,,
+Fireplacerock,24,C,Gengar,Monster,4,700,200,,"When this card would be destroyed by battle, you can target an opponent monster, silence it.",,,,,,,,,,,,,,"card = target_other_field()\ncard.status.append((""SILENCE"", -1))",,,,,
+Fireplacerock,25,SR,Dragonite,Monster,7,700,700,,When this card is at full health and takes damage: Half the damage taken.,,,,,,,,,,,,,,,,if self.health == self.original_health:\n  return args[0] // 2,,,
+Fireplacerock,26,SR,Gyarados,Monster,5,700,500,,"This card can only be summoned by destroying a “Magikarp” you control. When this card is summoned, reduce the attack of each of your opponent’s monsters by 100.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,27,R,Salamence,Monster,7,700,700,,"When this card destroys another by battle, increase this card’s attack by 300.",,,,,,,,,,,,,self.attack += 300,,,,,,
+Fireplacerock,28,SR,Lugia,Monster,8,500,1200,,Once per turn: When this card is about to take damage: Half the damage taken.,,,,,,,,,,,,,,,,"if not self.has_status(""ACTIVATED_EFFECT""):\n  self.status.append((""ACTIVATED_EFFECT"", 0, ""END""))\n  return 0",,,
+Fireplacerock,29,R,Lapras,Monster,3,100,200,,"When this card is summoned, place a “Perish” counter on all face-up monsters on the field. During the end phase of the next turn, destroy all monsters with a Perish counter.","for card in field:\n  card.status.append((""PERISH"", 1, ""END""))",,,,,,,,,,,,,,,,,,
+Fireplacerock,30,C,Turtwig,Monster,1,100,200,"Made from soil, the shell on its back hardens when it drinks water. It lives along lakes.",At the end of each turn: Gain 50 health.,,,,,,,,,,,self.health += 50,,,,,,,,
+Fireplacerock,31,C,Pokemon Safari,Field Spell,2,,,,At the beginning of each turn: Add a random 3 mana or lower Pokemon to your hand.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,32,R,Lavender Town,Field Spell,2,,,,"Once per turn: When a pokemon dies, summon a 100/100 ghost.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,33,C,Switch Out!,Spell,2,,,,Return one of your Pokemon on the field to your hand. Summon a Pokemon from your deck with equal or lesser cost.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,34,R,Ultraball,Spell,4,,,,Banish a monster on the field. You can’t attack directly this turn.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,35,R,Repel,Spell,3,,,,Return an enemy monster to the opponent’s hand,,,,,,,,,,,,,,,,,,,
+Fireplacerock,36,C,Squirt Bottle,Spell,2,,,,Silence a monster on the field,,,,,,,,,,,,,,,,,,,
+Fireplacerock,37,R,Technical Machine,Spell,1,,,,Grant a monster +100/+100,,,,,,,,,,,,,,,,,,,
+Fireplacerock,38,SR,Pokemon Trade,Spell,2,,,,Send as many Pokemon as you’d like from your field to the graveyard. Summon a random Pokemon with cost equal to their total cost.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,39,UR,Pokemon Shuffle,Spell,2,,,,Shuffle as many Pokemon as you’d like from the graveyard into your deck. Summon a random Pokemon with cost equal to the number of unique names sent.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,40,SR,Spright Jet,Monster,2,200,100,,If this card is summoned: you can add 1 spell card from your deck to your hand that costs exactly 2 mana.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,41,UR,Spright Blue,Monster,2,100,200,,If this card is summoned: you can add 1 monster card from your deck to your hand that costs exactly 2 mana.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,42,R,Spright Pixie,Monster,2,0,100,,You can tribute this card. Adjacent 2-cost monsters gain 100/100.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,43,R,Spright Starter,Spell,2,,,,Summon a 2 cost monster from your deck. Take damage equal to 2x its attack.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,44,UR,Wind Up Kitten,Monster,2,0,100,,Once while on the field: you can pay 1 mana; return a monster from the field to the hand,,,,,,,,,,,,,,,,,,,
+Fireplacerock,45,R,Live Twin Lil-la,Monster,2,100,100,,"When this card is summoned, and you control a “Ki-sikil” monster, destroy a random card on your opponent’s side of the field",,,,,,,,,,,,,,,,,,,
+Fireplacerock,46,R,Live Twin Ki-sikil,Monster,2,100,100,,"When this card is summoned, and you control a “Lil-la” monster, draw a card.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,47,UR,Live Twin Trouble Sunny,Monster,6,400,400,,You can send this card to the graveyard to summon up to one “Live Twin Lil-la” and up to one “Live Twin Ki-sikil” from your graveyard simultaneously.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,48,SR,Live Twin’s Moonlit Snitch,Field Spell,2,,,,"When this card is activated: You can add 1 ""Live Twin"" monster from your Deck to your hand. While you control a ""Live Twin"" monster, each time your opponent Normal Summons, you gain 100 LP, and if you do, inflict 100 damage to your opponent.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,49,R,Omen,Monster,4,400,400,,When this card is summoned: Target a monster: give it stealth.,"card = target_field()\ncard.status.append((""STEALTH"", -1))",,,,,,,,,,,,,,,,,,
+Fireplacerock,50,C,Brimstone,Monster,4,200,200,,While this card is on the field: Adjacent monsters gain 200 ATK,,,,,,,,,,,,,,,,,,,
+Fireplacerock,51,R,Viper,Monster,-1,-1,-1,,While this card is on the field: Opponent monsters in the 3 spaces in front of this monster lose 200 health (min. 1).,,,,,,,,,,,,,,,,,,,
+Fireplacerock,52,R,Reyna,Monster,6,400,600,,When this card destroys another minion: heal 200 HP,,,,,,,,,,,,,self.health += 200,,,,,,
+Fireplacerock,53,R,Cypher,Monster,4,200,400,,The opposing monster and adjacent monsters to this card can’t attack.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,54,SR,Kiljoy,Monster,2,200,200,,"Add a 1-cost ""Kiljoy Turret"" to hand",,,,,,,,,,,,,,,,,,,
+Fireplacerock,55,C,Neon,Monster,2,100,200,,"If an attack is directed at this monster: Flip a coin, if tails, the attack is negated",,,,,,,,,,,,,,,,,,,
+Fireplacerock,56,UR,Jett,Monster,5,500,400,,"Once per summon: if this card is about to take lethal battle damage, it survives with 1 health.",,,,,,,,,,,,,,,,,if arg[0] >= self.health:\n  return self.health - 1\nreturn arg[0],,
+Fireplacerock,57,R,Phoenix,Monster,4,600,200,,"When this attacks, the opposing monster has 0 attack.",,self.stolen_attack = arg[0].attack\narg[0].attack = 0,,,,,,,,,,,,,,,,arg[0].attack = self.stolen_attack\ndel self.stolen_attack,
+Fireplacerock,58,SR,1-Tap,Spell,3,,,,Target a monster: deal 500 damage,,,,,,,,,,,,,,,,,,,
+Fireplacerock,59,R,Shorty Angle,Spell,2,,,,Target a friendly monster: deal 500 damage to the opposing monster.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,60,UR,Cloud Burst,Spell,1,,,,Target a monster: give it stealth. Add another “Cloud burst” to your hand.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,61,R,Odin Spam,Spell,-1,,,,Deal damage to all opponent monsters equal to 150 x the number of monsters they control.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,62,C,Haven,Field Spell,2,,,,One “agent” can attack without taking damage each turn.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,63,SR,Bind,Field Spell,2,,,,Once per turn: swap an “agent” monster to a new space,,,,,,,,,,,,,,,,,,,
+Fireplacerock,64,C,Dart Monkey,Monster,1,100,100,,"When this card is summoned, you can deal 100 damage to a monster on the field. If you do, add a 2 mana dart monkey to your hand.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,65,SR,Super Monkey,Monster,6,600,600,,"At the beginning of your turn: this card turns into ""Sun Avatar.""",,,,,,,,,,,,,,,,,,,
+Fireplacerock,66,R,Super Monkey Fan Club,Spell,3,,,,"Convert all monkeys on your side of the field to Super Monkeys. At the end of this turn, convert them back.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,67,C,Johnny Wyles,Monster,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,68,C,River Wyles,Monster,-1,-1,-1,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,69,C,Emergency Button,Spell,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,70,C,Red Amogus,Monster,-1,-1,-1,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,71,C,League Placeholder 1,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,72,R,League Placeholder 2,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,73,SR,League Placeholder 3,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,74,C,League Placeholder 4,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,75,SR,League Placeholder 5,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,76,UR,League Placeholder 6,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,77,UR,League Placeholder 7,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,78,UR,League Placeholder 8,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,79,R,Ancient Ruins,Spell,2,,,,Summon as many Unown as you can to your side of the field.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,80,C,Lopunny,Monster,2,300,100,"The ears appear to be delicate. If they are touched roughly, it kicks with its graceful legs.","When this card is summoned, target one monster on the field; deal 100 damage to it.",card = target_other_field();card.health -= 100;,,,,,,,,,,,,,,,,,,
+Fireplacerock,81,UR,Mega Lopunny,Monster,3,400,200,,"When this card is summoned, target one monster on the field; deal 100 damage to it, and if you do, it is silenced and cannot attack until the end of the next turn. You cannot summon any “Mega” for the rest of this duel, except Mega Lopunny.","card = target_other_field();card.health -= 100;card.status.append(('SILENCE', 1, 'END'))",,,,,,,,,,,,,,,,,,
+Fireplacerock,82,C,Beedrill,Monster,2,100,100,Flies at high speed and attacks using its large venomous stingers on its forelegs and tail. ,"When this card attacks a monster, that monster takes 100 damage at the end of your turn.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,83,SR,Mega Beedrill,Monster,2,300,100,,"When this card attacks a monster, all of your “Beedrill” cards everywhere gain 100/100. When this card attacks directly, reduce its cost to 0, return it to your hand. You cannot summon any “Mega” for the rest of this duel, except Mega Beedrill.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,84,C,Charizard,Monster,3,400,300,"Charizard flies around the sky in search of powerful opponents. It breathes fire of such great heat that it melts anything. However, it never turns its fiery breath on any opponent weaker than itself.",,,,,,,,,,,,,,,,,,,,
+Fireplacerock,85,UR,Mega Charizard X,Monster,5,300,500,,"This card gains 300 attack. You cannot summon any “Mega” for the rest of this duel, except “Mega Charizard”.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,86,UR,Mega Charizard Y,Monster,5,600,300,,"This card does not take battle damage when attacking. You cannot summon any “Mega” for the rest of this duel, except “Mega Charizard”.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,87,SR,Mega Heracross,Monster,8,800,800,,This card cannot attack. At the end of your turn deal 100 damage 8 times randomly to opponent monsters.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,88,SR,Mega Snorlax,Monster,10,500,1500,,Opponent minions must attack this monster first. Spells do half damage to this monster.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,89,C,Scizor,Monster,3,300,300,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,90,SR,Mega Scizor,Monster,5,400,400,,"When this card is summoned, do 250 damage to the lowest health enemy monster. If it dies, do this again.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,91,C,Kangaskhan,Monster,3,300,400,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,92,R,Mega Kangaskhan,Monster,7,800,600,,This card can attack twice. The second attack does half damage.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,93,C,Sableye,Monster,1,0,200,,"If this card is summoned, target an enemy monster: Reduce its attack by half.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,94,R,Mega Sableye,Monster,5,0,1000,,Your monsters are unaffected by opponent’s card effects.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,95,SR,Ditto,Monster,3,100,100,,"When Ditto is summoned, target one monster on the field. This card becomes that card, except for the HP stat.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,96,SR,Eevee,Monster,3,200,200,,"Choose one: Gain +200 attack, Gain +200 health, Gain Stealth",,,,,,,,,,,,,,,,,,,
+Fireplacerock,97,R,Ambertwo,Monster,2,200,300,"Both Mew and Amber were successfully cloned, and while they were growing inside test tubes, Mewtwo became friends with Ambertwo telepathically. As Ambertwo disappears, she thanks Mewtwo for caring about her and tells him “life is wonderful"".","When this card is summoned, you can send one of your cards from your field to the graveyard. Heal life points equal to 3 times that card’s attack.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,98,SR,Mega Mewtwo X,Monster,10,600,1000,,"When this card is summoned, deal 600 damage to yourself, then you can deal 1000 damage to your opponent. If this card is destroyed, draw 3 cards.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,99,SR,Mega Mewtwo Y,Monster,10,1000,600,,"When this card is summoned, deal 1000 damage to yourself, then you can take control of up to two enemy monsters until the end of the turn. If this card is destroyed, draw 3 cards.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,100,UR,Mewtwo,Monster,7,600,600,,"When this card is summoned, deal 600 damage to yourself. If this card is destroyed, you can add one “Mewtwo” card from your deck to your hand. Reduce its mana cost by 2.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,--,--,Pokemon Ghost,Monster,0,100,100,"Many years ago, this was a beloved Pokemon. It wanders the Earth searching for its former master.",,,,,,,,,,,,,,,,,,,,
+Fireplacerock,--,--,Rainy Day,Field Spell,2,,,,It is raining. Groudon’s attack is reduced by 200.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,--,--,Harsh Sunlight,Field Spell,2,,,,The sunlight is harsh. Kyogre’s attack is reduced by 200.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,--,--,Kiljoy Turret,Monster,1,100,100,,Once per turn: deal 100 damage to the opposing monster and the monsters adjacent to it.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,--,--,Sun Avatar,Monster,6,600,1000,,At the beginning of your turn: this card turns into True Sun God.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,--,--,True Sun God,Monster,10,?,?,There can be only one.,"When this card is summoned, send all monsters from either side of the field to the graveyard. This card’s original attack and health becomes their total attack and health, plus 600/1000.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,101,XR,`Mew`. the First Pokemon,Monster,2,200,200,So rare that it is still said to be a mirage by many experts. Only a few people have seen it worldwide.,"Once per turn, you can pay 1 mana, this card’s effect becomes another face-up monster’s effect for rest this turn.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,102,XR,Lake of Rage `Gyarados`,Monster,4,700,500,"This Gyarados was forced to evolve by Team Rocket. The Magikarp it evolves from retains its red color, having no time to change its scale color to blue.","This card can only be summoned by destroying a “Magikarp” you control. When this card is summoned, reduce the attack of each of your opponent’s monsters by 100.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,103,XR,"`Arceus`, the Creator",Monster,10,1200,1200,It is the heavenly fount from which pours the light that shines across the world. Its luminance guides and protects all Pokémon. Hisuian mythology states that Arceus is the creator of all things.,Once while face-up on the field: Send all other cards on the field to the graveyard.,,,,,,,,,,,,,,,,,,,
+Fireplacerock,104,XR,`Mewtwo` Strikes Back,Monster,7,600,600,The circumstances of one's birth are irrelevant: it is what one does with life that determines one's destiny,"When this card is summoned, deal 600 damage to yourself. If this card is destroyed, you can add one “Mewtwo” card from your deck to your hand. Reduce its mana cost by 2.",,,,,,,,,,,,,,,,,,,
+Fireplacerock,105,XR,Placeholder XR 1,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,106,XR,Placeholder XR 2,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,107,XR,Placeholder XR 3,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,108,XR,Placeholder XR 4,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,109,XR,Placeholder XR 5,,-1,,,,,,,,,,,,,,,,,,,,,,,
+Fireplacerock,110,XR,Placeholder XR 6,,-1,,,,,,,,,,,,,,,,,,,,,,,
+,,C,R,SR,UR,XR,,,,,,,,,,,,,,,,,,,,,,
+,,34,31,22,15,10,,,,,,,,,,,,,,,,,,,,,,

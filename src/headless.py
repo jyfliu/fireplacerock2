@@ -4,11 +4,18 @@ import duel_api
 import io
 
 from easydict import EasyDict as edict
+from callbacks import *
+
+class InvalidSyntax(BaseException):
+  def __init__(self, message=""):
+    self.message = message
+  def __str__(self):
+    return self.message
 
 class Headless:
 
   def __init__(self):
-    with open("../res/cards/pokemon.json", "r") as f:
+    with open("../res/cards/fireplacerock.json", "r") as f:
       cards = json.load(f)
       cards = edict(cards)
 
@@ -21,9 +28,15 @@ class Headless:
     return idx
 
 
+  def flip_coin(self, result, player="turn"):
+    print(f"Flipped a coin: {'Heads!' if result == 1 else 'Tails!'}")
+
+
   def run(self):
     deck1 = ["magikarp", "magikarp", "magikarp", "pikachu", "pikachu", "pikachu", "mudkip", "mudkip", "mudkip", "grovyle", "megalopunny", "megalopunny", "megalopunny"]
     deck2 = ["magikarp", "magikarp", "magikarp", "pikachu", "pikachu", "pikachu", "mudkip", "mudkip", "mudkip", "grovyle", "megalopunny", "megalopunny", "megalopunny"]
+    deck1 = ["chansey"] * 100
+    deck2 = ["wailord"]*100
 
     deck1 = [self.cards[name] for name in deck1]
     deck1 = [card_api.Template(card) for card in deck1]
@@ -41,12 +54,15 @@ class Headless:
       print("Board: ", duel.other_p.board_str())
       print("     : ", duel.turn_p.board_str())
       print("Hand:  ", duel.turn_p.hand_str())
-      print(f"Commands: summon, attack, attack_directly, pass")
+      print(f"Commands: summon, attack, attack_directly, monster_effect, pass")
       try:
         command = input().split(" ")
         if command[0] == "summon" or command[0] == "s":
-          hand_idx = int(command[1])
-          board_idx = int(command[2])
+          try:
+            hand_idx = int(command[1])
+            board_idx = int(command[2])
+          except:
+            raise InvalidSyntax("s [hand_pos] [board_pos]")
 
           card = duel.play_hand(hand_idx)
           duel.summon(card, board_idx)
@@ -57,13 +73,18 @@ class Headless:
         elif command[0] == "attack_directly" or command[0] == "ad":
           attacker_idx = int(command[1])
           duel.attack_directly(attacker_idx)
+        elif command[0] == "monster_effect" or command[0] == "me":
+          board_idx = int(command[1])
+          duel.activate_on_board(board_idx)
         elif command[0] == "pass" or command[0] == "p":
           duel.end_turn()
           duel.start_turn()
 
-      except duel_api.InvalidMove as e:
-        print(f"Invalid Move {e}")
-      except duel_api.GameOver as e:
+      except InvalidSyntax as e:
+        print(f"Invalid Syntax: {e}")
+      except InvalidMove as e:
+        print(f"Invalid Move: {e}")
+      except GameOver as e:
         print(f"\nGame Over. {e}")
         break
 

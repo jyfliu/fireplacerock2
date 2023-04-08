@@ -2,17 +2,57 @@ import random
 from callbacks import *
 
 
+class Graveyard():
+
+  def __init__(self):
+    self.cards = []
+
+  def __contains__(self, card):
+    return card in self.cards
+
+  def __len__(self):
+    return len(self.cards)
+
+  def filter(self, fn):
+    return [card for card in self.cards if fn(card)]
+
+  def contains(self, fn):
+    return len(self.filter(fn)) > 0
+
+  def add(self, card):
+    self.cards.append(card)
+
+  def remove(self, card):
+    # TODO
+    pass
+
+
 class Player():
 
   def __init__(self):
     self.id = 0
     self.mana = 0
     self.mana_max = 0
-    self.life = 300
+    self.life = 1000
     self.hand = []
     self.deck = []
     self.board = [None] * 5
-    self.graveyard = []
+    self.graveyard = Graveyard()
+
+  @property
+  def field(self):
+    field = []
+    for card in self.board:
+      if card is not None:
+        field.append(card)
+    return field
+
+  def can_pay(self, amount):
+    return self.mana >= amount
+
+  def pay(self, amount):
+    assert self.mana >= amount
+    self.mana -= amount
 
   def hand_str(self):
     return " | ".join(
@@ -73,10 +113,19 @@ class Duel():
     p1.hand = p1.deck[-3:]
     p1.deck = p1.deck[:-3]
     p2.hand = p2.deck[-3:]
-    p2.deck = p2.deck[:3]
+    p2.deck = p2.deck[:-3]
 
 
   def end_turn(self):
+    self.end_phase()
+
+    for card in self.turn_p.board:
+      if card:
+        card.end_turn()
+    for card in self.other_p.board:
+      if card:
+        card.end_turn()
+
     self.cur_turn = 3 - self.cur_turn
     self.turn_p = self.p1 if self.cur_turn == 1 else self.p2
     self.other_p = self.p2 if self.cur_turn == 1 else self.p1
@@ -86,11 +135,47 @@ class Duel():
     self.turn_p.mana_max += 1
     self.turn_p.mana = self.turn_p.mana_max
 
+    self.draw_phase(first)
+    self.standby_phase()
+
+
+  def draw_phase(self, first):
+    self.cur_phase = "draw"
     if not first:
       if not self.turn_p.deck:
         raise GameOver(3 - self.cur_turn)
       self.turn_p.hand += self.turn_p.deck[-1:]
       self.turn_p.deck = self.turn_p.deck[:-1]
+
+    for card in self.turn_p.board:
+      if card:
+        card.on_draw()
+
+    for card in self.other_p.board:
+      if card:
+        card.on_draw()
+
+  def standby_phase(self):
+    self.cur_phase = "standby"
+    for card in self.turn_p.board:
+      if card:
+        card.on_standby()
+
+    for card in self.other_p.board:
+      if card:
+        card.on_standby()
+
+  def main_phase(self):
+    self.cur_phase = "main"
+
+  def end_phase(self):
+    self.cur_phase = "end"
+    for card in self.turn_p.board:
+      if card:
+        card.on_end()
+    for card in self.other_p.board:
+      if card:
+        card.on_end()
 
 
   def update_board(self):
@@ -106,14 +191,14 @@ class Duel():
       if card is None:
         continue
       if card.health <= 0:
-        card.on_destroy()
+        card.on_destroyed()
         to_remove_turn.append(i)
 
     for i, card in enumerate(self.other_p.board):
       if card is None:
         continue
       if card.health <= 0:
-        card.on_destroy()
+        card.on_destroyed()
         to_remove_other.append(i)
 
     # remove cards from field
@@ -159,6 +244,30 @@ class Duel():
     else:
       raise InvalidMove("No valid targets")
 
+  def target_field(self, player="turn"):
+    raise NotImplemented()
+
+  def flip_coin(self, player="turn"):
+    coin = random.randint(0, 1)
+    self.io.flip_coin(coin, player)
+    return coin
+
+  def get_adjacent(self, card, player="turn"):
+    active = self.get_active_player(turn)
+    for i, c in enumerate(active.board):
+      if c == card:
+        break
+    else: # for else
+      return []
+
+    adjs = []
+    if i > 0 and active.board[i - 1]:
+      adjs.append(active.board[i - 1])
+    if i < len(active.board) - 1 and active.board[i + 1]:
+      adjs.append(active.board[i + 1])
+
+    return adjs
+
 
   ### CARD ACTIONS ###
   # All of these functions accept a player ["turn", "other"] to bind the
@@ -167,9 +276,13 @@ class Duel():
   def play_hand(self, hand_idx, player="turn"):
     active = self.get_active_player(player)
 
+    if hand_idx < 0 or hand_idx >= len(active.hand):
+      raise InvalidMove("Invalid hand index")
+
     card = active.hand[hand_idx]
-    if card.mana <= active.mana:
-      active.mana -= card.mana
+
+    if card.cost <= active.mana:
+      active.mana -= card.cost
     else:
       raise InvalidMove("Not enough mana")
 
@@ -177,20 +290,53 @@ class Duel():
     return card
 
   def summon(self, card, board_idx, player="turn"):
-    active = self.get_active_player(player)
+    if type(player) == "str":
+      active = self.get_active_player(player)
+    else:
+      active = player
+
+    if board_idx < 0 or board_idx >= len(active.board):
+      raise InvalidMove("Invalid board index")
+
+    if active.board[board_idx] is not None:
+      raise InvalidMove("Cannot summon; board occupied")
 
     active.board[board_idx] = card
     card.on_summon()
 
     self.update_board()
 
+  def remove_field(self, card, player="turn"):
+    if card is None:
+      return
+
+    active = self.get_active_player(player)
+    remove_idxs = []
+    for i, c in enumerate(active.board):
+      if c == card:
+        remove_idxs.append(i)
+    for i in remove_idxs:
+      active.board[i] = None
+
+
   def send_graveyard(self, card, player="turn", update_board=True):
+    if card is None:
+      return
+
     player = self.get_active_player(player)
     player.graveyard.append(card)
     card.on_send_graveyard()
 
     if update_board:
       self.update_board()
+
+  def activate_on_board(self, board_idx, player="turn"):
+    active = self.get_active_player(player)
+    card = active.board[board_idx]
+
+    card.on_activate()
+
+    self.update_board()
 
   def attack_directly(self, attacker_idx, player="turn"):
     active = self.get_active_player(player)
@@ -200,10 +346,22 @@ class Duel():
       if card is not None:
         raise InvalidMove("Field is not empty")
 
+    if (
+        attacker_idx < 0
+        or attacker_idx >= len(active.board)
+        or active.board[attacker_idx] is None
+    ):
+      raise InvalidMove("Invalid attacker index")
+
     attacker = active.board[attacker_idx]
+
+    if not attacker.can_attack():
+      raise InvalidMove("Selected monster can't attack")
 
     attacker.on_attack_directly()
     inactive.life -= attacker.attack
+
+    attacker.status.append(("CANNOT_ATTACK", 0, "END"))
 
     self.update_board()
 
@@ -212,13 +370,45 @@ class Duel():
     active = self.get_active_player(player)
     inactive = self.get_inactive_player(player)
 
+    if (
+        attacker_idx < 0
+        or attacker_idx >= len(active.board)
+        or active.board[attacker_idx] is None
+    ):
+      raise InvalidMove("Invalid attacker index")
+    if (
+        attackee_idx < 0
+        or attackee_idx >= len(inactive.board)
+        or inactive.board[attackee_idx] is None
+    ):
+      raise InvalidMove("Invalid attackee index")
+
     attacker = active.board[attacker_idx]
     attackee = inactive.board[attackee_idx]
 
-    attacker.on_attack(attackee)
-    attackee.health -= attacker.attack
-    attacker.health -= attackee.attack
-    attackee.on_attacked(attacker)
+    if not attacker.can_attack():
+      raise InvalidMove("Selected monster can't attack")
+
+    amount = attacker.on_attack(attackee)
+    amount = attackee.on_attacked(attacker, amount)
+
+    attackee.health -= amount
+
+    amount = attacker.on_take_battle_damage(attackee.attack)
+    amount = attacker.on_take_damage(amount)
+    attacker.health -= amount
+
+    attacker.end_attack(attackee)
+    attackee.end_attacked(attacker)
+
+    if attackee.health <= 0:
+      attacker.on_destroy_battle()
+      attackee.on_destroyed_battle()
+    if attacker.health <= 0:
+      attackee.on_destroy_battle()
+      attacker.on_destroyed_battle()
+
+    attacker.status.append(("CANNOT_ATTACK", 0, "END"))
 
     self.update_board()
 
