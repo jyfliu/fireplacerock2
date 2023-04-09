@@ -20,138 +20,181 @@ class Board:
     self.hand = []
     self.graveyard = []
     self.deck = []
+    self.my_lp = 3000
+    self.enemy_lp = 3000
+    self.my_mana = 0
+    self.my_mana_max = 0
+    self.enemy_mana = 0
+    self.enemy_mana_max = 0
 
 
 class Headless:
 
-  def __init__(self, duel, player_name="Player"):
-    with open("../res/cards/fireplacerock.json", "r") as f:
-      cards = json.load(f)
-      cards = edict(cards)
-
-    self.cards = cards
+  def __init__(self, player_name="Player"):
     self.player_name = player_name
 
     self.board = Board()
 
+    self.end_turn = False
 
-  def target_other_field(self, player="turn"):
+  def prompt_user_activate(self, effect_name):
+    print(f"Activate {effect_name}'s effect?' [y/n]")
+    x = input().strip().lower()
+    return x == "y"
+
+
+  def target_owner_board_empty(self):
+    raise
+
+  def target_other_board_empty(self):
+    raise
+
+    # target card on the field
+    # optionally accepts a lambda to filter
+    # returns card of monster
+  def target_field(self):
+    raise
+
+  def target_owner_field(self):
+    pass
+
+  def target_other_field(self, filter=lambda x: True):
     print("Target a card on the opposing field [0-4]")
     idx = int(input())
     return idx
+
+    # select monster on the field
+    # optionally accepts a lambda to filter
+    # returns monster
+  def select_field(self):
+    raise
+
+  def select_owner_field(self):
+    raise
+
+  def select_other_field(self):
+    raise
+
+
+    # select card from deck
+    # optionally accepts a lambda to filter
+    # returns card
+  def select_owner_deck(self):
+    raise
+
+    # select_other_deck = self.io.select_other_deck
+
+    # select card from deck
+    # optionally accepts a lambda to filter
+    # returns card
+  def select_owner_graveyard(self):
+    raise
+
+  def select_other_graveyard(self):
+    raise
+
+
+
 
 
   def flip_coin(self, result, player="turn"):
     print(f"Flipped a coin: {'Heads!' if result == 1 else 'Tails!'}")
 
-  def update_board(self, enemy_board, my_board, hand, graveyard, deck):
-    self.board.enemy_board = enemy_board
-    self.board.my_board = my_board
-    self.board.hand = hand
-    self.board.graveyard = graveyard
-    self.board.deck = deck
+  def print_board(self):
+    print(f"\n{self.player_name}'s turn")
+    print(f"Your LP: {self.duel.turn_p.life} Mana: {self.duel.turn_p.mana} / {self.duel.turn_p.mana_max} | Mana: {self.duel.other_p.mana} / {self.duel.other_p.mana_max} Other LP: {self.duel.other_p.life}")
+    print("Board: ", self.duel.other_p.board_str())
+    print("     : ", self.duel.turn_p.board_str())
+    print("Hand:  ", self.duel.turn_p.hand_str())
+
+  def draw_phase_prompt(self):
+    # YOU DREW X
+    self.end_turn = False
+    pass
 
   def main_phase_prompt(self, main_phase_2=False):
+    if self.end_turn:
+      return ["pass"]
+    self.print_board()
     if main_phase_2:
       print("It is Main Phase 2")
     else:
       print("It is Main Phase")
-    print(f"Commands: summon, activate_hand, activate_board, pass")
+    print(f"Commands: summon, activate_hand, activate_board, pass, end")
     print(">>> ", end="")
     command = input().split()
     try:
       match command:
-        case ("summon", hand_idx, board_idx) | ("s", hand_idx, board_idx):
-          return ("summon", int(hand_idx), int(board_idx))
-        case ("activate_hand", hand_idx) | ("ah", hand_idx):
-          return ("activate_hand", int(hand_idx))
-        case ("activate_board", board_idx) | ("ab", board_idx):
-          return ("activate_board", int(boar_idx))
-        case ("pass"):
-          return ("pass")
-        case (other, *args):
+        case ["summon", hand_idx, board_idx] | ["s", hand_idx, board_idx]:
+          return ["summon", int(hand_idx), int(board_idx)]
+        case ["activate_hand", hand_idx] | ["ah", hand_idx]:
+          return ["activate_hand", int(hand_idx)]
+        case ["activate_board", board_idx] | ["ab", board_idx]:
+          return ["activate_board", int(boar_idx)]
+        case ["pass"] | ["p"]:
+          return ["pass"]
+        case ["end"] | ["e"]:
+          self.end_turn = True
+          return ["pass"]
+        case [other, *_]:
           raise ValueError(other)
+        case _:
+          raise ValueError
     except ValueError:
       print("Unable to Parse Command")
 
   def battle_phase_prompt(self):
-    print(f"Commands: attack, attack_directly, pass")
+    if self.end_turn:
+      return ["pass"]
+    self.print_board()
+    print("It is Battle Phase")
+    print(f"Commands: attack, attack_directly, pass, end")
     print(">>> ", end="")
     command = input().split()
     try:
       match command:
-        case ("attack", attacker_idx, attackee_idx) | ("a", attacker_idx, attackee_idx):
-          return ("attack", int(hand_idx), int(board_idx))
-        case ("attack_directly", attacker_idx) | ("ad", attacker_idx):
-          return ("attack_directly", int(attacker_idx))
-        case ("pass"):
-          return ("pass")
-        case (other, *args):
+        case ["attack", attacker_idx, attackee_idx] | ["a", attacker_idx, attackee_idx]:
+          return ["attack", int(attacker_idx), int(attackee_idx)]
+        case ["attack_directly", attacker_idx] | ["ad", attacker_idx]:
+          return ["attack_directly", int(attacker_idx)]
+        case ["pass"] | ["p"]:
+          return ["pass"]
+        case ["end"] | ["e"]:
+          self.end_turn = True
+          return ["pass"]
+        case [other, _] | [other]:
           raise ValueError(other)
     except ValueError:
       print("Unable to Parse Command")
 
 
 
-def test(self):
+def test():
+  with open("../res/cards/fireplacerock.json", "r") as f:
+    cards = json.load(f)
+    cards = edict(cards)
+
   deck1 = ["magikarp", "magikarp", "magikarp", "pikachu", "pikachu", "pikachu", "mudkip", "mudkip", "mudkip", "grovyle", "megalopunny", "megalopunny", "megalopunny"]
   deck2 = ["magikarp", "magikarp", "magikarp", "pikachu", "pikachu", "pikachu", "mudkip", "mudkip", "mudkip", "grovyle", "megalopunny", "megalopunny", "megalopunny"]
-  deck1 = ["chansey"] * 100
-  deck2 = ["wailord"]*100
+  deck1 = ["jirachi"] * 100
+  deck2 = ["hooh"]*100
 
-  deck1 = [self.cards[name] for name in deck1]
+  deck1 = [cards[name] for name in deck1]
   deck1 = [card_api.Template(card) for card in deck1]
 
-  deck2 = [self.cards[name] for name in deck2]
+  deck2 = [cards[name] for name in deck2]
   deck2 = [card_api.Template(card) for card in deck2]
 
-  p1 = Headless(duel, "Player 1")
-  p2 = Headless(duel, "Player 2")
-  duel = duel_api.Duel(deck1, deck2, p1, p2)
   p1 = Headless("Player 1")
   p2 = Headless("Player 2")
+  duel = duel_api.Duel(deck1, deck2, p1, p2)
+  duel.p1.mana_max = 10
+  duel.p2.mana_max = 10
+  # TMP STUFF for printing board
+  p1.duel = duel
+  p2.duel = duel
 
   duel.start_duel()
-  duel.start_turn(first=True)
-  while True:
-    print(f"\nPlayer {duel.cur_turn} turn")
-    print(f"Your LP: {duel.turn_p.life} Mana: {duel.turn_p.mana} / {duel.turn_p.mana_max} | Mana: {duel.other_p.mana} / {duel.other_p.mana_max} Other LP: {duel.other_p.life}")
-    print("Board: ", duel.other_p.board_str())
-    print("     : ", duel.turn_p.board_str())
-    print("Hand:  ", duel.turn_p.hand_str())
-    print(f"Commands: summon, attack, attack_directly, monster_effect, pass")
-    try:
-      command = input().split(" ")
-      if command[0] == "summon" or command[0] == "s":
-        try:
-          hand_idx = int(command[1])
-          board_idx = int(command[2])
-        except:
-          raise InvalidSyntax("s [hand_pos] [board_pos]")
-
-        card = duel.play_hand(hand_idx)
-        duel.summon(card, board_idx)
-      elif command[0] == "attack" or command[0] == "a":
-        attacker_idx = int(command[1])
-        attackee_idx = int(command[2])
-        duel.attack(attacker_idx, attackee_idx)
-      elif command[0] == "attack_directly" or command[0] == "ad":
-        attacker_idx = int(command[1])
-        duel.attack_directly(attacker_idx)
-      elif command[0] == "monster_effect" or command[0] == "me":
-        board_idx = int(command[1])
-        duel.activate_on_board(board_idx)
-      elif command[0] == "pass" or command[0] == "p":
-        duel.end_turn()
-        duel.start_turn()
-
-    except InvalidSyntax as e:
-      print(f"Invalid Syntax: {e}")
-    except InvalidMove as e:
-      print(f"Invalid Move: {e}")
-    except GameOver as e:
-      print(f"\nGame Over. {e}")
-      break
 
 
 if __name__ == '__main__':

@@ -1,4 +1,3 @@
-import pygame
 import random
 
 from callbacks import *
@@ -84,13 +83,12 @@ class Template:
       self.health = data.health
     self.description = data.description
 
-    for fn in functions:
+    for fn in triggers:
       if hasattr(data, fn):
         script = getattr(data, fn)
+        setattr(self, fn, script)
       else:
-        script = setattr(self, fn, "")
         continue
-      setattr(self, fn, script)
 
 
   def create_instance(self, owner, other, io):
@@ -122,6 +120,8 @@ class Card:
 
     field = owner.board + other.board
 
+    prompt_user_activate = self.io.prompt_user_activate
+
     get_adjacent = self.io.get_adjacent
     # target empty space
     # returns idx into board (-1 if no space)
@@ -133,6 +133,7 @@ class Card:
     # returns card of monster
     target_field = self.io.target_field
     target_owner_field = self.io.target_owner_field
+    can_target_other_field = self.io.can_target_other_field
     target_other_field = self.io.target_other_field
 
     # select monster on the field
@@ -157,7 +158,12 @@ class Card:
     flip_coin = self.io.flip_coin
 
     try:
-      exec(script)
+      ldict = {}
+      exec(script, globals() | locals(), ldict)
+      if "retval" in ldict:
+        return ldict["retval"]
+      else:
+        return
     except InvalidMove as e:
       print(e)
       pass
@@ -208,19 +214,21 @@ class Card:
   def take_damage(self, source, amount):
     if amount > 0:
       if source == "battle":
-        amount = self.effect("on_take_battle_damage", amount)
-    if amount > 0:
-      amount = self.effect("on_take_damage", amount)
+        self.effect("on_take_battle_damage")
+      self.effect("on_take_damage", amount)
       self.health -= amount
 
-  def set(self, source, attack=0, health=0):
-    pass
+  def set(self, source, attack=None, health=None):
+    if attack is not None:
+      self.attack = attack
+    if health is not None:
+      self.health = health
 
   def effect(self, trigger, *args):
-    try:
+    if hasattr(self.template, trigger):
       return self.interp(getattr(self.template, trigger), *args)
-    except:
-      return self.default(trigger)
+    else:
+      return self.default(trigger, *args)
 
   def can(self, action, *args):
     """
@@ -228,9 +236,9 @@ class Card:
     """
 
     trigger = f"can_{action}"
-    try:
+    if hasattr(self.template, trigger):
       return self.interp(getattr(self.template, trigger), *args)
-    except:
+    else:
       return self.default(trigger, *args)
 
   def default(self, trigger, *args):
@@ -255,6 +263,10 @@ class Card:
     elif trigger == "defendee_damage_calc":
       other, amount = args
       return amount
+    elif "opt" in trigger and "cost" in trigger:
+      return hasattr(self.template, trigger[:-5]) and self.io.prompt_user_activate(self.name)
+    elif "cost" in trigger:
+      return True
     else:
       return
 
