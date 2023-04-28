@@ -170,8 +170,20 @@ class Duel():
     # first player's turn
     self.turn(first=True)
 
-    while True:
-      self.turn()
+    try:
+      while True:
+        self.turn()
+    except GameOver as e:
+      if e.winner == 0:
+        # draw
+        self.p1.io.game_over(0)
+        self.p2.io.game_over(0)
+      else:
+        winner = self.p1 if e.winner == 1 else self.p2
+        loser = self.p2 if e.winner == 1 else self.p1
+        winner.io.game_over(1)
+        loser.io.game_over(-1)
+
 
   def turn(self, first=False):
     self.start_turn(first)
@@ -234,20 +246,25 @@ class Duel():
 
     while True:
       response = self.turn_p.io.main_phase_prompt(main_phase_2)
-      match response:
-        case ["pass"]:
-          break
-        case ["summon", hand_idx, board_idx]:
-          card = self.play_hand(hand_idx)
-          self.summon(card, board_idx)
-        case ["activate_hand", hand_idx]:
-          pass
-          # TODO
-        case ["activate_board", board_idx]:
-          pass
-          # TODO
-        case [other, *_] | [other]:
-          raise UnrecognizedCommand(other)
+      try:
+        match response:
+          case ["pass"]:
+            break
+          case ["summon", hand_idx, board_idx]:
+            card = self.play_hand(hand_idx)
+            self.summon(card, board_idx)
+          case ["activate_hand", hand_idx]:
+            pass
+            # TODO
+          case ["activate_board", board_idx]:
+            pass
+            # TODO
+          case [other, *_] | [other]:
+            raise UnrecognizedCommand(other)
+      except UnrecognizedCommand as e:
+        self.turn_p.io.display_message(f"Unrecognized command: {e.message}")
+      except InvalidMove as e:
+        self.turn_p.io.display_message(f"Illegal Move: {e.message}")
       self.check_field()
     self.phase_effects("end")
 
@@ -258,23 +275,28 @@ class Duel():
 
     while True:
       response = self.turn_p.io.battle_phase_prompt()
-      match response:
-        case ["pass"]:
-          break
-        case ["attack", attacker_idx, attackee_idx]:
-          self.attack(attacker_idx, attackee_idx)
-        case ["attack_directly", attacker_idx]:
-          self.attack_directly(attacker_idx)
-          # TODO
-        # QUICK EFFECTS ONLY
-        # case ["activate_hand", hand_idx]:
-        #   pass
-          # TODO
-        # case ["activate_board", board_idx]:
-         #  pass
-          # TODO
-        case [other, *_] | [other]:
-          raise UnrecognizedCommand(other)
+      try:
+        match response:
+          case ["pass"]:
+            break
+          case ["attack", attacker_idx, attackee_idx]:
+            self.attack(attacker_idx, attackee_idx)
+          case ["attack_directly", attacker_idx]:
+            self.attack_directly(attacker_idx)
+            # TODO
+          # QUICK EFFECTS ONLY
+          # case ["activate_hand", hand_idx]:
+          #   pass
+            # TODO
+          # case ["activate_board", board_idx]:
+           #  pass
+            # TODO
+          case [other, *_] | [other]:
+            raise UnrecognizedCommand(other)
+      except UnrecognizedCommand as e:
+        self.turn_p.io.display_message(f"Unrecognized command: {e.message}")
+      except InvalidMove as e:
+        self.turn_p.io.display_message(f"Illegal Move: {e.message}")
       self.check_field()
     self.phase_effects("end")
 
@@ -362,106 +384,6 @@ class Duel():
         card.effect(f"opt_{timing}_phase_{phase}")
         self.check_field()
 
-
-  ### IO ###
-
-  def prompt_user_activate(self, effect_name, player="turn"):
-    active = self.get_active_player(player)
-    return active.io.prompt_user_activate(effect_name)
-
-  def can_target_other_field(self, player="turn"):
-    inactive = self.get_inactive_player(player)
-    for card in inactive.board:
-      if card is not None:
-        return True
-    return False
-
-
-  def target_other_field(self, player="turn"):
-    if self.can_target_other_field(player):
-      active = self.get_active_player(player)
-      idx = active.io.target_other_field(player)
-
-      inactive = self.get_inactive_player(player)
-      card = inactive.board[idx]
-      return card
-    else:
-      raise InvalidMove("No valid targets")
-
-  def target_field(self, player="turn"):
-    raise NotImplemented()
-
-  def flip_coin(self, player="turn"):
-    coin = random.randint(0, 1)
-    active = self.get_active_player(player)
-    active.io.flip_coin(coin, player)
-    return coin
-
-  def get_adjacent(self, card, player="turn"):
-    active = self.get_active_player(turn)
-    for i, c in enumerate(active.board):
-      if c == card:
-        break
-    else: # for else
-      return []
-
-    adjs = []
-    if i > 0 and active.board[i - 1]:
-      adjs.append(active.board[i - 1])
-    if i < len(active.board) - 1 and active.board[i + 1]:
-      adjs.append(active.board[i + 1])
-
-    return adjs
-
-  # TEMP STUFF
-
-  def target_owner_board_empty(self):
-    raise
-
-  def target_other_board_empty(self):
-    raise
-
-    # target card on the field
-    # optionally accepts a lambda to filter
-    # returns card of monster
-  def target_field(self):
-    raise
-
-  def target_owner_field(self):
-    pass
-
-  def select_field(self):
-    raise
-
-  def select_owner_field(self):
-    raise
-
-  def select_other_field(self):
-    raise
-
-
-    # select card from deck
-    # optionally accepts a lambda to filter
-    # returns card
-  def select_owner_deck(self):
-    raise
-
-    # select_other_deck = self.io.select_other_deck
-
-    # select card from deck
-    # optionally accepts a lambda to filter
-    # returns card
-  def select_owner_graveyard(self):
-    raise
-
-  def select_other_graveyard(self):
-    raise
-
-
-
-
-
-
   ### CARD ACTIONS ###
   # All of these functions accept a player ["turn", "other"] to bind the
   # effect to (ie., which player did it)
@@ -495,6 +417,9 @@ class Duel():
       raise InvalidMove("Cannot summon; board occupied")
 
     active.board[board_idx] = card
+
+    card.attack = card.original_attack
+    card.health = card.original_health
 
     card.effect("if_summon_cost")
     card.effect("if_summon")

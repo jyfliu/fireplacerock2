@@ -120,42 +120,42 @@ class Card:
 
     field = owner.board + other.board
 
-    prompt_user_activate = self.io.prompt_user_activate
+    prompt_user_activate = self.prompt_user_activate
 
-    get_adjacent = self.io.get_adjacent
+    get_adjacent = self.get_adjacent
     # target empty space
     # returns idx into board (-1 if no space)
-    target_owner_board_empty = self.io.target_owner_board_empty
-    target_other_board_empty = self.io.target_other_board_empty
+    # target_owner_board_empty = self.target_self_board_empty
+    # target_other_board_empty = self.target_other_board_empty
 
     # target card on the field
     # optionally accepts a lambda to filter
     # returns card of monster
-    target_field = self.io.target_field
-    target_owner_field = self.io.target_owner_field
-    can_target_other_field = self.io.can_target_other_field
-    target_other_field = self.io.target_other_field
+    target_field = self.target_field
+    # target_owner_field = self.target_self_field
+    can_target_other_field = self.can_target_other_field
+    target_other_field = self.target_other_field
 
     # select monster on the field
     # optionally accepts a lambda to filter
     # returns monster
-    select_field = self.io.select_field
-    select_owner_field = self.io.select_owner_field
-    select_other_field = self.io.select_other_field
+    # select_field = self.select_field
+    # select_owner_field = self.select_self_field
+    # select_other_field = self.select_other_field
 
     # select card from deck
     # optionally accepts a lambda to filter
     # returns card
-    select_owner_deck = self.io.select_owner_deck
-    # select_other_deck = self.io.select_other_deck
+    # select_owner_deck = self.select_self_deck
+    # select_other_deck = self.select_other_deck
 
     # select card from deck
     # optionally accepts a lambda to filter
     # returns card
-    select_owner_graveyard = self.io.select_owner_graveyard
-    select_other_graveyard = self.io.select_other_graveyard
+    # select_owner_graveyard = self.select_self_graveyard
+    # select_other_graveyard = self.select_other_graveyard
 
-    flip_coin = self.io.flip_coin
+    flip_coin = self.flip_coin
 
     try:
       ldict = {}
@@ -167,6 +167,51 @@ class Card:
     except InvalidMove as e:
       print(e)
       pass
+
+  ### IO ###
+
+  def prompt_user_activate(self):
+    return self.owner.io.prompt_user_activate(self.name)
+
+  def can_target_other_field(self):
+    for card in self.other.board:
+      if card is not None:
+        return True
+    return False
+
+
+  def target_other_field(self):
+    if self.can_target_other_field():
+      idx = self.owner.io.target_other_field(player)
+
+      card = self.other.board[idx]
+      return card
+    else:
+      raise InvalidMove("No valid targets")
+
+  def target_field(self):
+    raise NotImplemented()
+
+  def flip_coin(self):
+    coin = random.randint(0, 1)
+    self.owner.io.flip_coin(coin)
+    self.other.io.flip_coin(coin)
+    return coin
+
+  def get_adjacent(self):
+    for i, c in enumerate(self.owner.board):
+      if c == card:
+        break
+    else: # for else
+      return []
+
+    adjs = []
+    if i > 0 and self.owner.board[i - 1]:
+      adjs.append(self.owner.board[i - 1])
+    if i < len(self.owner.board) - 1 and self.owner.board[i + 1]:
+      adjs.append(self.owner.board[i + 1])
+
+    return adjs
 
   ### STATUS ###
 
@@ -226,6 +271,7 @@ class Card:
 
   def effect(self, trigger, *args):
     if hasattr(self.template, trigger):
+      print(f"{self.name} activates its effect {trigger}")
       return self.interp(getattr(self.template, trigger), *args)
     else:
       return self.default(trigger, *args)

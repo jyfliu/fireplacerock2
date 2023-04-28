@@ -43,7 +43,7 @@ class Headless:
     return x == "y"
 
 
-  def target_owner_board_empty(self):
+  def target_self_board_empty(self):
     raise
 
   def target_other_board_empty(self):
@@ -55,7 +55,7 @@ class Headless:
   def target_field(self):
     raise
 
-  def target_owner_field(self):
+  def target_self_field(self):
     pass
 
   def target_other_field(self, filter=lambda x: True):
@@ -69,7 +69,7 @@ class Headless:
   def select_field(self):
     raise
 
-  def select_owner_field(self):
+  def select_self_field(self):
     raise
 
   def select_other_field(self):
@@ -79,7 +79,7 @@ class Headless:
     # select card from deck
     # optionally accepts a lambda to filter
     # returns card
-  def select_owner_deck(self):
+  def select_self_deck(self):
     raise
 
     # select_other_deck = self.io.select_other_deck
@@ -87,18 +87,27 @@ class Headless:
     # select card from deck
     # optionally accepts a lambda to filter
     # returns card
-  def select_owner_graveyard(self):
+  def select_self_graveyard(self):
     raise
 
   def select_other_graveyard(self):
     raise
 
 
-
-
-
-  def flip_coin(self, result, player="turn"):
+  def flip_coin(self, result):
     print(f"Flipped a coin: {'Heads!' if result == 1 else 'Tails!'}")
+
+
+  def display_message(self, msg):
+    print(msg)
+
+  def game_over(self, winner):
+    if winner == 0:
+      print("Game drawn")
+    elif winner == 1:
+      print("You win!!")
+    else:
+      print("You lose :(")
 
   def print_board(self):
     print(f"\n{self.player_name}'s turn")
