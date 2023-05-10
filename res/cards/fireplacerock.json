@@ -9,8 +9,9 @@
         "description": "Once per turn, you can pay 1 mana, this card\u2019s effect becomes another face-up monster\u2019s effect for rest this turn.",
         "id": 0,
         "rarity": "UR",
-        "can_activate": "if self.has_status(\"MEW_ACTIVATED_EFFECT\"):\n  retval = self.interp(self.mimic.can_activate)\nelse:\n  retval = can_target_field() and owner.mana >= 1",
-        "on_activate": "if self.has_status(\"MEW_ACTIVATED_EFFECT\"):\n  self.interp(self.mimic.on_activate)\nelse:\n  card = target_field()\n  self.mimic = card.template\n  self.status.append((\"MEW_ACTIVATED_EFFECT\", 0, \"END\"))",
+        "can_activate": "if self.has_status(\"MEW_ACTIVATED_EFFECT\"):\n  retval = self.interp(self.mimic.can_activate)\nelse:\n  retval = can_select_field() and owner.can_pay(1)",
+        "on_activate_cost": "if self.has_status(\"MEW_ACTIVATED_EFFECT\"):\n  self.interp(self.mimic.on_activate_cost)\nelse:\n  owner.pay(1)\n  self.target = select_field()",
+        "on_activate": "if self.has_status(\"MEW_ACTIVATED_EFFECT\"):\n  self.interp(self.mimic.on_activate)\nelse:\n  self.mimic = self.target.template\n  self.status.append((\"MEW_ACTIVATED_EFFECT\", 0, \"END\"))",
         "uuid": "mew"
     },
     "unown": {
@@ -878,10 +879,11 @@
         "attack": 300,
         "health": 100,
         "flavour": "The ears appear to be delicate. If they are touched roughly, it kicks with its graceful legs.",
-        "description": "When this card is summoned, target one monster on the field; deal 100 damage to it.",
+        "description": "When this card is summoned, you can target one monster on the field; deal 100 damage to it.",
         "id": 80,
         "rarity": "C",
-        "if_summon": "card = target_other_field();card.health -= 100;",
+        "opt_if_summon_cost": "retval = can_target_other_field() and prompt_user_activate()\nif retval:\n  self.target = target_other_field()",
+        "opt_if_summon": "self.target.health -= 100",
         "uuid": "lopunny"
     },
     "megalopunny": {
@@ -893,8 +895,8 @@
         "description": "When this card is summoned, you can target one monster on the field; deal 100 damage to it, and if you do, it is silenced and cannot attack until the end of the next turn. You cannot summon any \u201cMega\u201d for the rest of this duel, except Mega Lopunny.",
         "id": 81,
         "rarity": "UR",
-        "opt_if_summon_cost": "retval = can_target_other_field() and prompt_user_activate(self.name)",
-        "opt_if_summon": "card = target_other_field();card.health -= 100;card.status.append(('SILENCE', 1, 'END'))",
+        "opt_if_summon_cost": "retval = can_target_other_field() and prompt_user_activate()\nif retval:\n  self.target = target_other_field()",
+        "opt_if_summon": "self.target.health -= 100;self.target.apply_status(self, 'SILENCE', 1, 'END')",
         "uuid": "megalopunny"
     },
     "beedrill": {

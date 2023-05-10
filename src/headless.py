@@ -1,7 +1,8 @@
-import json
+import yaml
 import card_api
 import duel_api
 import io
+import random
 
 from easydict import EasyDict as edict
 from callbacks import *
@@ -43,56 +44,31 @@ class Headless:
     return x == "y"
 
 
-  def target_self_board_empty(self):
-    raise
+  def prompt_user_select(self, cards):
+    print(f"Select a card [0-{len(cards) - 1}]")
+    for (loc, card) in cards:
+      # loc in ["hand", "field", "deck", "banished",
+      # "other_hand", "other_field", "other_deck", "other_banished"]
+      print(f"{loc + ':': <15} {card}")
+    while True:
+      idx = int(input())
+      if 0 <= idx < len(cards):
+        return idx
+      print(f"Select a card [0-{len(cards) - 1}]")
 
-  def target_other_board_empty(self):
-    raise
-
-    # target card on the field
-    # optionally accepts a lambda to filter
-    # returns card of monster
-  def target_field(self):
-    raise
-
-  def target_self_field(self):
-    pass
-
-  def target_other_field(self, filter=lambda x: True):
-    print("Target a card on the opposing field [0-4]")
-    idx = int(input())
-    return idx
-
-    # select monster on the field
-    # optionally accepts a lambda to filter
-    # returns monster
-  def select_field(self):
-    raise
-
-  def select_self_field(self):
-    raise
-
-  def select_other_field(self):
-    raise
+  def prompt_user_select_board(self, nums):
+    print(f"Select an empty board index: {nums}")
+    while True:
+      idx = int(input())
+      if idx in nums:
+        return idx
+      print(f"Select an empty board index: {nums}")
 
 
-    # select card from deck
-    # optionally accepts a lambda to filter
-    # returns card
-  def select_self_deck(self):
-    raise
-
-    # select_other_deck = self.io.select_other_deck
-
-    # select card from deck
-    # optionally accepts a lambda to filter
-    # returns card
-  def select_self_graveyard(self):
-    raise
-
-  def select_other_graveyard(self):
-    raise
-
+  #def target_other_field(self, filter=lambda x: True):
+  #  print("Target a card on the opposing field [0-4]")
+  #  idx = int(input())
+  #  return idx
 
   def flip_coin(self, result):
     print(f"Flipped a coin: {'Heads!' if result == 1 else 'Tails!'}")
@@ -139,7 +115,7 @@ class Headless:
         case ["activate_hand", hand_idx] | ["ah", hand_idx]:
           return ["activate_hand", int(hand_idx)]
         case ["activate_board", board_idx] | ["ab", board_idx]:
-          return ["activate_board", int(boar_idx)]
+          return ["activate_board", int(board_idx)]
         case ["pass"] | ["p"]:
           return ["pass"]
         case ["end"] | ["e"]:
@@ -179,14 +155,34 @@ class Headless:
 
 
 def test():
-  with open("../res/cards/fireplacerock.json", "r") as f:
-    cards = json.load(f)
+  with open("../res/cards/fireplacerock.yaml", "r") as f:
+    cards = yaml.safe_load(f)
     cards = edict(cards)
 
-  deck1 = ["magikarp", "magikarp", "magikarp", "pikachu", "pikachu", "pikachu", "mudkip", "mudkip", "mudkip", "grovyle", "megalopunny", "megalopunny", "megalopunny"]
-  deck2 = ["magikarp", "magikarp", "magikarp", "pikachu", "pikachu", "pikachu", "mudkip", "mudkip", "mudkip", "grovyle", "megalopunny", "megalopunny", "megalopunny"]
-  deck1 = ["jirachi"] * 100
-  deck2 = ["hooh"]*100
+  names = [ # all working cards
+    "mew", "unown",
+    # "sprightelf",
+    "magikarp", "mudkip", "pikachu", "grovyle", "ampharos",
+    "blastoise", "wailord", "snorlax", "garchomp", "jirachi", "hooh",
+    # "kyogre", "groudon", "giratina",
+    "arceus", "gallade", "heracross", "shuckle", "breloom", "chansey",
+    "tyranitar", "gengar", "dragonite",
+    # "gyarados"
+    "salamence", "lugia", "lapras", "turtwig",
+    "sprightjet", "sprightblue", "sprightpixie", "windupkitten",
+    "livetwinlilla", "livetwinkisikil", "livetwintroublesunny", "omen",
+    # "brimstone", "viper",
+    "reyna",
+    # "cypher", "neon",
+    "jett", "phoenix", "dartmonkey",
+    # "supermonkey", "johnnywyles", "riverwyles", "redamogus", "zoe"
+    "lopunny", "megalopunny",
+  ]
+
+  deck1 = ["dartmonkey"] * 40
+  deck2 = ["mew"] * 40
+  deck1 = random.sample(names, k=16) * 3
+  deck2 = random.sample(names, k=16) * 3
 
   deck1 = [cards[name] for name in deck1]
   deck1 = [card_api.Template(card) for card in deck1]

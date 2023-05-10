@@ -91,6 +91,7 @@ class Player():
     self.deck = CardList()
     self.board = CardList([None] * 5)
     self.graveyard = CardList()
+    self.banished = CardList()
 
   @property
   def field(self):
@@ -99,6 +100,9 @@ class Player():
       if card is not None:
         field.append(card)
     return field
+
+  def take_damage(self, source, amount):
+    self.life -= amount
 
   def can_pay(self, amount):
     return self.mana >= amount
@@ -164,8 +168,9 @@ class Duel():
     p2 = self.other_p
 
     # both players draw 3
-    p1.hand.extend(p1.deck.pop(3)).sort()
-    p2.hand.extend(p2.deck.pop(3)).sort()
+    for _ in range(3):
+      self.draw(p1)
+      self.draw(p2)
 
     # first player's turn
     self.turn(first=True)
@@ -202,6 +207,7 @@ class Duel():
     self.end_turn()
 
   def start_turn(self, first=False):
+    self.check_game_over()
     self.turn_p.mana_max += 1
     self.turn_p.mana = self.turn_p.mana_max
 
@@ -212,6 +218,8 @@ class Duel():
     for card in self.other_p.board:
       if card:
         card.on_end_turn()
+
+    self.check_game_over()
 
     self.cur_turn = 3 - self.cur_turn
     self.turn_p = self.p1 if self.cur_turn == 1 else self.p2
@@ -225,7 +233,7 @@ class Duel():
     if not first:
       if not self.turn_p.deck:
         raise GameOver(3 - self.cur_turn)
-      self.turn_p.hand.append(self.turn_p.deck.pop()).sort()
+      self.draw(self.turn_p)
 
     self.turn_p.io.draw_phase_prompt()
 
@@ -257,8 +265,8 @@ class Duel():
             pass
             # TODO
           case ["activate_board", board_idx]:
-            pass
-            # TODO
+            card = self.turn_p.board[board_idx]
+            self.activate_board(card)
           case [other, *_] | [other]:
             raise UnrecognizedCommand(other)
       except UnrecognizedCommand as e:
@@ -266,6 +274,7 @@ class Duel():
       except InvalidMove as e:
         self.turn_p.io.display_message(f"Illegal Move: {e.message}")
       self.check_field()
+      self.check_game_over()
     self.phase_effects("end")
 
 
@@ -298,14 +307,19 @@ class Duel():
       except InvalidMove as e:
         self.turn_p.io.display_message(f"Illegal Move: {e.message}")
       self.check_field()
+      self.check_game_over()
     self.phase_effects("end")
 
   def end_phase(self):
     self.cur_phase = "end"
     self.phase_effects()
+    self.check_field()
+    self.check_game_over()
 
 
   def check_game_over(self):
+    if self.turn_p.life <= 0 and self.other_p.life <= 0:
+      raise GameOver(0)
     if self.turn_p.life <= 0:
       raise GameOver(self.turn_p.id)
     if self.other_p.life <= 0:
@@ -383,6 +397,7 @@ class Duel():
       if card:
         card.effect(f"opt_{timing}_phase_{phase}")
         self.check_field()
+    self.check_game_over()
 
   ### CARD ACTIONS ###
   # All of these functions accept a player ["turn", "other"] to bind the
@@ -418,8 +433,7 @@ class Duel():
 
     active.board[board_idx] = card
 
-    card.attack = card.original_attack
-    card.health = card.original_health
+    card.reset_stats()
 
     card.effect("if_summon_cost")
     card.effect("if_summon")
@@ -427,27 +441,87 @@ class Duel():
     if act:
       card.effect("opt_if_summon")
 
-  def remove_field(self, card, player="turn"):
+
+  def activate_board(self, card, player="turn"):
+    if card is None:
+      raise InvalidMove("Cannot activate effect; no monster")
+    if not card.can("activate"):
+      raise InvalidMove("Card cannot activate effect")
+
+    card.effect("on_activate_cost")
+    card.effect("on_activate")
+
+
+
+  def deck_to_hand(self, card):
+    card.owner.deck.remove(card).shuffle()
+    card.owner.hand.add(card)
+
+
+  def send_graveyard(self, card):
+    return self.send_graveyard_multiple([card])
+
+
+  def bounce(self, card):
     if card is None:
       return
 
-    active = self.get_active_player(player)
-    remove_idxs = []
-    for i, c in enumerate(active.board):
-      if c == card:
-        remove_idxs.append(i)
-    for i in remove_idxs:
-      active.board[i] = None
+    card.owner.board.delete(card)
+    card.owner.hand.add(card)
+    card.reset_stats()
 
+  def draw(self, player):
+    player.hand.append(player.deck.pop()).sort()
 
-  def send_graveyard(self, card, player="turn"):
+  def remove_field(self, card):
     if card is None:
       return
+    card.owner.board.delete(card)
 
-    player = self.get_active_player(player)
-    player.graveyard.append(card)
-    card.effect("if_send_graveyard")
-    card.effect("opt_if_send_graveyard")
+  def remove_graveyard(self, card):
+    if card is None:
+      return
+    card.owner.graveyard.remove(card)
+
+  def destroy(self, card):
+    return self.destroy_multiple([card])
+
+  def send_graveyard_multiple(self, cards):
+    for card in cards:
+      if card is None:
+        continue
+      card.owner.graveyard.append(card)
+
+    for card in cards:
+      if card is None:
+        continue
+      card.effect("if_send_graveyard")
+      card.effect("opt_if_send_graveyard")
+
+
+  def destroy_multiple(self, cards):
+    active = self.get_active_player("turn")
+    inactive = self.get_inactive_player("turn")
+
+    for card in cards:
+      # delete is a no-op if card isn't on the board
+      card.owner.board.delete(card)
+
+    # destroyed effects
+    for card in cards:
+      if card is not None and card.owner == self.turn_p:
+        card.effect("if_destroyed")
+    for card in cards:
+      if card is not None and card.owner == self.other_p:
+        card.effect("if_destroyed")
+    for card in cards:
+      if card is not None and card.owner == self.turn_p:
+        card.effect("opt_if_destroyed")
+    for card in cards:
+      if card is not None and card.owner == self.other_p:
+        card.effect("opt_if_destroyed")
+
+    self.send_graveyard_multiple(cards)
 
 
   def activate_on_board(self, board_idx, player="turn"):
@@ -483,9 +557,16 @@ class Duel():
 
     attacker.effect("if_attack_directly")
     attacker.effect("opt_if_attack_directly")
-    inactive.life -= attacker.attack
 
-    attacker.status.append(("CANNOT_ATTACK", 0, "END"))
+    # damage calc
+    forward = attacker.effect("attacker_direct_damage_calc")
+
+    inactive.life -= forward
+
+    attacker.effect("end_attack_directly")
+    attacker.effect("opt_end_attack_directly")
+
+    attacker.apply_status("god", "CANNOT_ATTACK", 0, "END")
 
     self.check_game_over()
 
@@ -538,6 +619,12 @@ class Duel():
     attackee_destroyed = attackee.health <= 0
     attacker_destroyed = attacker.health <= 0
 
+    # remove cards from field
+    if attacker_destroyed:
+      active.board.delete(attacker)
+    if attackee_destroyed:
+      inactive.board.delete(attackee)
+
     # attacker effects
     if attackee_destroyed:
       attacker.effect("if_destroy_battle", attackee)
@@ -563,17 +650,13 @@ class Duel():
       attackee.effect("opt_if_destroyed_battle", attacker)
       attackee.effect("opt_if_destroyed", attackee)
 
-    # remove cards from field
-    if attacker_destroyed:
-      active.board.delete(attacker)
-    if attackee_destroyed:
-      inactive.board.delete(attackee)
-
     # send cards to graveyard
+    to_gy = []
     if attacker_destroyed:
-      self.send_graveyard(attacker, player="turn")
+      to_gy.append(attacker)
     if attackee_destroyed:
-      self.send_graveyard(attackee, player="other")
+      to_gy.append(attackee)
+    self.send_graveyard_multiple(to_gy)
 
     attacker.effect("end_attack", attackee)
     attackee.effect("end_attacked", attacker)
@@ -581,7 +664,7 @@ class Duel():
     attacker.effect("opt_end_attack", attackee)
     attackee.effect("opt_end_attacked", attacker)
 
-    attacker.status.append(("CANNOT_ATTACK", 0, "END"))
+    attacker.apply_status("god", "CANNOT_ATTACK", 0, "END")
 
     self.check_game_over()
 

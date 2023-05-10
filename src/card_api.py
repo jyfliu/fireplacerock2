@@ -47,6 +47,7 @@ triggers = [
   "if_attack_directly", # if this monster is about to attack directly
   "if_attacked", # if this monster is selected for an attack
   "attacker_damage_calc", # (other) => attack damage done
+  "attacker_direct_damage_calc", # (other) => attack damage done
   "attackee_damage_calc", # (other, amount) => attack damage done
   "defender_damage_calc", # (other) => recoil damage done
   "defendee_damage_calc", # (other, amount) => recoil damage done
@@ -70,6 +71,7 @@ triggers = [
 
 statuses = [
   "SILENCE",
+  "PERISH",
 ]
 
 class Template:
@@ -113,6 +115,11 @@ class Card:
     self.other = other
     self.io = io
 
+  def reset_stats(self):
+    self.attack = self.original_attack
+    self.health = self.original_health
+    self.status = []
+
   def interp(self, script, *args):
     owner = self.owner
     other = self.other
@@ -131,29 +138,46 @@ class Card:
     # target card on the field
     # optionally accepts a lambda to filter
     # returns card of monster
+    can_target_field = self.can_target_field
     target_field = self.target_field
-    # target_owner_field = self.target_self_field
+    can_target_owner_field = self.can_target_owner_field
+    target_owner_field = self.target_owner_field
     can_target_other_field = self.can_target_other_field
     target_other_field = self.target_other_field
 
     # select monster on the field
     # optionally accepts a lambda to filter
     # returns monster
-    # select_field = self.select_field
-    # select_owner_field = self.select_self_field
-    # select_other_field = self.select_other_field
+    can_select_field = self.can_select_field
+    select_field = self.select_field
+    can_select_owner_field = self.can_select_owner_field
+    select_owner_field = self.select_owner_field
+    can_select_other_field = self.can_select_other_field
+    select_other_field = self.select_other_field
+
+    # select card from deck
+    can_select_owner_deck = self.can_select_owner_deck
+    select_owner_deck = self.select_owner_deck
+    can_select_other_deck = self.can_select_other_deck
+    select_other_deck = self.select_other_deck
 
     # select card from deck
     # optionally accepts a lambda to filter
     # returns card
-    # select_owner_deck = self.select_self_deck
+    # select_owner_deck = self.select_owner_deck
     # select_other_deck = self.select_other_deck
 
-    # select card from deck
-    # optionally accepts a lambda to filter
-    # returns card
-    # select_owner_graveyard = self.select_self_graveyard
-    # select_other_graveyard = self.select_other_graveyard
+    # select card from gy
+    can_select_owner_graveyard = self.can_select_owner_graveyard
+    select_owner_graveyard = self.select_owner_graveyard
+    can_select_other_graveyard = self.can_select_other_graveyard
+    select_other_graveyard = self.select_other_graveyard
+
+    # select empty spot
+    can_select_owner_board = self.can_select_owner_board
+    select_owner_board = self.select_owner_board
+    can_select_other_board = self.can_select_other_board
+    select_other_board = self.select_other_board
 
     flip_coin = self.flip_coin
 
@@ -173,24 +197,147 @@ class Card:
   def prompt_user_activate(self):
     return self.owner.io.prompt_user_activate(self.name)
 
-  def can_target_other_field(self):
-    for card in self.other.board:
-      if card is not None:
-        return True
-    return False
+  def select_cards(self, filter=lambda x: True):
+    cards = [
+        ("field", card)
+        for card in self.owner.board
+        if card is not None and filter(card)
+    ] + [
+        ("hand", card)
+        for card in self.owner.hand
+        if card is not None and filter(card)
+    ] + [
+        ("deck", card)
+        for card in self.owner.deck
+        if card is not None and filter(card)
+    ] + [
+        ("graveyard", card)
+        for card in self.owner.graveyard
+        if card is not None and filter(card)
+    ] + [
+        ("banished", card)
+        for card in self.owner.banished
+        if card is not None and filter(card)
+    ] + [
+        ("other_field", card)
+        for card in self.other.board
+        if card is not None and filter(card)
+    ] + [
+        ("other_hand", card)
+        for card in self.other.hand
+        if card is not None and filter(card)
+    ] + [
+        ("other_deck", card)
+        for card in self.other.deck
+        if card is not None and filter(card)
+    ] + [
+        ("other_graveyard", card)
+        for card in self.other.graveyard
+        if card is not None and filter(card)
+    ] + [
+        ("other_banished", card)
+        for card in self.other.banished
+        if card is not None and filter(card)
+    ]
+    return cards
 
 
-  def target_other_field(self):
-    if self.can_target_other_field():
-      idx = self.owner.io.target_other_field(player)
+  def can_select(self, filter=lambda x: True):
+    return len(self.select_cards(filter)) > 0
 
-      card = self.other.board[idx]
+  def select(self, filter=lambda x: True):
+    if self.can_select(filter):
+      cards = self.select_cards(filter)
+      assert len(cards) > 0
+      idx = self.owner.io.prompt_user_select(cards)
+
+      _, card = cards[idx]
       return card
     else:
       raise InvalidMove("No valid targets")
 
-  def target_field(self):
-    raise NotImplemented()
+
+  def can_target_owner_field(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.owner.board and filter(x))
+
+  def target_owner_field(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.owner.board and filter(x))
+
+  def can_target_other_field(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.other.board and filter(x))
+
+  def target_other_field(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.other.board and filter(x))
+
+  def can_target_field(self, filter=lambda x: True):
+    return self.can_select(lambda x: (x in self.other.board or x in self.owner.board) and filter(x))
+
+  def target_field(self, filter=lambda x: True):
+    return self.select(lambda x: (x in self.other.board or x in self.owner.board) and filter(x))
+
+  def can_select_owner_field(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.owner.board and filter(x))
+
+  def select_owner_field(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.owner.board and filter(x))
+
+  def can_select_other_field(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.other.board and filter(x))
+
+  def select_other_field(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.other.board and filter(x))
+
+  def can_select_field(self, filter=lambda x: True):
+    return self.can_select(lambda x: (x in self.other.board or x in self.owner.board) and filter(x))
+
+  def select_field(self, filter=lambda x: True):
+    return self.select(lambda x: (x in self.other.board or x in self.owner.board) and filter(x))
+
+  def can_select_owner_deck(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.owner.deck and filter(x))
+
+  def select_owner_deck(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.owner.deck and filter(x))
+
+  def can_select_other_deck(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.other.deck and filter(x))
+
+  def select_other_deck(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.other.deck and filter(x))
+
+  def can_select_owner_graveyard(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.owner.graveyard and filter(x))
+
+  def select_owner_graveyard(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.owner.graveyard and filter(x))
+
+  def can_select_other_graveyard(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.other.graveyard and filter(x))
+
+  def select_other_graveyard(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.other.graveyard and filter(x))
+
+  def can_select_owner_board(self):
+    return None in self.owner.board
+
+  def select_owner_board(self):
+    nums = []
+    for i, card in enumerate(self.owner.board):
+      if card is None:
+        nums.append(i)
+    idx = self.owner.io.prompt_user_select_board(nums)
+    return idx
+
+  def can_select_other_board(self):
+    return None in self.other.board
+
+  def select_other_board(self):
+    nums = []
+    for i, card in enumerate(self.other.board):
+      if card is None:
+        nums.append(i)
+    idx = self.owner.io.prompt_user_select_board(nums)
+    return idx
 
   def flip_coin(self):
     coin = random.randint(0, 1)
@@ -200,7 +347,7 @@ class Card:
 
   def get_adjacent(self):
     for i, c in enumerate(self.owner.board):
-      if c == card:
+      if c == self:
         break
     else: # for else
       return []
@@ -214,6 +361,9 @@ class Card:
     return adjs
 
   ### STATUS ###
+  # SILENCE
+  # UNTARGETABLE
+  #
 
   def has_status(self, status):
     for st in self.status:
@@ -222,7 +372,7 @@ class Card:
     return False
 
   def apply_status(self, source, status, duration=0, expiry="end"):
-    self.status.append((status, duration, expiry))
+    self.status.append([status, duration, expiry])
 
   def on_end_turn(self):
     new_status = []
@@ -230,6 +380,8 @@ class Card:
       if st[1] < 0:
         new_status.append(st)
       elif st[1] == 0:
+        if st[0] == "PERISH":
+          self.io.destroy(self)
         pass # expire status (NEED TO CHECK WHAT STGE IT IS!!)
       else:
         st[1] = st[1] - 1
@@ -278,7 +430,8 @@ class Card:
 
   def can(self, action, *args):
     """
-    action in ["attack", "summon"]
+    action in ["attack", "summon", "target", "activate"]
+    todo: implement source (eg., is it a monster or spell targeting)
     """
 
     trigger = f"can_{action}"
@@ -299,7 +452,11 @@ class Card:
       )
     elif trigger == "can_attack_directly":
       return not self.has_status("CANNOT_ATTACK")
+    elif trigger == "can_target":
+      return not self.has_status("UNTARGETABLE")
     elif trigger == "attacker_damage_calc":
+      return self.attack
+    elif trigger == "attacker_direct_damage_calc":
       return self.attack
     elif trigger == "attackee_damage_calc":
       other, amount = args
@@ -317,6 +474,9 @@ class Card:
       return
 
   def __str__(self):
-    return f"{self.name} {self.cost} {self.attack}/{self.health}"
+    if self.type == "monster":
+      return f"{self.name} {self.cost} {self.attack}/{self.health}"
+    else:
+      return f"{self.name} {self.cost}"
 
 
