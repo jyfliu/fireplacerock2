@@ -271,11 +271,9 @@ arceus:
       to_gy = []
       for card in owner.board:
         if card != self and card is not None:
-          io.remove_field(card)
           to_gy.append(card)
       for card in other.board:
         if card is not None:
-          io.remove_field(card)
           to_gy.append(card)
       io.send_graveyard_multiple(to_gy)
       self.apply_status(self, "ACTIVATED_EFFECT", -1)
@@ -604,7 +602,7 @@ sprightjet:
     retval = can_select_owner_deck(lambda x: "spell" in x.type and x.cost == 2) and prompt_user_activate()
   opt_if_summon: |-
     card = select_owner_deck(lambda x: "spell" in x.type and x.cost == 2)
-    io.deck_to_hand(card)
+    io.add_to_hand(card)
   id: 40
   rarity: SR
   uuid: sprightjet
@@ -620,7 +618,7 @@ sprightblue:
     retval = can_select_owner_deck(lambda x: "monster" in x.type and x.cost == 2) and prompt_user_activate()
   opt_if_summon: |-
     card = select_owner_deck(lambda x: "monster" in x.type and x.cost == 2)
-    io.deck_to_hand(card)
+    io.add_to_hand(card)
   id: 41
   rarity: UR
   uuid: sprightblue
@@ -636,7 +634,6 @@ sprightpixie:
       if c == self:
         break
     self.idx = i
-    io.remove_field(self)
     io.send_graveyard(self)
   on_activate: |-
     i = self.idx
@@ -727,16 +724,13 @@ livetwintroublesunny:
       if c == self:
         break
     self.idx = i
-    io.remove_field(self)
     io.send_graveyard(self)
   on_activate: |-
     if can_select_owner_board() and can_select_owner_graveyard(lambda x: "live twin lil-la" in x.name.lower()):
       lilla = select_owner_graveyard(lambda x: "live twin lil-la" in x.name.lower())
       idx = select_owner_board()
 
-      lilla.reset_stats()
-      io.remove_graveyard(lilla)
-      owner.board[idx] = lilla
+      io.move_to(lilla, "field", idx)
     else:
       lilla = None
 
@@ -744,9 +738,7 @@ livetwintroublesunny:
       kisikil = select_owner_graveyard(lambda x: "live twin ki-sikil" in x.name.lower())
       idx = select_owner_board()
 
-      kisikil.reset_stats()
-      io.remove_graveyard(kisikil)
-      owner.board[idx] = kisikil
+      io.move_to(kisikil, "field", idx)
     else:
       kisikil = None
 
@@ -1104,7 +1096,7 @@ lopunny:
     retval = can_target_other_field() and prompt_user_activate()
     if retval:
       self.target = target_other_field()
-  opt_if_summon: self.target.take_damage(100)
+  opt_if_summon: self.target.take_damage(self, 100)
   uuid: lopunny
 megalopunny:
   name: Mega Lopunny
@@ -1122,7 +1114,7 @@ megalopunny:
     retval = can_target_other_field() and prompt_user_activate()
     if retval:
       self.target = target_other_field()
-  opt_if_summon: self.target.take_damage(100);self.target.apply_status(self, 'SILENCE',
+  opt_if_summon: self.target.take_damage(self, 100);self.target.apply_status(self, 'SILENCE',
     1, 'END')
   uuid: megalopunny
 beedrill:

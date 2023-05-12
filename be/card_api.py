@@ -84,6 +84,10 @@ class Template:
       self.attack = data.attack
       self.health = data.health
     self.description = data.description
+    if hasattr(data, "flavour"):
+      self.flavour = data.flavour
+    else:
+      self.flavour = ""
 
     for fn in triggers:
       if hasattr(data, fn):
@@ -98,6 +102,8 @@ class Template:
 
 
 class Card:
+
+  last_uuid = 0
 
   def __init__(self, template, owner, other, io):
     self.template = template
@@ -114,6 +120,16 @@ class Card:
     self.owner = owner
     self.other = other
     self.io = io
+
+    Card.last_uuid += 1
+    self.uuid = Card.last_uuid
+
+
+  def __eq__(self, other):
+    if other is None:
+      return False
+    return self.uuid == other.uuid
+
 
   def reset_stats(self):
     self.attack = self.original_attack
@@ -408,10 +424,14 @@ class Card:
     self.attack -= attack
     self.health -= health
 
+  def take_battle_damage(self, source, amount):
+    if amount > 0:
+      self.effect("on_take_battle_damage", amount)
+      self.take_damage(source, amount)
+
+
   def take_damage(self, source, amount):
     if amount > 0:
-      if source == "battle":
-        self.effect("on_take_battle_damage")
       self.effect("on_take_damage", amount)
       self.health -= amount
 
@@ -424,7 +444,9 @@ class Card:
   def effect(self, trigger, *args):
     if hasattr(self.template, trigger):
       print(f"{self.name} activates its effect {trigger}")
-      return self.interp(getattr(self.template, trigger), *args)
+      retval = self.interp(getattr(self.template, trigger), *args)
+      self.io.check_field(self)
+      return retval
     else:
       return self.default(trigger, *args)
 
@@ -458,7 +480,7 @@ class Card:
       return self.attack
     elif trigger == "attacker_direct_damage_calc":
       return self.attack
-    elif trigger == "attackee_damage_calc":
+    elif trigger == "attackee_damage_calc": # joy was here
       other, amount = args
       return amount
     elif trigger == "defender_damage_calc":

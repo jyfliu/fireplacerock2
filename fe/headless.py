@@ -1,10 +1,18 @@
+import random
+import sys
+import os
+
 import yaml
+from easydict import EasyDict as edict
+
+import game_state
+
+sys.path.append(os.path.abspath("../be"))
+
 import card_api
 import duel_api
 import io
-import random
 
-from easydict import EasyDict as edict
 from callbacks import *
 
 class InvalidSyntax(BaseException):
@@ -14,29 +22,16 @@ class InvalidSyntax(BaseException):
     return self.message
 
 
-class Board:
-  def __init__(self):
-    self.enemy_board = [None] * 5
-    self.my_board = [None] * 5
-    self.hand = []
-    self.graveyard = []
-    self.deck = []
-    self.my_lp = 3000
-    self.enemy_lp = 3000
-    self.my_mana = 0
-    self.my_mana_max = 0
-    self.enemy_mana = 0
-    self.enemy_mana_max = 0
-
-
 class Headless:
 
   def __init__(self, player_name="Player"):
     self.player_name = player_name
 
-    self.board = Board()
-
     self.end_turn = False
+
+  def init(self, owner, oppon):
+    self.owner = game_state.Player(owner)
+    self.oppon = game_state.Player(oppon)
 
   def prompt_user_activate(self, effect_name):
     print(f"Activate {effect_name}'s effect?' [y/n]")
@@ -46,10 +41,10 @@ class Headless:
 
   def prompt_user_select(self, cards):
     print(f"Select a card [0-{len(cards) - 1}]")
-    for (loc, card) in cards:
+    for i, (loc, card) in enumerate(cards):
       # loc in ["hand", "field", "deck", "banished",
       # "other_hand", "other_field", "other_deck", "other_banished"]
-      print(f"{loc + ':': <15} {card}")
+      print(f"{i: >2} {loc + ':': <15} {card}")
     while True:
       idx = int(input())
       if 0 <= idx < len(cards):
@@ -64,15 +59,28 @@ class Headless:
         return idx
       print(f"Select an empty board index: {nums}")
 
+  def take_damage(self, amount):
+    self.owner.life -= amount
 
-  #def target_other_field(self, filter=lambda x: True):
-  #  print("Target a card on the opposing field [0-4]")
-  #  idx = int(input())
-  #  return idx
+  def oppon_take_damage(self, amount):
+    self.oppon.life -= amount
+
+  def pay_mana(self, amount):
+    self.owner.mana -= amount
+
+  def oppon_pay_mana(self, amount):
+    self.oppon.mana -= amount
+
+  def restore_mana(self, mana, mana_max):
+    self.owner.mana = mana
+    self.owner.mana_max = mana_max
+
+  def oppon_restore_mana(self, mana, mana_max):
+    self.oppon.mana = mana
+    self.oppon.mana_max = mana_max
 
   def flip_coin(self, result):
     print(f"Flipped a coin: {'Heads!' if result == 1 else 'Tails!'}")
-
 
   def display_message(self, msg):
     print(msg)
@@ -85,12 +93,53 @@ class Headless:
     else:
       print("You lose :(")
 
+
+  def _move_card(self, player, card, from_loc, to_loc, idx):
+    match from_loc:
+      case "field":
+        player.board.delete(card)
+      case other:
+        getattr(player, from_loc).remove(card)
+
+    match to_loc:
+      case "hand":
+        player.hand.add(card).sort()
+
+      case "field":
+        player.board[idx] = card
+
+      case "graveyard":
+        player.graveyard.append(card)
+
+      case "banished":
+        player.banished.append(card)
+
+      case "deck":
+        # player can't see into the deck
+        pass
+
+  def move_card(self, card, from_loc, to_loc, idx):
+    self._move_card(self.owner, card, from_loc, to_loc, idx)
+
+  def move_oppon_card(self, card, from_loc, to_loc, idx):
+    self._move_card(self.oppon, card, from_loc, to_loc, idx)
+
   def print_board(self):
     print(f"\n{self.player_name}'s turn")
-    print(f"Your LP: {self.duel.turn_p.life} Mana: {self.duel.turn_p.mana} / {self.duel.turn_p.mana_max} | Mana: {self.duel.other_p.mana} / {self.duel.other_p.mana_max} Other LP: {self.duel.other_p.life}")
-    print("Board: ", self.duel.other_p.board_str())
-    print("     : ", self.duel.turn_p.board_str())
-    print("Hand:  ", self.duel.turn_p.hand_str())
+    print(f"Your LP: {self.owner.life} Mana: {self.owner.mana} / {self.owner.mana_max} | Mana: {self.oppon.mana} / {self.oppon.mana_max} Other LP: {self.oppon.life}")
+    print("Board: ", self.oppon.board_str())
+    print("     : ", self.owner.board_str())
+    print("Hand:  ", self.owner.hand_str())
+
+  def print_card(self, card):
+    print()
+    print(card)
+    print("Status: ", card.status)
+    print()
+    print(card.template.description)
+    if card.template.flavour:
+      print()
+      print(card.template.flavour)
 
   def draw_phase_prompt(self):
     # YOU DREW X
@@ -105,15 +154,44 @@ class Headless:
       print("It is Main Phase 2")
     else:
       print("It is Main Phase")
-    print(f"Commands: summon, activate_hand, activate_board, pass, end")
+    print(f"Commands: info, summon, activate_hand, activate_board, pass, end")
     print(">>> ", end="")
     command = input().split()
     try:
+      hand = [("hand", card) for card in self.owner.hand]
+      field = [("field", card) for card in self.owner.field]
+      other_field = [("other_field", card) for card in self.oppon.field]
+
+      empty_board = [i for i in range(5) if self.owner.board[i] is None]
+      filled_board = [i for i in range(5) if self.owner.board[i] is not None]
+
       match command:
+        case ["info"] | ["i"]:
+          cards = hand + field + other_field
+          _, card = cards[self.prompt_user_select(cards)]
+          self.print_card(card)
+        case ["info", idx] | ["i", idx]:
+          cards = self.owner.hand + self.owner.field + self.oppon.field
+          self.print_card(cards[idx])
+
+        case ["summon"] | ["s"]:
+          hand_idx = self.prompt_user_select(hand)
+          board_idx = self.prompt_user_select_board(empty_board)
+          return ["summon", hand_idx, board_idx]
         case ["summon", hand_idx, board_idx] | ["s", hand_idx, board_idx]:
           return ["summon", int(hand_idx), int(board_idx)]
+
+        case ["activate_hand"] | ["ah"]:
+          hand_idx = self.prompt_user_select(hand)
+          return ["activate_hand", hand_idx]
         case ["activate_hand", hand_idx] | ["ah", hand_idx]:
           return ["activate_hand", int(hand_idx)]
+
+        case ["activate_board"] | ["ab"]:
+          board_idx = self.prompt_user_select(field)
+          board_idx = filled_board[board_idx]
+
+          return ["activate_board", board_idx]
         case ["activate_board", board_idx] | ["ab", board_idx]:
           return ["activate_board", int(board_idx)]
         case ["pass"] | ["p"]:
@@ -179,8 +257,8 @@ def test():
     "lopunny", "megalopunny",
   ]
 
-  deck1 = ["dartmonkey"] * 40
-  deck2 = ["mew"] * 40
+  #deck1 = ["livetwinlilla", "livetwinkisikil", "livetwintroublesunny"] * 16
+  #deck2 = ["sprightblue", "mew", "arceus"] * 16
   deck1 = random.sample(names, k=16) * 3
   deck2 = random.sample(names, k=16) * 3
 
@@ -195,9 +273,9 @@ def test():
   duel = duel_api.Duel(deck1, deck2, p1, p2)
   duel.p1.mana_max = 10
   duel.p2.mana_max = 10
-  # TMP STUFF for printing board
-  p1.duel = duel
-  p2.duel = duel
+
+  p1.init(duel.p1, duel.p2)
+  p2.init(duel.p2, duel.p1)
 
   duel.start_duel()
 
