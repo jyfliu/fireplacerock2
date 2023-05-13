@@ -495,7 +495,7 @@ class Duel():
         card.reset_stats()
 
     card.owner.io.move_card(card, from_loc, destination, idx)
-    card.other.io.move_oppon_card(card, from_loc, destination, idx)
+    card.oppon.io.move_oppon_card(card, from_loc, destination, idx)
 
 
   def send_graveyard(self, card):

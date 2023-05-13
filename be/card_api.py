@@ -97,15 +97,15 @@ class Template:
         continue
 
 
-  def create_instance(self, owner, other, io):
-    return Card(self, owner, other, io)
+  def create_instance(self, owner, oppon, io):
+    return Card(self, owner, oppon, io)
 
 
 class Card:
 
   last_uuid = 0
 
-  def __init__(self, template, owner, other, io):
+  def __init__(self, template, owner, oppon, io):
     self.template = template
     self.name = template.name
     self.cost = template.cost
@@ -118,7 +118,7 @@ class Card:
     self.status = []
 
     self.owner = owner
-    self.other = other
+    self.oppon = oppon
     self.io = io
 
     Card.last_uuid += 1
@@ -138,10 +138,10 @@ class Card:
 
   def interp(self, script, *args):
     owner = self.owner
-    other = self.other
+    oppon = self.oppon
     io = self.io
 
-    field = owner.board + other.board
+    field = owner.board + oppon.board
 
     prompt_user_activate = self.prompt_user_activate
 
@@ -149,7 +149,7 @@ class Card:
     # target empty space
     # returns idx into board (-1 if no space)
     # target_owner_board_empty = self.target_self_board_empty
-    # target_other_board_empty = self.target_other_board_empty
+    # target_oppon_board_empty = self.target_oppon_board_empty
 
     # target card on the field
     # optionally accepts a lambda to filter
@@ -158,8 +158,8 @@ class Card:
     target_field = self.target_field
     can_target_owner_field = self.can_target_owner_field
     target_owner_field = self.target_owner_field
-    can_target_other_field = self.can_target_other_field
-    target_other_field = self.target_other_field
+    can_target_oppon_field = self.can_target_oppon_field
+    target_oppon_field = self.target_oppon_field
 
     # select monster on the field
     # optionally accepts a lambda to filter
@@ -168,32 +168,32 @@ class Card:
     select_field = self.select_field
     can_select_owner_field = self.can_select_owner_field
     select_owner_field = self.select_owner_field
-    can_select_other_field = self.can_select_other_field
-    select_other_field = self.select_other_field
+    can_select_oppon_field = self.can_select_oppon_field
+    select_oppon_field = self.select_oppon_field
 
     # select card from deck
     can_select_owner_deck = self.can_select_owner_deck
     select_owner_deck = self.select_owner_deck
-    can_select_other_deck = self.can_select_other_deck
-    select_other_deck = self.select_other_deck
+    can_select_oppon_deck = self.can_select_oppon_deck
+    select_oppon_deck = self.select_oppon_deck
 
     # select card from deck
     # optionally accepts a lambda to filter
     # returns card
     # select_owner_deck = self.select_owner_deck
-    # select_other_deck = self.select_other_deck
+    # select_oppon_deck = self.select_oppon_deck
 
     # select card from gy
     can_select_owner_graveyard = self.can_select_owner_graveyard
     select_owner_graveyard = self.select_owner_graveyard
-    can_select_other_graveyard = self.can_select_other_graveyard
-    select_other_graveyard = self.select_other_graveyard
+    can_select_oppon_graveyard = self.can_select_oppon_graveyard
+    select_oppon_graveyard = self.select_oppon_graveyard
 
     # select empty spot
     can_select_owner_board = self.can_select_owner_board
     select_owner_board = self.select_owner_board
-    can_select_other_board = self.can_select_other_board
-    select_other_board = self.select_other_board
+    can_select_oppon_board = self.can_select_oppon_board
+    select_oppon_board = self.select_oppon_board
 
     flip_coin = self.flip_coin
 
@@ -235,24 +235,24 @@ class Card:
         for card in self.owner.banished
         if card is not None and filter(card)
     ] + [
-        ("other_field", card)
-        for card in self.other.board
+        ("oppon_field", card)
+        for card in self.oppon.board
         if card is not None and filter(card)
     ] + [
-        ("other_hand", card)
-        for card in self.other.hand
+        ("oppon_hand", card)
+        for card in self.oppon.hand
         if card is not None and filter(card)
     ] + [
-        ("other_deck", card)
-        for card in self.other.deck
+        ("oppon_deck", card)
+        for card in self.oppon.deck
         if card is not None and filter(card)
     ] + [
-        ("other_graveyard", card)
-        for card in self.other.graveyard
+        ("oppon_graveyard", card)
+        for card in self.oppon.graveyard
         if card is not None and filter(card)
     ] + [
-        ("other_banished", card)
-        for card in self.other.banished
+        ("oppon_banished", card)
+        for card in self.oppon.banished
         if card is not None and filter(card)
     ]
     return cards
@@ -279,17 +279,17 @@ class Card:
   def target_owner_field(self, filter=lambda x: True):
     return self.select(lambda x: x in self.owner.board and filter(x))
 
-  def can_target_other_field(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.other.board and filter(x))
+  def can_target_oppon_field(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.oppon.board and filter(x))
 
-  def target_other_field(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.other.board and filter(x))
+  def target_oppon_field(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.oppon.board and filter(x))
 
   def can_target_field(self, filter=lambda x: True):
-    return self.can_select(lambda x: (x in self.other.board or x in self.owner.board) and filter(x))
+    return self.can_select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x))
 
   def target_field(self, filter=lambda x: True):
-    return self.select(lambda x: (x in self.other.board or x in self.owner.board) and filter(x))
+    return self.select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x))
 
   def can_select_owner_field(self, filter=lambda x: True):
     return self.can_select(lambda x: x in self.owner.board and filter(x))
@@ -297,17 +297,17 @@ class Card:
   def select_owner_field(self, filter=lambda x: True):
     return self.select(lambda x: x in self.owner.board and filter(x))
 
-  def can_select_other_field(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.other.board and filter(x))
+  def can_select_oppon_field(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.oppon.board and filter(x))
 
-  def select_other_field(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.other.board and filter(x))
+  def select_oppon_field(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.oppon.board and filter(x))
 
   def can_select_field(self, filter=lambda x: True):
-    return self.can_select(lambda x: (x in self.other.board or x in self.owner.board) and filter(x))
+    return self.can_select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x))
 
   def select_field(self, filter=lambda x: True):
-    return self.select(lambda x: (x in self.other.board or x in self.owner.board) and filter(x))
+    return self.select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x))
 
   def can_select_owner_deck(self, filter=lambda x: True):
     return self.can_select(lambda x: x in self.owner.deck and filter(x))
@@ -315,11 +315,11 @@ class Card:
   def select_owner_deck(self, filter=lambda x: True):
     return self.select(lambda x: x in self.owner.deck and filter(x))
 
-  def can_select_other_deck(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.other.deck and filter(x))
+  def can_select_oppon_deck(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.oppon.deck and filter(x))
 
-  def select_other_deck(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.other.deck and filter(x))
+  def select_oppon_deck(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.oppon.deck and filter(x))
 
   def can_select_owner_graveyard(self, filter=lambda x: True):
     return self.can_select(lambda x: x in self.owner.graveyard and filter(x))
@@ -327,11 +327,11 @@ class Card:
   def select_owner_graveyard(self, filter=lambda x: True):
     return self.select(lambda x: x in self.owner.graveyard and filter(x))
 
-  def can_select_other_graveyard(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.other.graveyard and filter(x))
+  def can_select_oppon_graveyard(self, filter=lambda x: True):
+    return self.can_select(lambda x: x in self.oppon.graveyard and filter(x))
 
-  def select_other_graveyard(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.other.graveyard and filter(x))
+  def select_oppon_graveyard(self, filter=lambda x: True):
+    return self.select(lambda x: x in self.oppon.graveyard and filter(x))
 
   def can_select_owner_board(self):
     return None in self.owner.board
@@ -344,12 +344,12 @@ class Card:
     idx = self.owner.io.prompt_user_select_board(nums)
     return idx
 
-  def can_select_other_board(self):
-    return None in self.other.board
+  def can_select_oppon_board(self):
+    return None in self.oppon.board
 
-  def select_other_board(self):
+  def select_oppon_board(self):
     nums = []
-    for i, card in enumerate(self.other.board):
+    for i, card in enumerate(self.oppon.board):
       if card is None:
         nums.append(i)
     idx = self.owner.io.prompt_user_select_board(nums)
@@ -358,7 +358,7 @@ class Card:
   def flip_coin(self):
     coin = random.randint(0, 1)
     self.owner.io.flip_coin(coin)
-    self.other.io.flip_coin(coin)
+    self.oppon.io.flip_coin(coin)
     return coin
 
   def get_adjacent(self):
@@ -389,6 +389,8 @@ class Card:
 
   def apply_status(self, source, status, duration=0, expiry="end"):
     self.status.append([status, duration, expiry])
+    self.owner.io.apply_status(self.uuid, status, duration, expiry)
+    self.oppon.io.apply_status(self.uuid, status, duration, expiry)
 
   def on_end_turn(self):
     new_status = []
@@ -403,6 +405,8 @@ class Card:
         st[1] = st[1] - 1
         new_status.append(st)
     self.status = new_status
+    self.owner.io.end_turn()
+    self.oppon.io.end_turn()
 
   ### HELPERS ###
   def heal(self, source, amount):

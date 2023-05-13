@@ -7,8 +7,8 @@ class Card:
     if self.type == "monster":
       self.attack = card.attack
       self.health = card.health
-      self.original_attack = card.attack
-      self.original_health = card.health
+      self.original_attack = card.original_attack
+      self.original_health = card.original_health
     self.status = []
 
     self.uuid = card.uuid

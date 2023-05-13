@@ -43,7 +43,7 @@ class Headless:
     print(f"Select a card [0-{len(cards) - 1}]")
     for i, (loc, card) in enumerate(cards):
       # loc in ["hand", "field", "deck", "banished",
-      # "other_hand", "other_field", "other_deck", "other_banished"]
+      # "oppon_hand", "oppon_field", "oppon_deck", "oppon_banished"]
       print(f"{i: >2} {loc + ':': <15} {card}")
     while True:
       idx = int(input())
@@ -119,9 +119,11 @@ class Headless:
         pass
 
   def move_card(self, card, from_loc, to_loc, idx):
+    card = game_state.Card(card)
     self._move_card(self.owner, card, from_loc, to_loc, idx)
 
   def move_oppon_card(self, card, from_loc, to_loc, idx):
+    card = game_state.Card(card)
     self._move_card(self.oppon, card, from_loc, to_loc, idx)
 
   def print_board(self):
@@ -160,14 +162,14 @@ class Headless:
     try:
       hand = [("hand", card) for card in self.owner.hand]
       field = [("field", card) for card in self.owner.field]
-      other_field = [("other_field", card) for card in self.oppon.field]
+      oppon_field = [("oppon_field", card) for card in self.oppon.field]
 
       empty_board = [i for i in range(5) if self.owner.board[i] is None]
       filled_board = [i for i in range(5) if self.owner.board[i] is not None]
 
       match command:
         case ["info"] | ["i"]:
-          cards = hand + field + other_field
+          cards = hand + field + oppon_field
           _, card = cards[self.prompt_user_select(cards)]
           self.print_card(card)
         case ["info", idx] | ["i", idx]:

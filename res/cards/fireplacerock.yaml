@@ -70,7 +70,7 @@ sprightelf:
       owner.pay(1)
     retval = will_activate
   if_summon: |-
-    card = select_other_graveyard(lambda card: card.type == "monster" and card.cost == 2)
+    card = select_oppon_graveyard(lambda card: card.type == "monster" and card.cost == 2)
     owner.graveyard.remove(card)
     idx = target_owner_board_empty()
     io.summon(card, idx, owner)
@@ -272,7 +272,7 @@ arceus:
       for card in owner.board:
         if card != self and card is not None:
           to_gy.append(card)
-      for card in other.board:
+      for card in oppon.board:
         if card is not None:
           to_gy.append(card)
       io.send_graveyard_multiple(to_gy)
@@ -353,9 +353,9 @@ breloom:
   id: 21
   rarity: C
   opt_if_summon_cost: |-
-    retval = can_target_other_field() and prompt_user_activate()
+    retval = can_target_oppon_field() and prompt_user_activate()
     if retval:
-      self.target = target_other_field()
+      self.target = target_oppon_field()
   opt_if_summon: |-
     self.target.apply_status(self, 'SILENCE', 1, 'END')
     self.target.apply_status(self, "CANNOT_ATTACK", 1, "END")
@@ -386,11 +386,11 @@ tyranitar:
     for card in owner.board:
       if card is not None and "tyranitar" not in card.name.lower():
         card.take_damage(self, 100)
-    for card in other.board:
+    for card in oppon.board:
       if card is not None and "tyranitar" not in card.name.lower():
         card.take_damage(self, 100)
     owner.take_damage(self, 100)
-    other.take_damage(self, 100)
+    oppon.take_damage(self, 100)
   id: 23
   rarity: R
   uuid: tyranitar
@@ -405,7 +405,7 @@ gengar:
   id: 24
   rarity: C
   opt_if_destroyed_battle: |-
-    card = target_other_field()
+    card = target_oppon_field()
     card.apply_status(self, "SILENCE", -1)
   uuid: gengar
 dragonite:
@@ -451,13 +451,13 @@ salamence:
     by 300.
   id: 27
   rarity: R
-  if_destroy_battle: self.attack += 300
+  if_destroy_battle: self.gain(self, 300)
   uuid: salamence
 lugia:
   name: Lugia
   type: monster
-  cost: 8
-  attack: 500
+  cost: 7
+  attack: 400
   health: 1200
   description: 'Once per turn: When this card is about to take battle damage: Half the damage
     taken.'
@@ -568,16 +568,14 @@ technicalmachine:
   spell_can_activate: retval = can_select_field()
   spell_on_activate: self.target = select_field()
   spell_on_resolve: |-
-    self.target.attack += 200
-    self.target.health += 200
-    self.target.original_health += 200
+    self.target.gain(self, 200, 200)
   uuid: technicalmachine
 pokemontrade:
   name: Pokemon Trade
   type: spell
   cost: 2
   description: Send as many Pokemon as you’d like from your field to the graveyard.
-    Summon a random Pokemon with cost equal to their total cost.
+    Summon, from your extra deck, a Pokemon with cost equal to their total cost.
   id: 38
   rarity: SR
   uuid: pokemontrade
@@ -586,7 +584,7 @@ pokemonshuffle:
   type: spell
   cost: 2
   description: Shuffle as many Pokemon as you’d like from the graveyard into your
-    deck. Summon a random Pokemon with cost equal to the number of unique names sent.
+    deck. Summon, from your extra deck, a Pokemon with cost equal to the number of unique names sent.
   id: 39
   rarity: UR
   uuid: pokemonshuffle
@@ -684,9 +682,9 @@ livetwinlilla:
     for card in owner.field:
       if "ki-sikil" in card.name.lower():
         found = True
-    retval = found and can_target_other_field() and prompt_user_activate()
+    retval = found and can_target_oppon_field() and prompt_user_activate()
     if retval:
-      self.target = target_other_field()
+      self.target = target_oppon_field()
   opt_if_summon: |-
     io.destroy(self.target)
   id: 45
@@ -774,9 +772,9 @@ omen:
   id: 49
   rarity: R
   opt_if_summon_cost: |-
-    retval = can_target_other_field() and prompt_user_activate()
+    retval = can_target_oppon_field() and prompt_user_activate()
     if retval:
-      self.target = target_other_field()
+      self.target = target_oppon_field()
   opt_if_summon:
     self.target.apply_status(self, "STEALTH", -1)
   uuid: omen
@@ -810,7 +808,7 @@ reyna:
   description: 'When this card destroys another minion: heal 200 HP'
   id: 52
   rarity: R
-  if_destroy_battle: self.health += 200
+  if_destroy_battle: self.heal(self, 200)
   uuid: reyna
 cypher:
   name: Cypher
@@ -947,7 +945,7 @@ dartmonkey:
       self.target = target_field()
   opt_if_summon: |-
     self.target.take_damage(self, 100)
-    owner.hand.add(self.template.create_instance(owner, other, io))
+    owner.hand.add(self.template.create_instance(owner, oppon, io))
   id: 64
   rarity: C
   uuid: dartmonkey
@@ -1093,9 +1091,9 @@ lopunny:
   id: 80
   rarity: C
   opt_if_summon_cost: |-
-    retval = can_target_other_field() and prompt_user_activate()
+    retval = can_target_oppon_field() and prompt_user_activate()
     if retval:
-      self.target = target_other_field()
+      self.target = target_oppon_field()
   opt_if_summon: self.target.take_damage(self, 100)
   uuid: lopunny
 megalopunny:
@@ -1111,9 +1109,9 @@ megalopunny:
   id: 81
   rarity: UR
   opt_if_summon_cost: |-
-    retval = can_target_other_field() and prompt_user_activate()
+    retval = can_target_oppon_field() and prompt_user_activate()
     if retval:
-      self.target = target_other_field()
+      self.target = target_oppon_field()
   opt_if_summon: self.target.take_damage(self, 100);self.target.apply_status(self, 'SILENCE',
     1, 'END')
   uuid: megalopunny
