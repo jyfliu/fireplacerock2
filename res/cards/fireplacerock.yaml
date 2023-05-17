@@ -64,16 +64,15 @@ sprightelf:
     2-cost monsters on your field cannot be targeted.
   id: 2
   rarity: UR
-  if_summon_cost: |-
-    will_activate = owner.graveyard.contains(lambda card: card.cost == 2) and owner.can_pay(1) and prompt_user_activate(self.name);
+  opt_if_summon_cost: |-
+    will_activate = owner.graveyard.contains(lambda card: card.cost == 2) and owner.can_pay(1) and prompt_user_activate();
     if will_activate:
       owner.pay(1)
     retval = will_activate
-  if_summon: |-
-    card = select_oppon_graveyard(lambda card: card.type == "monster" and card.cost == 2)
-    owner.graveyard.remove(card)
-    idx = target_owner_board_empty()
-    io.summon(card, idx, owner)
+  opt_if_summon: |-
+    card = select_owner_graveyard(lambda card: card.type == "monster" and card.cost == 2)
+    idx = select_owner_board()
+    io.summon(card, idx)
   uuid: sprightelf
 magikarp:
   name: Magikarp
@@ -528,6 +527,23 @@ switchout:
   cost: 2
   description: Return one of your Pokemon on the field to your hand. Summon a Pokemon
     from your deck with equal or lesser cost.
+  can_activate_hand: |-
+    def works(max_cost):
+      return can_select_owner_deck(lambda card: card.cost <= max_cost and card.type == "monster"and card.id in archetypes.pokemon)
+    retval = can_select_owner_field(
+      lambda card: card.type == "monster" and card.id in archetypes.pokemon and
+                   can_select_owner_deck(lambda x: x.cost <= card.cost and x.type == "monster"and x.id in archetypes.pokemon)
+    )
+  on_activate_hand_cost: |-
+    self.target = select_owner_field(
+      lambda card: card.type == "monster" and card.id in archetypes.pokemon and
+                   can_select_owner_deck(lambda x: x.cost <= card.cost and x.type == "monster"and x.id in archetypes.pokemon)
+    )
+    io.bounce(self.target)
+  on_activate_hand: |-
+    to_summon = select_owner_deck(lambda card: card.cost <= self.target.cost and card.type == "monster"and card.id in archetypes.pokemon)
+    idx = select_owner_board()
+    io.summon(to_summon, idx)
   id: 33
   rarity: C
   uuid: switchout
@@ -554,9 +570,9 @@ squirtbottle:
   description: Target a monster on the field, silence it until the end of this turn
   id: 36
   rarity: C
-  spell_can_activate: retval = can_target_field()
-  spell_on_activate: self.target = target_field()
-  spell_on_resolve: self.target.apply_status(self, "SILENCE", 0, "END")
+  can_activate_hand: retval = can_target_field()
+  on_activate_hand_cost: self.target = target_field()
+  on_activate_hand: self.target.apply_status(self, "SILENCE", 0, "END")
   uuid: squirtbottle
 technicalmachine:
   name: Technical Machine
@@ -565,9 +581,9 @@ technicalmachine:
   description: Select a monster on the field; it gains +200/+200
   id: 37
   rarity: R
-  spell_can_activate: retval = can_select_field()
-  spell_on_activate: self.target = select_field()
-  spell_on_resolve: |-
+  can_activate_hand: retval = can_select_field()
+  on_activate_hand_cost: self.target = select_field()
+  on_activate_hand: |-
     self.target.gain(self, 200, 200)
   uuid: technicalmachine
 pokemontrade:
@@ -885,9 +901,9 @@ phoenix:
   description: 'Target a monster: deal 500 damage'
   id: 58
   rarity: SR
-  spell_can_activate: retval = can_target_field()
-  spell_on_activate: self.target = target_field()
-  spell_on_resolve: self.target.take_damage(self, 500)
+  can_activate_hand: retval = can_target_field()
+  on_activate_hand_cost: self.target = target_field()
+  on_activate_hand: self.target.take_damage(self, 500)
   uuid: 1tap
 shortyangle:
   name: Shorty Angle

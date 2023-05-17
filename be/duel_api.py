@@ -281,11 +281,11 @@ class Duel():
           case ["pass"]:
             break
           case ["summon", hand_idx, board_idx]:
-            card = self.play_hand(hand_idx)
+            card = self.play_hand(hand_idx, action="summon")
             self.summon(card, board_idx)
-          case ["activate_hand", hand_idx]:
-            pass
-            # TODO
+          case ["activate_spell", hand_idx]:
+            card = self.play_hand(hand_idx, action="activate_hand")
+            self.activate_spell(card)
           case ["activate_board", board_idx]:
             card = self.turn_p.board[board_idx]
             self.activate_board(card)
@@ -398,13 +398,16 @@ class Duel():
   # All of these functions accept a player ["turn", "other"] to bind the
   # effect to (ie., which player did it)
 
-  def play_hand(self, hand_idx, player="turn"):
+  def play_hand(self, hand_idx, action="", player="turn"):
     active = self.get_active_player(player)
 
     if hand_idx < 0 or hand_idx >= len(active.hand):
       raise InvalidMove("Invalid hand index")
 
     card = active.hand[hand_idx]
+
+    if action and not card.can(action):
+      raise InvalidMove("Card cannot activate effect")
 
     if active.can_pay(card.cost):
       active.pay(card.cost)
@@ -431,7 +434,19 @@ class Duel():
       card.effect("opt_if_summon")
 
 
-  def activate_board(self, card, player="turn"):
+  def activate_spell(self, card):
+    if card is None:
+      raise InvalidMove("Cannot activate effect; no spell")
+    if not card.can("activate_hand"):
+      raise InvalidMove("Card cannot activate effect")
+
+    self.move_to(card, "graveyard")
+
+    card.effect("on_activate_hand_cost")
+    card.effect("on_activate_hand")
+
+
+  def activate_board(self, card):
     if card is None:
       raise InvalidMove("Cannot activate effect; no monster")
     if not card.can("activate"):
@@ -487,9 +502,11 @@ class Duel():
 
       case "graveyard":
         card.owner.graveyard.append(card)
+        card.reset_stats()
 
       case "banished":
         card.owner.banished.append(card)
+        card.reset_stats()
 
       case "deck":
         # TODO: move to a specific deck idx without shuffling?

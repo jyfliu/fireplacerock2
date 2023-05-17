@@ -1,6 +1,7 @@
 import random
 
 from callbacks import *
+import archetypes
 
 triggers = [
   # MANDATORY TURN EFFECTS
@@ -64,9 +65,9 @@ triggers = [
   "opt_end_attack", # (other, damage_dealt)
   "opt_end_attacked", # (other, damage_dealt)
   # SPELL EFFECTS
-  "spell_can_activate",
-  "spell_on_activate",
-  "spell_on_resolve",
+  "can_activate_hand",
+  "on_activate_hand_cost",
+  "on_activate_hand",
 ]
 
 statuses = [
@@ -77,6 +78,7 @@ statuses = [
 class Template:
 
   def __init__(self, data):
+    self.id = data.uuid
     self.name = data.name
     self.cost = data.cost
     self.type = data.type
@@ -124,6 +126,8 @@ class Card:
     Card.last_uuid += 1
     self.uuid = Card.last_uuid
 
+    self.id = self.template.id
+
 
   def __eq__(self, other):
     if other is None:
@@ -132,8 +136,11 @@ class Card:
 
 
   def reset_stats(self):
-    self.attack = self.original_attack
-    self.health = self.original_health
+    if self.type == "monster":
+      self.attack = self.original_attack
+      self.health = self.original_health
+      self.owner.io.card_set(self.uuid, None, self.original_attack, self.original_health)
+      self.oppon.io.card_set(self.uuid, None, self.original_attack, self.original_health)
     self.status = []
 
   def interp(self, script, *args):
@@ -146,10 +153,6 @@ class Card:
     prompt_user_activate = self.prompt_user_activate
 
     get_adjacent = self.get_adjacent
-    # target empty space
-    # returns idx into board (-1 if no space)
-    # target_owner_board_empty = self.target_self_board_empty
-    # target_oppon_board_empty = self.target_oppon_board_empty
 
     # target card on the field
     # optionally accepts a lambda to filter
@@ -492,6 +495,10 @@ class Card:
       return (
         hasattr(self.template, "on_activate")
         and not self.has_status("SILENCE")
+      )
+    elif trigger == "can_activate_hand":
+      return (
+        hasattr(self.template, "on_activate")
       )
     elif trigger == "can_attack_directly":
       return not self.has_status("CANNOT_ATTACK")

@@ -206,7 +206,7 @@ class Headless:
       print("It is Main Phase 2")
     else:
       print("It is Main Phase")
-    print(f"Commands: info, summon, activate_hand, activate_board, pass, end")
+    print(f"Commands: info, summon, activate_spell, activate_board, pass, end")
     print(">>> ", end="")
     command = input().split()
     try:
@@ -233,11 +233,11 @@ class Headless:
         case ["summon", hand_idx, board_idx] | ["s", hand_idx, board_idx]:
           return ["summon", int(hand_idx), int(board_idx)]
 
-        case ["activate_hand"] | ["ah"]:
+        case ["activate_spell"] | ["as"]:
           hand_idx = self.prompt_user_select(hand)
-          return ["activate_hand", hand_idx]
-        case ["activate_hand", hand_idx] | ["ah", hand_idx]:
-          return ["activate_hand", int(hand_idx)]
+          return ["activate_spell", hand_idx]
+        case ["activate_spell", hand_idx] | ["as", hand_idx]:
+          return ["activate_spell", int(hand_idx)]
 
         case ["activate_board"] | ["ab"]:
           board_idx = self.prompt_user_select(field)
@@ -291,7 +291,7 @@ def test():
 
   names = [ # all working cards
     "mew", "unown",
-    # "sprightelf",
+    "sprightelf", # targeting protection not working
     "magikarp", "mudkip", "pikachu", "grovyle", "ampharos",
     "blastoise", "wailord", "snorlax", "garchomp", "jirachi", "hooh",
     # "kyogre", "groudon", "giratina",
@@ -307,12 +307,14 @@ def test():
     "jett", "phoenix", "dartmonkey",
     # "supermonkey", "johnnywyles", "riverwyles", "redamogus", "zoe"
     "lopunny", "megalopunny",
+    # Spells
+    "squirtbottle", "technicalmachine", "1tap", "switchout"
   ]
 
   deck1 = random.sample(names, k=16) * 3
   deck2 = random.sample(names, k=16) * 3
   #deck1 = ["mew"] * 16
-  #deck2 = ["mudkip"] * 16
+  #deck2 = ["1tap"] * 16
 
   deck1 = [cards[name] for name in deck1]
   deck1 = [card_api.Template(card) for card in deck1]
