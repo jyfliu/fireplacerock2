@@ -23,7 +23,7 @@ class CardList:
     return self.cards.__setitem__(*args)
 
   def __add__(self, other):
-    return self.cards.__add__(other.cards)
+    return CardList(self.cards.__add__(other.cards))
 
   def __str__(self):
     return str([card.name for card in self.cards])
@@ -239,6 +239,8 @@ class Duel():
       if card:
         card.on_end_turn()
 
+    self.turn_p.io.end_turn()
+    self.other_p.io.end_turn()
     self.check_game_over()
 
     self.cur_turn = 3 - self.cur_turn
@@ -628,8 +630,8 @@ class Duel():
     backward = attackee.effect("defender_damage_calc", attacker)
     backward = attacker.effect("defendee_damage_calc", attackee, backward)
 
-    attackee.take_damage("battle", forward)
-    attacker.take_damage("battle", backward)
+    attackee.take_battle_damage("battle", forward)
+    attacker.take_battle_damage("battle", backward)
 
     # exit damage step
     # TODO

@@ -7,8 +7,8 @@ mew:
   health: 200
   flavour: Apparently, it appears only to those people who are pure of heart and have
     a strong desire to see it.
-  description: Once per turn, you can pay 1 mana, this card’s effect becomes another
-    face-up monster’s effect for rest this turn.
+  description: Once per turn, you can pay 1 mana, this card’s activated effect becomes
+    another face-up monster’s activated effect for rest this turn (you pay its cost).
   id: 0
   rarity: UR
   can_activate: |-
@@ -49,9 +49,9 @@ unown:
   rarity: R
   if_summon: |-
     c = random.randrange(28)
-    if c == 26: self.name = "Unown !"
-    elif c == 27: self.name = "Unown ?"
-    else: self.name = "Unown " + chr(c+ord("A"))
+    if c == 26: self.change_name("Unown !")
+    elif c == 27: self.change_name("Unown ?")
+    else: self.change_name("Unown " + chr(c+ord("A")))
   uuid: unown
 sprightelf:
   name: Spright Elf
@@ -265,9 +265,9 @@ arceus:
     field to the graveyard.'
   id: 17
   rarity: SR
-  can_activate: retval = not self.has_status("ACTIVATED_EFFECT")
+  can_activate: retval = not self.has_status("ARCEUS_ACTIVATED_EFFECT")
   on_activate: |-
-    if not self.has_status("ACTIVATED_EFFECT"):
+    if not self.has_status("ARCEUS_ACTIVATED_EFFECT"):
       to_gy = []
       for card in owner.board:
         if card != self and card is not None:
@@ -276,7 +276,7 @@ arceus:
         if card is not None:
           to_gy.append(card)
       io.send_graveyard_multiple(to_gy)
-      self.apply_status(self, "ACTIVATED_EFFECT", -1)
+      self.apply_status(self, "ARCEUS_ACTIVATED_EFFECT", -1)
   uuid: arceus
 gallade:
   name: Gallade

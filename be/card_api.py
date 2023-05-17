@@ -405,10 +405,13 @@ class Card:
         st[1] = st[1] - 1
         new_status.append(st)
     self.status = new_status
-    self.owner.io.end_turn()
-    self.oppon.io.end_turn()
 
   ### HELPERS ###
+  def change_name(self, new_name):
+    self.name = new_name
+    self.owner.io.card_change_name(self.uuid, new_name)
+    self.oppon.io.card_change_name(self.uuid, new_name)
+
   def heal(self, source, amount):
     # self.on_heal(amount)
     if self.health <= self.original_health - amount:
@@ -417,16 +420,22 @@ class Card:
       self.health = self.original_health
     else:
       pass
+    self.owner.io.card_gain(self.uuid, source, 0, amount)
+    self.oppon.io.card_gain(self.uuid, source, 0, amount)
 
   def gain(self, source, attack=0, health=0):
     # source = [f]
     self.attack += attack
     self.health += health
+    self.owner.io.card_gain(self.uuid, source, attack, health)
+    self.oppon.io.card_gain(self.uuid, source, attack, health)
 
   def lose(self, source, attack=0, health=0):
     # todo self.on_lose_attack?
     self.attack -= attack
     self.health -= health
+    self.owner.io.card_lose(self.uuid, source, attack, health)
+    self.oppon.io.card_lose(self.uuid, source, attack, health)
 
   def take_battle_damage(self, source, amount):
     if amount > 0:
@@ -438,12 +447,20 @@ class Card:
     if amount > 0:
       self.effect("on_take_damage", amount)
       self.health -= amount
+      self.owner.io.card_take_damage(self.uuid, source, amount)
+      self.oppon.io.card_take_damage(self.uuid, source, amount)
 
   def set(self, source, attack=None, health=None):
     if attack is not None:
       self.attack = attack
+    else:
+      attack = self.attack
     if health is not None:
       self.health = health
+    else:
+      health = self.health
+    self.owner.io.card_set(self.uuid, source, attack, health)
+    self.oppon.io.card_set(self.uuid, source, attack, health)
 
   def effect(self, trigger, *args):
     if hasattr(self.template, trigger):

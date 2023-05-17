@@ -27,7 +27,7 @@ class Headless:
   def __init__(self, player_name="Player"):
     self.player_name = player_name
 
-    self.end_turn = False
+    self.will_end_turn = False
 
   def init(self, owner, oppon):
     self.owner = game_state.Player(owner)
@@ -126,6 +126,52 @@ class Headless:
     card = game_state.Card(card)
     self._move_card(self.oppon, card, from_loc, to_loc, idx)
 
+  def apply_status(self, uuid, status, duration, expiry):
+    for card in self.owner.cards + self.oppon.cards:
+      if card.uuid == uuid:
+        card.status.append([status, duration, expiry])
+
+  def end_turn(self):
+    for card in self.owner.cards + self.oppon.cards:
+      new_status = []
+      for st in card.status:
+        if st[1] < 0:
+          new_status.append(st)
+        elif st[1] == 0:
+          pass # expire status (NEED TO CHECK WHAT STGE IT IS!!)
+        else:
+          st[1] = st[1] - 1
+          new_status.append(st)
+      card.status = new_status
+
+  def card_change_name(self, uuid, new_name):
+    for card in self.owner.cards + self.oppon.cards:
+      if card.uuid == uuid:
+        card.name = new_name
+
+  def card_gain(self, uuid, source, attack, health):
+    for card in self.owner.cards + self.oppon.cards:
+      if card.uuid == uuid:
+        card.attack += attack
+        card.health += health
+
+  def card_lose(self, uuid, source, attack, health):
+    for card in self.owner.cards + self.oppon.cards:
+      if card.uuid == uuid:
+        card.attack -= attack
+        card.health -= health
+
+  def card_take_damage(self, uuid, source, amount):
+    for card in self.owner.cards + self.oppon.cards:
+      if card.uuid == uuid:
+        card.health -= amount
+
+  def card_set(self, uuid, source, attack, health):
+    for card in self.owner.cards + self.oppon.cards:
+      if card.uuid == uuid:
+        card.attack = attack
+        card.health = health
+
   def print_board(self):
     print(f"\n{self.player_name}'s turn")
     print(f"Your LP: {self.owner.life} Mana: {self.owner.mana} / {self.owner.mana_max} | Mana: {self.oppon.mana} / {self.oppon.mana_max} Other LP: {self.oppon.life}")
@@ -136,7 +182,11 @@ class Headless:
   def print_card(self, card):
     print()
     print(card)
-    print("Status: ", card.status)
+    if not card.status:
+      print("Status: None")
+    else:
+      for st, dur, _ in card.status:
+        print(f"Status: {st.lower()} for {dur} more turns")
     print()
     print(card.template.description)
     if card.template.flavour:
@@ -145,11 +195,11 @@ class Headless:
 
   def draw_phase_prompt(self):
     # YOU DREW X
-    self.end_turn = False
+    self.will_end_turn = False
     pass
 
   def main_phase_prompt(self, main_phase_2=False):
-    if self.end_turn:
+    if self.will_end_turn:
       return ["pass"]
     self.print_board()
     if main_phase_2:
@@ -174,7 +224,7 @@ class Headless:
           self.print_card(card)
         case ["info", idx] | ["i", idx]:
           cards = self.owner.hand + self.owner.field + self.oppon.field
-          self.print_card(cards[idx])
+          self.print_card(cards[int(idx)])
 
         case ["summon"] | ["s"]:
           hand_idx = self.prompt_user_select(hand)
@@ -199,7 +249,7 @@ class Headless:
         case ["pass"] | ["p"]:
           return ["pass"]
         case ["end"] | ["e"]:
-          self.end_turn = True
+          self.will_end_turn = True
           return ["pass"]
         case [other, *_]:
           raise ValueError(other)
@@ -209,7 +259,7 @@ class Headless:
       print("Unable to Parse Command")
 
   def battle_phase_prompt(self):
-    if self.end_turn:
+    if self.will_end_turn:
       return ["pass"]
     self.print_board()
     print("It is Battle Phase")
@@ -225,7 +275,7 @@ class Headless:
         case ["pass"] | ["p"]:
           return ["pass"]
         case ["end"] | ["e"]:
-          self.end_turn = True
+          self.will_end_turn = True
           return ["pass"]
         case [other, _] | [other]:
           raise ValueError(other)
@@ -259,10 +309,10 @@ def test():
     "lopunny", "megalopunny",
   ]
 
-  #deck1 = ["livetwinlilla", "livetwinkisikil", "livetwintroublesunny"] * 16
-  #deck2 = ["sprightblue", "mew", "arceus"] * 16
   deck1 = random.sample(names, k=16) * 3
   deck2 = random.sample(names, k=16) * 3
+  #deck1 = ["mew"] * 16
+  #deck2 = ["mudkip"] * 16
 
   deck1 = [cards[name] for name in deck1]
   deck1 = [card_api.Template(card) for card in deck1]
@@ -273,8 +323,6 @@ def test():
   p1 = Headless("Player 1")
   p2 = Headless("Player 2")
   duel = duel_api.Duel(deck1, deck2, p1, p2)
-  duel.p1.mana_max = 10
-  duel.p2.mana_max = 10
 
   p1.init(duel.p1, duel.p2)
   p2.init(duel.p2, duel.p1)

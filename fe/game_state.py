@@ -12,6 +12,7 @@ class Card:
     self.status = []
 
     self.uuid = card.uuid
+    self.template = card.template # TODO this should really just be the card ID and queried locally
 
   def __eq__(self, other):
     if other is None:
@@ -46,7 +47,7 @@ class CardList:
     return self.cards.__setitem__(*args)
 
   def __add__(self, other):
-    return self.cards.__add__(other.cards)
+    return CardList(self.cards.__add__(other.cards))
 
   def filter(self, fn):
     return CardList([card for card in self.cards if card is not None and fn(card)])
@@ -121,7 +122,11 @@ class Player():
     for card in self.board:
       if card is not None:
         field.append(card)
-    return field
+    return CardList(field)
+
+  @property
+  def cards(self):
+    return self.field + self.hand + self.deck + self.graveyard + self.banished
 
   def hand_str(self):
     return " | ".join(
