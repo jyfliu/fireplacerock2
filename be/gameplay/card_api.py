@@ -1,7 +1,7 @@
 import random
 
-from callbacks import *
-import archetypes
+from .callbacks import *
+from . import archetypes
 
 triggers = [
   # MANDATORY TURN EFFECTS
@@ -418,27 +418,28 @@ class Card:
   def heal(self, source, amount):
     # self.on_heal(amount)
     if self.health <= self.original_health - amount:
-      self.health += amount
+      heal_amount = amount
     elif self.health <= self.original_health:
-      self.health = self.original_health
+      heal_amount = self.original_health - self.health
     else:
-      pass
-    self.owner.io.card_gain(self.uuid, source, 0, amount)
-    self.oppon.io.card_gain(self.uuid, source, 0, amount)
+      heal_amount = 0
+    self.health += heal_amount
+    self.owner.io.card_gain(self.uuid, None, 0, heal_amount)
+    self.oppon.io.card_gain(self.uuid, None, 0, heal_amount)
 
   def gain(self, source, attack=0, health=0):
     # source = [f]
     self.attack += attack
     self.health += health
-    self.owner.io.card_gain(self.uuid, source, attack, health)
-    self.oppon.io.card_gain(self.uuid, source, attack, health)
+    self.owner.io.card_gain(self.uuid, None, attack, health)
+    self.oppon.io.card_gain(self.uuid, None, attack, health)
 
   def lose(self, source, attack=0, health=0):
     # todo self.on_lose_attack?
     self.attack -= attack
     self.health -= health
-    self.owner.io.card_lose(self.uuid, source, attack, health)
-    self.oppon.io.card_lose(self.uuid, source, attack, health)
+    self.owner.io.card_lose(self.uuid, None, attack, health)
+    self.oppon.io.card_lose(self.uuid, None, attack, health)
 
   def take_battle_damage(self, source, amount):
     if amount > 0:
@@ -450,8 +451,8 @@ class Card:
     if amount > 0:
       self.effect("on_take_damage", amount)
       self.health -= amount
-      self.owner.io.card_take_damage(self.uuid, source, amount)
-      self.oppon.io.card_take_damage(self.uuid, source, amount)
+      self.owner.io.card_take_damage(self.uuid, None, amount)
+      self.oppon.io.card_take_damage(self.uuid, None, amount)
 
   def set(self, source, attack=None, health=None):
     if attack is not None:
@@ -462,12 +463,13 @@ class Card:
       self.health = health
     else:
       health = self.health
-    self.owner.io.card_set(self.uuid, source, attack, health)
-    self.oppon.io.card_set(self.uuid, source, attack, health)
+    self.owner.io.card_set(self.uuid, None, attack, health)
+    self.oppon.io.card_set(self.uuid, None, attack, health)
 
   def effect(self, trigger, *args):
     if hasattr(self.template, trigger):
-      print(f"{self.name} activates its effect {trigger}")
+      self.owner.io.display_message(f"Your {self.name} activates its effect {trigger}")
+      self.oppon.io.display_message(f"Their {self.name} activates its effect {trigger}")
       retval = self.interp(getattr(self.template, trigger), *args)
       self.io.check_field(self)
       return retval

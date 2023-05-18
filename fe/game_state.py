@@ -12,7 +12,8 @@ class Card:
     self.status = []
 
     self.uuid = card.uuid
-    self.template = card.template # TODO this should really just be the card ID and queried locally
+    self.description = card.description
+    self.flavour = card.flavour
 
   def __eq__(self, other):
     if other is None:
@@ -106,10 +107,10 @@ class CardList:
 
 class Player():
 
-  def __init__(self, player):
-    self.mana = player.mana
-    self.mana_max = player.mana_max
-    self.life = player.life
+  def __init__(self):
+    self.mana = 0
+    self.mana_max = 0
+    self.life = 3000
     self.hand = CardList()
     self.deck = CardList()
     self.board = CardList([None] * 5)

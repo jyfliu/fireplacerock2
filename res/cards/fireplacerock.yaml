@@ -961,7 +961,7 @@ dartmonkey:
       self.target = target_field()
   opt_if_summon: |-
     self.target.take_damage(self, 100)
-    owner.hand.add(self.template.create_instance(owner, oppon, io))
+    io.add_to_hand(self.template.create_instance(owner, oppon, io))
   id: 64
   rarity: C
   uuid: dartmonkey

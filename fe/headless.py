@@ -1,19 +1,12 @@
 import random
 import sys
 import os
+import threading
 
 import yaml
 from easydict import EasyDict as edict
 
 import game_state
-
-sys.path.append(os.path.abspath("../be"))
-
-import card_api
-import duel_api
-import io
-
-from callbacks import *
 
 class InvalidSyntax(BaseException):
   def __init__(self, message=""):
@@ -28,36 +21,45 @@ class Headless:
     self.player_name = player_name
 
     self.will_end_turn = False
+    self.is_other_turn = True
 
-  def init(self, owner, oppon):
-    self.owner = game_state.Player(owner)
-    self.oppon = game_state.Player(oppon)
+    self.owner = game_state.Player()
+    self.oppon = game_state.Player()
+
+    self.print_last = 22
+    self.msg_history = [""] * self.print_last
+
+    self.lock = threading.Lock()
+
 
   def prompt_user_activate(self, effect_name):
-    print(f"Activate {effect_name}'s effect?' [y/n]")
-    x = input().strip().lower()
-    return x == "y"
+    with self.lock:
+      print(f"Activate {effect_name}'s effect?' [y/n]")
+      x = input().strip().lower()
+      return x == "y"
 
 
   def prompt_user_select(self, cards):
-    print(f"Select a card [0-{len(cards) - 1}]")
-    for i, (loc, card) in enumerate(cards):
-      # loc in ["hand", "field", "deck", "banished",
-      # "oppon_hand", "oppon_field", "oppon_deck", "oppon_banished"]
-      print(f"{i: >2} {loc + ':': <15} {card}")
-    while True:
-      idx = int(input())
-      if 0 <= idx < len(cards):
-        return idx
+    with self.lock:
       print(f"Select a card [0-{len(cards) - 1}]")
+      for i, (loc, card) in enumerate(cards):
+        # loc in ["hand", "field", "deck", "banished",
+        # "oppon_hand", "oppon_field", "oppon_deck", "oppon_banished"]
+        print(f"{i: >2} {loc + ':': <15} {game_state.Card(card)}")
+      while True:
+        idx = int(input())
+        if 0 <= idx < len(cards):
+          return idx
+        print(f"Select a card [0-{len(cards) - 1}]")
 
   def prompt_user_select_board(self, nums):
-    print(f"Select an empty board index: {nums}")
-    while True:
-      idx = int(input())
-      if idx in nums:
-        return idx
+    with self.lock:
       print(f"Select an empty board index: {nums}")
+      while True:
+        idx = int(input())
+        if idx in nums:
+          return idx
+        print(f"Select an empty board index: {nums}")
 
   def take_damage(self, amount):
     self.owner.life -= amount
@@ -80,18 +82,20 @@ class Headless:
     self.oppon.mana_max = mana_max
 
   def flip_coin(self, result):
-    print(f"Flipped a coin: {'Heads!' if result == 1 else 'Tails!'}")
+    self.msg_history.append(f"Flipped a coin: {'Heads!' if result == 1 else 'Tails!'}")
 
   def display_message(self, msg):
-    print(msg)
+    self.msg_history.append(msg)
 
   def game_over(self, winner):
-    if winner == 0:
-      print("Game drawn")
-    elif winner == 1:
-      print("You win!!")
-    else:
-      print("You lose :(")
+    with self.lock:
+      if winner == 0:
+        print("Game drawn")
+      elif winner == 1:
+        print("You win!!")
+      else:
+        print("You lose :(")
+      sys.exit()
 
 
   def _move_card(self, player, card, from_loc, to_loc, idx):
@@ -99,7 +103,8 @@ class Headless:
       case "field":
         player.board.delete(card)
       case other:
-        getattr(player, from_loc).remove(card)
+        if other != "unknown":
+          getattr(player, from_loc).remove(card)
 
     match to_loc:
       case "hand":
@@ -117,6 +122,7 @@ class Headless:
       case "deck":
         # player can't see into the deck
         pass
+    self.print_board()
 
   def move_card(self, card, from_loc, to_loc, idx):
     card = game_state.Card(card)
@@ -130,8 +136,10 @@ class Headless:
     for card in self.owner.cards + self.oppon.cards:
       if card.uuid == uuid:
         card.status.append([status, duration, expiry])
+    self.print_board()
 
   def end_turn(self):
+    self.is_other_turn = True
     for card in self.owner.cards + self.oppon.cards:
       new_status = []
       for st in card.status:
@@ -143,6 +151,7 @@ class Headless:
           st[1] = st[1] - 1
           new_status.append(st)
       card.status = new_status
+    self.print_board()
 
   def card_change_name(self, uuid, new_name):
     for card in self.owner.cards + self.oppon.cards:
@@ -154,60 +163,76 @@ class Headless:
       if card.uuid == uuid:
         card.attack += attack
         card.health += health
+    self.print_board()
 
   def card_lose(self, uuid, source, attack, health):
     for card in self.owner.cards + self.oppon.cards:
       if card.uuid == uuid:
         card.attack -= attack
         card.health -= health
+    self.print_board()
 
   def card_take_damage(self, uuid, source, amount):
     for card in self.owner.cards + self.oppon.cards:
       if card.uuid == uuid:
         card.health -= amount
+    self.print_board()
 
   def card_set(self, uuid, source, attack, health):
     for card in self.owner.cards + self.oppon.cards:
       if card.uuid == uuid:
         card.attack = attack
         card.health = health
+    self.print_board()
 
   def print_board(self):
-    print(f"\n{self.player_name}'s turn")
-    print(f"Your LP: {self.owner.life} Mana: {self.owner.mana} / {self.owner.mana_max} | Mana: {self.oppon.mana} / {self.oppon.mana_max} Other LP: {self.oppon.life}")
-    print("Board: ", self.oppon.board_str())
-    print("     : ", self.owner.board_str())
-    print("Hand:  ", self.owner.hand_str())
+    with self.lock:
+      print("\033c", end="")
+      print(f"\n{self.player_name}'s turn")
+      print(f"Your LP: {self.owner.life} Mana: {self.owner.mana} / {self.owner.mana_max} | Mana: {self.oppon.mana} / {self.oppon.mana_max} Other LP: {self.oppon.life}")
+      print("Board: ", self.oppon.board_str())
+      print("     : ", self.owner.board_str())
+      print("Hand:  ", self.owner.hand_str())
+      print()
+      print("-" * 20)
+      for line in self.msg_history[-self.print_last:]:
+        print(line)
+      print("-" * 20)
+      if self.is_other_turn:
+        print("It is the opponent's turn.")
 
   def print_card(self, card):
-    print()
-    print(card)
+    self.msg_history.append("")
+    self.msg_history.append(card)
     if not card.status:
-      print("Status: None")
+      self.msg_history.append("Status: None")
     else:
       for st, dur, _ in card.status:
-        print(f"Status: {st.lower()} for {dur} more turns")
-    print()
-    print(card.template.description)
-    if card.template.flavour:
-      print()
-      print(card.template.flavour)
+        self.msg_history.append(f"Status: {st.lower()} for {dur} more turns")
+    if card.description:
+      self.msg_history.append("")
+      self.msg_history.append(card.description)
+    if card.flavour:
+      self.msg_history.append("")
+      self.msg_history.append(card.flavour)
 
   def draw_phase_prompt(self):
     # YOU DREW X
+    self.is_other_turn = False
     self.will_end_turn = False
-    pass
+    return ["pass"]
 
   def main_phase_prompt(self, main_phase_2=False):
     if self.will_end_turn:
       return ["pass"]
     self.print_board()
-    if main_phase_2:
-      print("It is Main Phase 2")
-    else:
-      print("It is Main Phase")
-    print(f"Commands: info, summon, activate_spell, activate_board, pass, end")
-    print(">>> ", end="")
+    with self.lock:
+      if main_phase_2:
+        print("It is Main Phase 2")
+      else:
+        print("It is Main Phase")
+      print(f"Commands: info, summon, activate_spell, activate_board, pass, end")
+      print(">>> ", end="")
     command = input().split()
     try:
       hand = [("hand", card) for card in self.owner.hand]
@@ -223,8 +248,11 @@ class Headless:
           _, card = cards[self.prompt_user_select(cards)]
           self.print_card(card)
         case ["info", idx] | ["i", idx]:
-          cards = self.owner.hand + self.owner.field + self.oppon.field
-          self.print_card(cards[int(idx)])
+          try:
+            cards = self.owner.hand + self.owner.field + self.oppon.field
+            self.print_card(cards[int(idx)])
+          except:
+            raise ValueError()
 
         case ["summon"] | ["s"]:
           hand_idx = self.prompt_user_select(hand)
@@ -256,15 +284,16 @@ class Headless:
         case _:
           raise ValueError
     except ValueError:
-      print("Unable to Parse Command")
+      self.msg_history.append("Unable to Parse Command")
 
   def battle_phase_prompt(self):
     if self.will_end_turn:
       return ["pass"]
     self.print_board()
-    print("It is Battle Phase")
-    print(f"Commands: attack, attack_directly, pass, end")
-    print(">>> ", end="")
+    with self.lock:
+      print("It is Battle Phase")
+      print(f"Commands: attack, attack_directly, pass, end")
+      print(">>> ", end="")
     command = input().split()
     try:
       match command:
@@ -281,57 +310,4 @@ class Headless:
           raise ValueError(other)
     except ValueError:
       print("Unable to Parse Command")
-
-
-
-def test():
-  with open("../res/cards/fireplacerock.yaml", "r") as f:
-    cards = yaml.safe_load(f)
-    cards = edict(cards)
-
-  names = [ # all working cards
-    "mew", "unown",
-    "sprightelf", # targeting protection not working
-    "magikarp", "mudkip", "pikachu", "grovyle", "ampharos",
-    "blastoise", "wailord", "snorlax", "garchomp", "jirachi", "hooh",
-    # "kyogre", "groudon", "giratina",
-    "arceus", "gallade", "heracross", "shuckle", "breloom", "chansey",
-    "tyranitar", "gengar", "dragonite",
-    # "gyarados"
-    "salamence", "lugia", "lapras", "turtwig",
-    "sprightjet", "sprightblue", "sprightpixie", "windupkitten",
-    "livetwinlilla", "livetwinkisikil", "livetwintroublesunny", "omen",
-    # "brimstone", "viper",
-    "reyna",
-    # "cypher", "neon",
-    "jett", "phoenix", "dartmonkey",
-    # "supermonkey", "johnnywyles", "riverwyles", "redamogus", "zoe"
-    "lopunny", "megalopunny",
-    # Spells
-    "squirtbottle", "technicalmachine", "1tap", "switchout"
-  ]
-
-  deck1 = random.sample(names, k=16) * 3
-  deck2 = random.sample(names, k=16) * 3
-  #deck1 = ["mew"] * 16
-  #deck2 = ["1tap"] * 16
-
-  deck1 = [cards[name] for name in deck1]
-  deck1 = [card_api.Template(card) for card in deck1]
-
-  deck2 = [cards[name] for name in deck2]
-  deck2 = [card_api.Template(card) for card in deck2]
-
-  p1 = Headless("Player 1")
-  p2 = Headless("Player 2")
-  duel = duel_api.Duel(deck1, deck2, p1, p2)
-
-  p1.init(duel.p1, duel.p2)
-  p2.init(duel.p2, duel.p1)
-
-  duel.start_duel()
-
-
-if __name__ == '__main__':
-  test()
 

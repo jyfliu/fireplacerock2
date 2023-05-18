@@ -1,5 +1,5 @@
 import random
-from callbacks import *
+from .callbacks import *
 
 
 class CardList:
@@ -602,6 +602,9 @@ class Duel():
 
     inactive.take_damage(attacker, forward)
 
+    attacker.owner.io.display_message(f"Your {attacker.name} attacks directly for {forward}")
+    attacker.oppon.io.display_message(f"Their {attacker.name} attacks directly for {forward}")
+
     attacker.effect("end_attack_directly")
     attacker.effect("opt_end_attack_directly")
 
@@ -649,6 +652,9 @@ class Duel():
 
     attackee.take_battle_damage("battle", forward)
     attacker.take_battle_damage("battle", backward)
+
+    attacker.owner.io.display_message(f"Your {attacker.name} attacks their {attackee.name} for {forward}")
+    attacker.oppon.io.display_message(f"Their {attacker.name} attacks your {attackee.name} for {forward}")
 
     # exit damage step
     # TODO

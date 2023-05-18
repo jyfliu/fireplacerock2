@@ -18,4 +18,3 @@ class GameOver(BaseException):
   def __str__(self):
     return f"Player {self.winner} wins! Congratulations!" if self.winner else "Draw"
 
-
