@@ -3,6 +3,10 @@ from easydict import EasyDict as edict
 
 import headless
 
+ip = input("Enter server IP:\n")
+if not ip:
+  ip = "0.0.0.0"
+print(ip)
 player_name = input("Enter your name:\n")
 other = input("Enter name of who you want to challenge: [tmp]\n")
 
@@ -119,6 +123,6 @@ def battle_phase_prompt():
   return io.battle_phase_prompt()
 
 
-sio.connect('http://localhost:9069')
+sio.connect(f'http://{ip}:9069')
 sio.wait()
 

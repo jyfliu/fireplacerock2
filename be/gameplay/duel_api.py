@@ -185,18 +185,14 @@ class Duel():
       self.other_p = self.p1
       self.cur_turn = 2
 
-    p1 = self.turn_p
-    p2 = self.other_p
-
     # both players draw 3
     for _ in range(3):
-      self.draw(p1)
-      self.draw(p2)
-
-    # first player's turn
-    self.turn(first=True)
+      self.draw(self.turn_p)
+      self.draw(self.other_p)
 
     try:
+      # first player's turn
+      self.turn(first=True)
       while True:
         self.turn()
     except GameOver as e:
@@ -343,9 +339,9 @@ class Duel():
     if self.turn_p.life <= 0 and self.other_p.life <= 0:
       raise GameOver(0)
     if self.turn_p.life <= 0:
-      raise GameOver(self.turn_p.id)
-    if self.other_p.life <= 0:
       raise GameOver(self.other_p.id)
+    if self.other_p.life <= 0:
+      raise GameOver(self.turn_p.id)
 
   def check_field(self, source=None):
     to_gy = []

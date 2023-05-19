@@ -188,7 +188,10 @@ class Headless:
   def print_board(self):
     with self.lock:
       print("\033c", end="")
-      print(f"\n{self.player_name}'s turn")
+      if self.is_other_turn:
+        print("Their turn")
+      else:
+        print(f"Your turn")
       print(f"Your LP: {self.owner.life} Mana: {self.owner.mana} / {self.owner.mana_max} | Mana: {self.oppon.mana} / {self.oppon.mana_max} Other LP: {self.oppon.life}")
       print("Board: ", self.oppon.board_str())
       print("     : ", self.owner.board_str())
@@ -296,11 +299,30 @@ class Headless:
       print(">>> ", end="")
     command = input().split()
     try:
+      hand = [("hand", card) for card in self.owner.hand]
+      field = [("field", card) for card in self.owner.field]
+      oppon_field = [("oppon_field", card) for card in self.oppon.field]
+
+      empty_board = [i for i in range(5) if self.owner.board[i] is None]
+      filled_board = [i for i in range(5) if self.owner.board[i] is not None]
+
       match command:
         case ["attack", attacker_idx, attackee_idx] | ["a", attacker_idx, attackee_idx]:
           return ["attack", int(attacker_idx), int(attackee_idx)]
+        case ["attack"] | ["a"]:
+          if field and oppon_field:
+            attacker_idx = self.prompt_user_select(field)
+            attackee_idx = self.prompt_user_select(oppon_field)
+          else:
+            raise ValueError()
+          return ["attack", attacker_idx, attackee_idx]
+
         case ["attack_directly", attacker_idx] | ["ad", attacker_idx]:
           return ["attack_directly", int(attacker_idx)]
+        case ["attack_directly"] | ["ad"]:
+          attacker_idx = self.prompt_user_select(field)
+          return ["attack_directly", attacker_idx]
+
         case ["pass"] | ["p"]:
           return ["pass"]
         case ["end"] | ["e"]:
@@ -309,5 +331,5 @@ class Headless:
         case [other, _] | [other]:
           raise ValueError(other)
     except ValueError:
-      print("Unable to Parse Command")
+      self.msg_history.append("Unable to Parse Command")
 
