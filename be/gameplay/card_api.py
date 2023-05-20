@@ -148,7 +148,7 @@ class Card:
     oppon = self.oppon
     io = self.io
 
-    field = owner.board + oppon.board
+    field = owner.field + oppon.field
 
     prompt_user_activate = self.prompt_user_activate
 
@@ -500,7 +500,7 @@ class Card:
       )
     elif trigger == "can_activate_hand":
       return (
-        hasattr(self.template, "on_activate")
+        hasattr(self.template, "on_activate_hand")
       )
     elif trigger == "can_attack_directly":
       return not self.has_status("CANNOT_ATTACK")

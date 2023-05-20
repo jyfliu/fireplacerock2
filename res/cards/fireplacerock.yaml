@@ -551,7 +551,13 @@ ultraball:
   name: Ultraball
   type: spell
   cost: 4
-  description: Banish a monster on the field. You can’t attack directly this turn.
+  description: Target a monster on the field with 7 or less attack; banish it.
+  can_activate_hand: |-
+    retval = can_target_field(lambda card: card.attack <= 7)
+  on_activate_hand_cost: |-
+    self.target = target_field(lambda card: card.attack <= 7)
+  on_activate_hand: |-
+    io.banish(self.target)
   id: 34
   rarity: R
   uuid: ultraball
@@ -560,6 +566,11 @@ repel:
   type: spell
   cost: 3
   description: Return an enemy monster to the opponent’s hand
+  can_activate_hand: |-
+    retval = can_select_oppon_field()
+  on_activate_hand: |-
+    target = select_oppon_field()
+    io.bounce(target)
   id: 35
   rarity: R
   uuid: repel
@@ -664,6 +675,13 @@ sprightstarter:
   cost: 2
   description: Summon a 2 cost monster from your deck. Take damage equal to 2x its
     attack.
+  can_activate_hand: |-
+    retval = can_select_owner_deck(lambda card: card.cost == 2) and can_select_owner_board()
+  on_activate_hand: |-
+    if can_select_owner_deck(lambda card: card.cost == 2) and can_select_owner_board():
+      card = select_owner_deck(lambda card: card.cost == 2)
+      idx = select_owner_board()
+      io.summon(card, idx)
   id: 43
   rarity: R
   uuid: sprightstarter
@@ -925,9 +943,13 @@ cloudburst:
 odinspam:
   name: Odin Spam
   type: spell
-  cost: -1
+  cost: 5
   description: Deal damage to all opponent monsters equal to 150 x the number of monsters
     they control.
+  on_activate_hand: |-
+    damage = len(oppon.field) * 150
+    for target in oppon.field:
+      target.take_damage(self, 500)
   id: 61
   rarity: R
   uuid: odinspam
@@ -1091,6 +1113,12 @@ ancientruins:
   type: spell
   cost: 2
   description: Summon as many Unown as you can to your side of the field.
+  on_activate_hand: |-
+    unown_tmpl = io.card_templates["unown"]
+    for i in range(len(owner.board)):
+      if owner.board[i] == None:
+        card = unown_tmpl.create_instance(owner, oppon, io)
+        io.summon(card, i)
   id: 79
   rarity: R
   uuid: ancientruins

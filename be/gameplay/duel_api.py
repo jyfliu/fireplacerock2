@@ -146,7 +146,9 @@ class Player():
 
 class Duel():
 
-  def __init__(self, deck1, deck2, p1_io, p2_io):
+  def __init__(self, card_templates, deck1, deck2, p1_io, p2_io):
+    self.card_templates = card_templates
+
     self.p1 = Player(1, p1_io)
     self.p2 = Player(2, p2_io)
 
@@ -454,6 +456,9 @@ class Duel():
 
   def add_to_hand(self, card):
     self.move_to(card, "hand")
+
+  def banish(self, card):
+    self.move_to(card, "banished")
 
   def bounce(self, card):
     self.move_to(card, "hand")

@@ -19,8 +19,10 @@ names = [ # all working cards
   # "supermonkey", "johnnywyles", "riverwyles", "redamogus", "zoe"
   "lopunny", "megalopunny",
   # Spells
-  "squirtbottle", "technicalmachine", "1tap", "switchout"
+  "ultraball", "repel", "squirtbottle", "technicalmachine", "1tap", "switchout",
+  "sprightstarter", "odinspam", "ancientruins",
 ]
 
 deck1 = random.sample(names, k=16) * 3
 deck2 = random.sample(names, k=16) * 3
+

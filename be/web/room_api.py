@@ -142,7 +142,10 @@ class Room:
     deck2 = [cards[name] for name in deck2]
     deck2 = [card_api.Template(card) for card in deck2]
 
-    duel = duel_api.Duel(deck1, deck2, p1, p2)
+    card_templates = {
+        uuid: card_api.Template(card) for uuid, card in cards.items()
+    }
+    duel = duel_api.Duel(card_templates, deck1, deck2, p1, p2)
 
     duel.start_duel()
 
