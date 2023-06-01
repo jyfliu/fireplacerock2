@@ -59,19 +59,34 @@ sprightelf:
   cost: 2
   attack: 200
   health: 200
-  description: When this card is summoned, you can pay 1 mana; summon a 2 cost monster
-    from your graveyard to your field. While this card is on your field, adjacent
+  description: |-
+    Link: 1 2-cost monster + 1 other monster. You can pay 1 mana; summon a 2 cost monster
+    from your graveyard to an adjacent space. While this card is on your field, adjacent
     2-cost monsters on your field cannot be targeted.
   id: 2
   rarity: UR
-  opt_if_summon_cost: |-
-    will_activate = owner.graveyard.contains(lambda card: card.cost == 2) and owner.can_pay(1) and prompt_user_activate();
-    if will_activate:
-      owner.pay(1)
-    retval = will_activate
-  opt_if_summon: |-
-    card = select_owner_graveyard(lambda card: card.type == "monster" and card.cost == 2)
-    idx = select_owner_board()
+  can_summon_extradeck: |-
+    retval = can_link(
+      lambda card: card.cost == 2,
+      lambda card: True,
+    )
+  summon_extradeck: |-
+    link(
+      lambda card: card.cost == 2,
+      lambda card: True,
+    )
+  can_summon: retval = False
+  can_activate: |-
+    retval = (
+      owner.can_pay(1)
+      and owner.graveyard.contains(lambda card: card.cost == 2 and card.can("summon"))
+      and can_select_owner_board(get_adjacent_board_idxs())
+    )
+  on_activate_cost: |-
+    owner.pay(1)
+  on_activate: |-
+    card = select_owner_graveyard(lambda card: card.type == "monster" and card.cost == 2 and card.can("summon"))
+    idx = select_owner_board(get_adjacent_board_idxs())
     io.summon(card, idx)
   uuid: sprightelf
 magikarp:
@@ -525,23 +540,21 @@ switchout:
   name: Switch Out!
   type: spell
   cost: 2
-  description: Return one of your Pokemon on the field to your hand. Summon a Pokemon
+  description: (Quick) Return one of your Pokemon on the field to your hand. Summon a Pokemon
     from your deck with equal or lesser cost.
   can_activate_hand: |-
-    def works(max_cost):
-      return can_select_owner_deck(lambda card: card.cost <= max_cost and card.type == "monster"and card.id in archetypes.pokemon)
     retval = can_select_owner_field(
       lambda card: card.type == "monster" and card.id in archetypes.pokemon and
-                   can_select_owner_deck(lambda x: x.cost <= card.cost and x.type == "monster"and x.id in archetypes.pokemon)
+                   can_select_owner_deck(lambda x: x.cost <= card.cost and x.type == "monster" and x.id in archetypes.pokemon)
     )
   on_activate_hand_cost: |-
     self.target = select_owner_field(
       lambda card: card.type == "monster" and card.id in archetypes.pokemon and
-                   can_select_owner_deck(lambda x: x.cost <= card.cost and x.type == "monster"and x.id in archetypes.pokemon)
+                   can_select_owner_deck(lambda x: x.cost <= card.cost and x.type == "monster" and x.id in archetypes.pokemon)
     )
     io.bounce(self.target)
   on_activate_hand: |-
-    to_summon = select_owner_deck(lambda card: card.cost <= self.target.cost and card.type == "monster"and card.id in archetypes.pokemon)
+    to_summon = select_owner_deck(lambda card: card.cost <= self.target.cost and card.type == "monster" and card.id in archetypes.pokemon)
     idx = select_owner_board()
     io.summon(to_summon, idx)
   id: 33
@@ -612,6 +625,28 @@ pokemonshuffle:
   cost: 2
   description: Shuffle as many Pokemon as you’d like from the graveyard into your
     deck. Summon, from your extra deck, a Pokemon with cost equal to the number of unique names sent.
+  can_activate_hand: |-
+    self.num_gy = len(owner.graveyard.filter(lambda card: card.id in archetypes.pokemon and card.type == "monster"))
+    ed_targets = owner.extradeck.filter(lambda card: card.id in archetypes.pokemon and card.type == "monster" and card.cost <= self.num_gy)
+    has_target = len(ed_targets) > 0
+
+    has_space = can_select_owner_board()
+    retval = has_target and has_space
+  on_activate_hand_cost: |-
+    sends = select_owner_graveyard(lambda card: card.id in archetypes.pokemon and card.type == "monster", amount=-1)
+    names = {card.name for card in sends}
+    self.pkmn_shuffle_num_names = len(names)
+    for card in sends:
+      io.spin(card)
+  on_activate_hand: |-
+    ed_target = select_owner_extradeck(
+      lambda card:
+        card.id in archetypes.pokemon
+        and card.type == "monster"
+        and card.cost == self.pkmn_shuffle_num_names
+    )
+    idx = select_owner_board()
+    io.summon(ed_target, idx)
   id: 39
   rarity: UR
   uuid: pokemonshuffle
@@ -676,10 +711,10 @@ sprightstarter:
   description: Summon a 2 cost monster from your deck. Take damage equal to 2x its
     attack.
   can_activate_hand: |-
-    retval = can_select_owner_deck(lambda card: card.cost == 2) and can_select_owner_board()
+    retval = can_select_owner_deck(lambda card: card.cost == 2 and card.type == "monster") and can_select_owner_board()
   on_activate_hand: |-
-    if can_select_owner_deck(lambda card: card.cost == 2) and can_select_owner_board():
-      card = select_owner_deck(lambda card: card.cost == 2)
+    if can_select_owner_deck(lambda card: card.cost == 2 and card.type == "monster") and can_select_owner_board():
+      card = select_owner_deck(lambda card: card.cost == 2 and card.type == "monster")
       idx = select_owner_board()
       io.summon(card, idx)
   id: 43
@@ -707,20 +742,29 @@ livetwinlilla:
   name: Live Twin Lil-la
   type: monster
   cost: 2
-  attack: 100
+  attack: 0
   health: 100
-  description: When this card is summoned, and you control a “Ki-sikil” monster, you can target
-    a card on your opponent's field; destroy it.
+  description: When this card is summoned, and you control “Ki-sikil”,
+    you can target a card on your opponent's field; destroy it. If you don't,
+    you can add a “Ki-sikil” from your deck to your hand.
   opt_if_summon_cost: |-
     found = False
     for card in owner.field:
       if "ki-sikil" in card.name.lower():
         found = True
-    retval = found and can_target_oppon_field() and prompt_user_activate()
-    if retval:
-      self.target = target_oppon_field()
+    self.kisikil_exists = found
+    if found:
+      retval = can_target_oppon_field() and prompt_user_activate()
+      if retval:
+        self.target = target_oppon_field()
+    else:
+      retval = can_select_owner_deck(lambda card: "kisikil" in card.id) and prompt_user_activate()
   opt_if_summon: |-
-    io.destroy(self.target)
+    if self.kisikil_exists:
+      io.destroy(self.target)
+    else:
+      card = select_owner_deck(lambda card: "kisikil" in card.id)
+      io.add_to_hand(card)
   id: 45
   rarity: R
   uuid: livetwinlilla
@@ -728,25 +772,33 @@ livetwinkisikil:
   name: Live Twin Ki-sikil
   type: monster
   cost: 2
-  attack: 100
+  attack: 0
   health: 100
-  description: When this card is summoned, and you control a “Lil-la” monster, draw
-    a card.
+  description: When this card is summoned, and you control “Lil-la”, draw
+    a card. If you don't, you can add a “Lil-la” from your deck to your hand.
   opt_if_summon_cost: |-
     found = False
     for card in owner.field:
       if "lil-la" in card.name.lower():
         found = True
-    retval = found and prompt_user_activate()
+    self.lilla_exists = found
+    if found:
+      retval = prompt_user_activate()
+    else:
+      retval = can_select_owner_deck(lambda card: "lilla" in card.id) and prompt_user_activate()
   opt_if_summon: |-
-    io.draw(owner)
+    if self.lilla_exists:
+      io.draw(owner)
+    else:
+      card = select_owner_deck(lambda card: "lilla" in card.id)
+      io.add_to_hand(card)
   id: 46
   rarity: R
   uuid: livetwinkisikil
 livetwintroublesunny:
   name: Live Twin Trouble Sunny
   type: monster
-  cost: 6
+  cost: 4
   attack: 400
   health: 400
   description: You can tribute this card; summon up to one “Live Twin
@@ -957,7 +1009,8 @@ haven:
   name: Haven
   type: field spell
   cost: 2
-  description: One “agent” can attack without taking damage each turn.
+  description: 'Once per turn: If an “agent” monster is about to attack, you can
+    (Quick) activate this effect, it takes no recoil.'
   id: 62
   rarity: C
   uuid: haven
@@ -965,7 +1018,7 @@ bind:
   name: Bind
   type: field spell
   cost: 2
-  description: 'Once per turn: swap an “agent” monster to a new space'
+  description: 'Once per turn (Quick): swap an “agent” monster to a new space'
   id: 63
   rarity: SR
   uuid: bind
@@ -976,14 +1029,16 @@ dartmonkey:
   attack: 100
   health: 100
   description: When this card is summoned, you can target a monster on the field;
-    deal 100 damage to it. Then add a 1 mana Dart Monkey to your hand.
+    deal 100 damage to it. Then add a temporary Dart Monkey to your hand.
   opt_if_summon_cost: |-
     retval = can_target_field() and prompt_user_activate()
     if retval:
       self.target = target_field()
   opt_if_summon: |-
     self.target.take_damage(self, 100)
-    io.add_to_hand(self.template.create_instance(owner, oppon, io))
+    dart_monkey = self.template.create_instance(owner, oppon, io)
+    io.add_to_hand(dart_monkey)
+    dart_monkey.apply_status(self, "BANISH", 0, "END")
   id: 64
   rarity: C
   uuid: dartmonkey
@@ -1001,7 +1056,7 @@ supermonkeyfanclub:
   name: Super Monkey Fan Club
   type: spell
   cost: 3
-  description: Convert all monkeys on your side of the field to Super Monkeys. At
+  description: Convert all Dart Monkeys on your side of the field to Super Monkeys. At
     the end of this turn, convert them back.
   id: 66
   rarity: R
@@ -1148,10 +1203,14 @@ megalopunny:
   health: 200
   description: When this card is summoned, you can target one monster on the field;
     deal 100 damage to it, and if you do, it is silenced and cannot attack until the
-    end of the next turn. You cannot summon any “Mega” for the rest of this duel,
-    except Mega Lopunny.
+    end of the next turn. Must first be summoned by “Mega Bracelet”, and you cannot
+    summon any “Mega” for the rest of this duel, except Mega Lopunny.
   id: 81
   rarity: UR
+  can_summon: |-
+    retval = self.has_status("PROPERLY_SUMMONED")
+  if_summon: |-
+    self.apply_status(self, "PROPERLY_SUMMONED", -1)
   opt_if_summon_cost: |-
     retval = can_target_oppon_field() and prompt_user_activate()
     if retval:
@@ -1167,8 +1226,14 @@ beedrill:
   health: 100
   flavour: 'Flies at high speed and attacks using its large venomous stingers on its
     forelegs and tail. '
-  description: When this card attacks a monster, that monster takes 100 damage at
-    the end of your turn.
+  description: When this card attacks, all your “Beedrill” cards everywhere
+    gain 50 original attack.
+  if_attack: |-
+    for card in all_cards.filter(lambda card: "beedrill" in card.id):
+      card.original_gain(self, 50, 0)
+  if_attack_directly: |-
+    for card in all_cards.filter(lambda card: "beedrill" in card.id):
+      card.original_gain(self, 50, 0)
   id: 82
   rarity: C
   uuid: beedrill
@@ -1178,10 +1243,21 @@ megabeedrill:
   cost: 2
   attack: 300
   health: 100
-  description: When this card attacks a monster, all of your “Beedrill” cards everywhere
-    gain 100/100. When this card attacks directly, reduce its cost to 0, return it
-    to your hand. You cannot summon any “Mega” for the rest of this duel, except Mega
-    Beedrill.
+  description: When this card attacks, all of your “Beedrill” cards everywhere
+    gain 100 attack. (Quick) You can return this card to your hand; Add a “Beedrill”
+    from your graveyard to your hand. You cannot summon any “Mega” for the rest
+    of this duel, except Mega Beedrill.
+  if_attack: |-
+    for card in all_cards.filter(lambda card: "beedrill" in card.id):
+      card.original_gain(self, 100, 0)
+  if_attack_directly: |-
+    for card in all_cards.filter(lambda card: "beedrill" in card.id):
+      card.original_gain(self, 100, 0)
+  can_activate: |-
+    retval = can_select_owner_graveyard(lambda card: "beedrill" in card.id)
+  on_activate_cost: io.bounce(self)
+  on_activate: |-
+    io.bounce(select_owner_graveyard(lambda card: "beedrill" in card.id))
   id: 83
   rarity: SR
   uuid: megabeedrill
@@ -1206,6 +1282,8 @@ megacharizardx:
   health: 500
   description: 'In the standby phase of each turn: This card gains 300 attack. You
     cannot summon any “Mega” for the rest of this duel, except “Mega Charizard”.'
+  begin_phase_standby: |-
+    self.gain(self, 300)
   id: 85
   rarity: UR
   uuid: megacharizardx
@@ -1215,8 +1293,9 @@ megacharizardy:
   cost: 5
   attack: 600
   health: 300
-  description: This card does not take battle damage when attacking. You cannot summon
+  description: This card can attack directly. You cannot summon
     any “Mega” for the rest of this duel, except “Mega Charizard”.
+  can_attack_directly: retval = not self.has_status("CANNOT_ATTACK")
   id: 86
   rarity: UR
   uuid: megacharizardy
@@ -1226,9 +1305,15 @@ megaheracross:
   cost: 8
   attack: 800
   health: 800
-  description: This card cannot attack. In your end phase deal 100 damage 8 times
+  description: This card cannot attack. In the end phase deal 100 damage 8 times
     randomly to opponent monsters. You cannot summon any “Mega” for the rest of this
     duel, except “Mega Heracross”.
+  begin_phase_end: |-
+    for _ in range(8):
+      if len(oppon.field):
+        tgt = random.choice(oppon.field)
+        tgt.take_damage(100)
+        io.check_field(source=self)
   id: 87
   rarity: SR
   can_attack: retval = False
@@ -1327,7 +1412,21 @@ eevee:
   cost: 3
   attack: 200
   health: 200
-  description: 'Choose one: Gain +200 attack, Gain +200 health, Gain Stealth'
+  description: 'If this card is summoned, choose one: Gain 200 attack,
+    Gain 200 health, Gain stealth'
+  if_summon: |-
+    choice = owner.io.prompt_user_select_text([
+      "Gain 200 attack",
+      "Gain 200 health",
+      "Gain stealth",
+    ])
+    match choice:
+      case 0: 
+        self.gain(self, 200, 0)
+      case 1: 
+        self.gain(self, 0, 200)
+      case 2: 
+        self.apply_status(self, "STEALTH", -1)
   id: 96
   rarity: SR
   uuid: eevee
@@ -1337,6 +1436,41 @@ megabracelet:
   cost: 0
   description: Send a Pokemon to the graveyard from your hand, field, or deck; Summon
     a Mega Pokemon from your extra deck that mentions it and pay its mana cost
+  can_activate_hand: |-
+    ed_targets = owner.extradeck.filter(
+      lambda card:
+        "Mega" in card.name and card.id in archetypes.pokemon and owner.can_pay(card.cost)
+    )
+    self.ed_names = [card.name for card in ed_targets]
+    has_target = can_select(
+      lambda card:
+        (card in owner.hand or card in owner.field or card in owner.deck) 
+        and any(card.name in ed_name for ed_name in self.ed_names)
+    )
+    has_space = can_select_owner_board()
+    retval = has_target and has_space
+  on_activate_hand_cost: |-
+    ed_targets = owner.extradeck.filter(
+      lambda card: "Mega" in card.name and card.id in archetypes.pokemon and owner.can_pay(card.cost)
+    )
+    self.ed_names = [card.name for card in ed_targets]
+    self.target = select(
+      lambda card:
+        (card in owner.hand or card in owner.field or card in owner.deck) 
+        and any(card.name in ed_name for ed_name in self.ed_names)
+    )
+    io.send_graveyard(self.target)
+  on_activate_hand: |-
+    ed_target = select_owner_extradeck(
+      lambda card:
+        "Mega" in card.name
+        and self.target.name in card.name
+        and card.id in archetypes.pokemon
+        and owner.can_pay(card.cost)
+    )
+    idx = select_owner_board()
+    owner.pay(ed_target.cost)
+    io.summon(ed_target, idx)
   id: 97
   rarity: C
   uuid: megabracelet
@@ -1429,12 +1563,12 @@ truesungod:
   name: True Sun God
   type: monster
   cost: 10
-  attack: -1
-  health: -1
+  attack: 600
+  health: 1000
   flavour: There can be only one.
   description: When this card is summoned, send all monsters from either side of the
-    field to the graveyard. This card’s original attack and health becomes their total
-    attack and health, plus 600/1000.
+    field to the graveyard. This card’s original attack and health increases by their total
+    attack and health.
   id: -1
   rarity: "--"
   uuid: truesungod

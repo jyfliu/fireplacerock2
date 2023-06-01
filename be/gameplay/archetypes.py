@@ -5,4 +5,6 @@ pokemon = [
   "chansey", "tyranitar", "gengar", "dragonite", "gyarados" "salamence",
   "lugia", "lapras", "turtwig",
   "lopunny", "megalopunny",
+  "beedrill", "megabeedrill",
+  "charizard", "megacharizardx", "megacharizardy",
 ]

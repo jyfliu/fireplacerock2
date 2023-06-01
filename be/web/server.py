@@ -46,7 +46,7 @@ def challenge(sid, challengee):
     state.room_id += 1
 
     # start duel
-    room.start_duel(deck_api.deck1, deck_api.deck2)
+    room.start_duel((deck_api.sd_pote, deck_api.ed_pote), (deck_api.sd_cs, deck_api.ed_cs))
   else:
     state.challenge_map[challenger] = challengee
     if challengee in state.name_to_sid:

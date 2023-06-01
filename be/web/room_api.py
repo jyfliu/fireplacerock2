@@ -34,17 +34,34 @@ class PlayerIO:
   def sid(self):
     return se.state.name_to_sid[self.name]
 
+  def init_game_state(self, extradeck):
+    extradeck = [serialize_card(card) for card in extradeck]
+    se.sio.emit("init_game_state", extradeck, room=self.sid)
+
   def prompt_user_activate(self, effect_name):
     response = se.sio.call("prompt_user_activate", effect_name, sid=self.sid, timeout=9999)
 
     assert response in [True, False]
     return response
 
-  def prompt_user_select(self, cards):
+  def prompt_user_select(self, cards, amount=1):
+    if amount == -1:
+      amount = list(range(len(cards) + 1))
+    elif not isinstance(amount, list):
+      amount = [amount]
     cards = [(loc, serialize_card(card)) for loc, card in cards]
-    response = se.sio.call("prompt_user_select", cards, sid=self.sid, timeout=9999)
+    response = se.sio.call("prompt_user_select_cards", (cards, amount), sid=self.sid, timeout=9999)
 
-    assert response in range(len(cards))
+    if len(response) == 1:
+      assert response[0] in range(len(cards))
+      return response[0]
+    else:
+      return response
+
+  def prompt_user_select_text(self, options):
+    response = se.sio.call("prompt_user_select_text", options, sid=self.sid, timeout=9999)
+
+    assert response in range(len(options))
     return response
 
   def prompt_user_select_board(self, nums):
@@ -136,16 +153,24 @@ class Room:
       cards = yaml.safe_load(f)
       cards = edict(cards)
 
-    deck1 = [cards[name] for name in deck1]
-    deck1 = [card_api.Template(card) for card in deck1]
+    sd1, ed1 = deck1
+    sd1 = [cards[name] for name in sd1]
+    sd1 = [card_api.Template(card) for card in sd1]
 
-    deck2 = [cards[name] for name in deck2]
-    deck2 = [card_api.Template(card) for card in deck2]
+    ed1 = [cards[name] for name in ed1]
+    ed1 = [card_api.Template(card) for card in ed1]
+
+    sd2, ed2 = deck2
+    sd2 = [cards[name] for name in sd2]
+    sd2 = [card_api.Template(card) for card in sd2]
+
+    ed2 = [cards[name] for name in ed2]
+    ed2 = [card_api.Template(card) for card in ed2]
 
     card_templates = {
         uuid: card_api.Template(card) for uuid, card in cards.items()
     }
-    duel = duel_api.Duel(card_templates, deck1, deck2, p1, p2)
+    duel = duel_api.Duel(card_templates, (sd1, ed1), (sd2, ed2), p1, p2)
 
     duel.start_duel()
 

@@ -26,13 +26,21 @@ def disconnect():
   print('Disconnected from server')
 
 @sio.event
+def init_game_state(extradeck):
+  return io.init_game_state([edict(card) for card in extradeck])
+
+@sio.event
 def prompt_user_activate(effect_name):
   return io.prompt_user_activate(effect_name)
 
 @sio.event
-def prompt_user_select(cards):
+def prompt_user_select_cards(cards, amounts):
   cards = [(loc, edict(card)) for loc, card in cards]
-  return io.prompt_user_select(cards)
+  return io.prompt_user_select_multiple(cards, amounts)
+
+@sio.event
+def prompt_user_select_text(nums):
+  return io.prompt_user_select_text(nums)
 
 @sio.event
 def prompt_user_select_board(nums):

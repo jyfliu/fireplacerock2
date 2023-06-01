@@ -91,11 +91,15 @@ class Player():
     self.mana = 0
     self.mana_max = 0
     self.life = 3000
+
     self.hand = CardList()
     self.deck = CardList()
+    self.extradeck = CardList()
     self.board = CardList([None] * 5)
     self.graveyard = CardList()
     self.banished = CardList()
+
+    self.status = []
     self.oppon = None
 
   def set_oppon(self, oppon):
@@ -107,7 +111,11 @@ class Player():
     for card in self.board:
       if card is not None:
         field.append(card)
-    return field
+    return CardList(field)
+
+  @property
+  def cards(self):
+    return self.field + self.hand + self.deck + self.extradeck + self.graveyard + self.banished
 
   def take_damage(self, source, amount):
     self.life -= amount
@@ -155,11 +163,20 @@ class Duel():
     self.p1.set_oppon(self.p2)
     self.p2.set_oppon(self.p1)
 
+    deck1, extradeck1 = deck1
+    deck2, extradeck2 = deck2
+
     deck1 = [card.create_instance(self.p1, self.p2, self) for card in deck1]
     self.p1.deck = CardList(deck1).shuffle()
 
     deck2 = [card.create_instance(self.p2, self.p1, self) for card in deck2]
     self.p2.deck = CardList(deck2).shuffle()
+
+    extradeck1 = [card.create_instance(self.p1, self.p2, self) for card in extradeck1]
+    self.p1.extradeck = CardList(extradeck1).sort()
+
+    extradeck2 = [card.create_instance(self.p2, self.p1, self) for card in extradeck2]
+    self.p2.extradeck = CardList(extradeck2).sort()
 
   ### HELPER FUNCTIONS ###
   def get_active_player(self, player):
@@ -187,10 +204,14 @@ class Duel():
       self.other_p = self.p1
       self.cur_turn = 2
 
-    # both players draw 3
-    for _ in range(3):
+    # both players draw 4
+    for _ in range(4):
       self.draw(self.turn_p)
       self.draw(self.other_p)
+
+    # init extra decks
+    self.turn_p.io.init_game_state(self.turn_p.extradeck)
+    self.other_p.io.init_game_state(self.other_p.extradeck)
 
     try:
       # first player's turn
@@ -230,10 +251,10 @@ class Duel():
     self.turn_p.restore_mana(self.turn_p.mana_max + 1, self.turn_p.mana_max + 1)
 
   def end_turn(self):
-    for card in self.turn_p.board:
+    for card in self.turn_p.cards:
       if card:
         card.on_end_turn()
-    for card in self.other_p.board:
+    for card in self.other_p.cards:
       if card:
         card.on_end_turn()
 
@@ -280,6 +301,9 @@ class Duel():
             break
           case ["summon", hand_idx, board_idx]:
             card = self.play_hand(hand_idx, action="summon")
+            self.summon(card, board_idx)
+          case ["summon_extradeck", extradeck_idx, board_idx]:
+            card = self.play_extradeck(extradeck_idx)
             self.summon(card, board_idx)
           case ["activate_spell", hand_idx]:
             card = self.play_hand(hand_idx, action="activate_hand")
@@ -396,6 +420,21 @@ class Duel():
   # All of these functions accept a player ["turn", "other"] to bind the
   # effect to (ie., which player did it)
 
+  def play_extradeck(self, ed_idx, player="turn"):
+    active = self.get_active_player(player)
+
+    if ed_idx < 0 or ed_idx >= len(active.extradeck):
+      raise InvalidMove("Invalid extra deck index")
+
+    card = active.extradeck[ed_idx]
+
+    if not card.can("summon_extradeck"):
+      raise InvalidMove("Card cannot activate effect")
+
+    card.effect("summon_extradeck")
+
+    return card
+
   def play_hand(self, hand_idx, action="", player="turn"):
     active = self.get_active_player(player)
 
@@ -466,10 +505,13 @@ class Duel():
   def draw(self, player):
     self.move_to(player.deck[-1], "hand")
 
+  def spin(self, card):
+    self.move_to(card, "deck")
+
   def determine_location(self, card):
     if card is None:
       return "unknown"
-    locs = ["field", "hand", "graveyard", "deck", "banished"]
+    locs = ["field", "hand", "graveyard", "deck", "banished", "extradeck"]
     for loc in locs:
       if card in getattr(card.owner, loc):
         return loc
@@ -500,6 +542,7 @@ class Duel():
       case "field":
         assert idx >= 0
         card.owner.board[idx] = card
+        card.reset_stats()
 
       case "graveyard":
         card.owner.graveyard.append(card)
@@ -512,6 +555,10 @@ class Duel():
       case "deck":
         # TODO: move to a specific deck idx without shuffling?
         card.owner.deck.append(card).shuffle()
+        card.reset_stats()
+
+      case "extradeck":
+        card.owner.deck.append(card).sort()
         card.reset_stats()
 
     card.owner.io.move_card(card, from_loc, destination, idx)
@@ -578,10 +625,6 @@ class Duel():
   def attack_directly(self, attacker_idx, player="turn"):
     active = self.get_active_player(player)
     inactive = self.get_inactive_player(player)
-
-    for card in inactive.board:
-      if card is not None:
-        raise InvalidMove("Field is not empty")
 
     if (
         attacker_idx < 0

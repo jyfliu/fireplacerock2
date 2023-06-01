@@ -1,4 +1,5 @@
 import random
+import itertools
 
 from .callbacks import *
 from . import archetypes
@@ -68,6 +69,9 @@ triggers = [
   "can_activate_hand",
   "on_activate_hand_cost",
   "on_activate_hand",
+  # extra deck
+  "can_summon_extradeck",
+  "summon_extradeck",
 ]
 
 statuses = [
@@ -149,9 +153,19 @@ class Card:
     io = self.io
 
     field = owner.field + oppon.field
+    all_cards = (
+        owner.field + oppon.field
+        + owner.deck + oppon.deck
+        + owner.extradeck + oppon.extradeck
+        + owner.graveyard + oppon.graveyard
+        + owner.banished + oppon.banished
+        + owner.hand + oppon.hand
+    )
 
     prompt_user_activate = self.prompt_user_activate
 
+    get_current_board_idx = self.get_current_board_idx
+    get_adjacent_board_idxs = self.get_adjacent_board_idxs
     get_adjacent = self.get_adjacent
 
     # target card on the field
@@ -163,6 +177,9 @@ class Card:
     target_owner_field = self.target_owner_field
     can_target_oppon_field = self.can_target_oppon_field
     target_oppon_field = self.target_oppon_field
+
+    can_select = self.can_select
+    select = self.select
 
     # select monster on the field
     # optionally accepts a lambda to filter
@@ -179,6 +196,11 @@ class Card:
     select_owner_deck = self.select_owner_deck
     can_select_oppon_deck = self.can_select_oppon_deck
     select_oppon_deck = self.select_oppon_deck
+
+    can_select_owner_extradeck = self.can_select_owner_extradeck
+    select_owner_extradeck = self.select_owner_extradeck
+    can_select_oppon_extradeck = self.can_select_oppon_extradeck
+    select_oppon_extradeck = self.select_oppon_extradeck
 
     # select card from deck
     # optionally accepts a lambda to filter
@@ -198,6 +220,11 @@ class Card:
     can_select_oppon_board = self.can_select_oppon_board
     select_oppon_board = self.select_oppon_board
 
+    # extra deck
+    can_link = self.can_link
+    link = self.link
+
+    # misc
     flip_coin = self.flip_coin
 
     try:
@@ -230,6 +257,10 @@ class Card:
         for card in self.owner.deck
         if card is not None and filter(card)
     ] + [
+        ("extradeck", card)
+        for card in self.owner.extradeck
+        if card is not None and filter(card)
+    ] + [
         ("graveyard", card)
         for card in self.owner.graveyard
         if card is not None and filter(card)
@@ -250,6 +281,10 @@ class Card:
         for card in self.oppon.deck
         if card is not None and filter(card)
     ] + [
+        ("oppon_extradeck", card)
+        for card in self.oppon.extradeck
+        if card is not None and filter(card)
+    ] + [
         ("oppon_graveyard", card)
         for card in self.oppon.graveyard
         if card is not None and filter(card)
@@ -261,88 +296,112 @@ class Card:
     return cards
 
 
-  def can_select(self, filter=lambda x: True):
-    return len(self.select_cards(filter)) > 0
+  def can_select(self, filter=lambda x: True, amount=1):
+    return len(self.select_cards(filter)) >= amount
 
-  def select(self, filter=lambda x: True):
+  def select(self, filter=lambda x: True, amount=1):
     if self.can_select(filter):
       cards = self.select_cards(filter)
       assert len(cards) > 0
-      idx = self.owner.io.prompt_user_select(cards)
-
-      _, card = cards[idx]
-      return card
+      idx = self.owner.io.prompt_user_select(cards, amount=amount)
+      if amount == 1:
+        _, card = cards[idx]
+        return card
+      else:
+        retval = []
+        for i in idx:
+          _, card = cards[i]
+          retval.append(card)
+        return retval
     else:
       raise InvalidMove("No valid targets")
 
 
-  def can_target_owner_field(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.owner.board and filter(x))
+  def can_target_owner_field(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.owner.board and filter(x), amount=amount)
 
-  def target_owner_field(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.owner.board and filter(x))
+  def target_owner_field(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.owner.board and filter(x), amount=amount)
 
-  def can_target_oppon_field(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.oppon.board and filter(x))
+  def can_target_oppon_field(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.oppon.board and filter(x), amount=amount)
 
-  def target_oppon_field(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.oppon.board and filter(x))
+  def target_oppon_field(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.oppon.board and filter(x), amount=amount)
 
-  def can_target_field(self, filter=lambda x: True):
-    return self.can_select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x))
+  def can_target_field(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x), amount=amount)
 
-  def target_field(self, filter=lambda x: True):
-    return self.select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x))
+  def target_field(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x), amount=amount)
 
-  def can_select_owner_field(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.owner.board and filter(x))
+  def can_select_owner_field(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.owner.board and filter(x), amount=amount)
 
-  def select_owner_field(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.owner.board and filter(x))
+  def select_owner_field(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.owner.board and filter(x), amount=amount)
 
-  def can_select_oppon_field(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.oppon.board and filter(x))
+  def can_select_oppon_field(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.oppon.board and filter(x), amount=amount)
 
-  def select_oppon_field(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.oppon.board and filter(x))
+  def select_oppon_field(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.oppon.board and filter(x), amount=amount)
 
-  def can_select_field(self, filter=lambda x: True):
-    return self.can_select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x))
+  def can_select_field(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x), amount=amount)
 
-  def select_field(self, filter=lambda x: True):
-    return self.select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x))
+  def select_field(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x), amount=amount)
 
-  def can_select_owner_deck(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.owner.deck and filter(x))
+  def can_select_owner_deck(self, filter=lambda x: True, amount=1):
+    retval = self.can_select(lambda x: x in self.owner.deck and filter(x), amount=amount)
+    return retval
 
-  def select_owner_deck(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.owner.deck and filter(x))
+  def select_owner_deck(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.owner.deck and filter(x), amount=amount)
 
-  def can_select_oppon_deck(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.oppon.deck and filter(x))
+  def can_select_owner_extradeck(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.owner.extradeck and filter(x), amount=amount)
 
-  def select_oppon_deck(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.oppon.deck and filter(x))
+  def select_owner_extradeck(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.owner.extradeck and filter(x), amount=amount)
 
-  def can_select_owner_graveyard(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.owner.graveyard and filter(x))
+  def can_select_oppon_deck(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.oppon.deck and filter(x), amount=amount)
 
-  def select_owner_graveyard(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.owner.graveyard and filter(x))
+  def select_oppon_deck(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.oppon.deck and filter(x), amount=amount)
 
-  def can_select_oppon_graveyard(self, filter=lambda x: True):
-    return self.can_select(lambda x: x in self.oppon.graveyard and filter(x))
+  def can_select_oppon_extradeck(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.oppon.extradeck and filter(x), amount=amount)
 
-  def select_oppon_graveyard(self, filter=lambda x: True):
-    return self.select(lambda x: x in self.oppon.graveyard and filter(x))
+  def select_oppon_extradeck(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.oppon.extradeck and filter(x), amount=amount)
 
-  def can_select_owner_board(self):
-    return None in self.owner.board
+  def can_select_owner_graveyard(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.owner.graveyard and filter(x), amount=amount)
 
-  def select_owner_board(self):
+  def select_owner_graveyard(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.owner.graveyard and filter(x), amount=amount)
+
+  def can_select_oppon_graveyard(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.oppon.graveyard and filter(x), amount=amount)
+
+  def select_oppon_graveyard(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.oppon.graveyard and filter(x), amount=amount)
+
+  def can_select_owner_board(self, idxs=None):
+    if not idxs:
+      return None in self.owner.board
+    else:
+      return any(self.owner.board[i] is None for i in idxs)
+
+  def select_owner_board(self, idxs=None):
+    if idxs is None:
+      idxs = range(len(self.owner.board))
     nums = []
     for i, card in enumerate(self.owner.board):
-      if card is None:
+      if card is None and i in idxs:
         nums.append(i)
     idx = self.owner.io.prompt_user_select_board(nums)
     return idx
@@ -358,24 +417,53 @@ class Card:
     idx = self.owner.io.prompt_user_select_board(nums)
     return idx
 
+  def link_satisfies_requirements(self, cards, reqs):
+    if len(cards) != len(reqs):
+      return False
+    for try_cards in itertools.permutations(cards):
+      success = all(req(card) for card, req in zip(try_cards, reqs))
+      if success:
+        return True
+    return False
+
+  def can_link(self, *reqs):
+    for cards in itertools.combinations(self.owner.field, len(reqs)):
+      if self.link_satisfies_requirements(cards, reqs):
+        return True
+    return False
+
+  def link(self, *reqs):
+    cards = []
+    for req in reqs:
+      cards.append(self.select_owner_field(lambda card: card not in cards and req(card)))
+    self.io.send_graveyard_multiple(cards)
+
   def flip_coin(self):
     coin = random.randint(0, 1)
     self.owner.io.flip_coin(coin)
     self.oppon.io.flip_coin(coin)
     return coin
 
-  def get_adjacent(self):
+  def get_current_board_idx(self):
     for i, c in enumerate(self.owner.board):
       if c == self:
-        break
-    else: # for else
-      return []
+        return i
+    return -1
 
+  def get_adjacent_board_idxs(self):
+    i = self.get_current_board_idx()
+    if i == -1:
+      return []
     adjs = []
-    if i > 0 and self.owner.board[i - 1]:
-      adjs.append(self.owner.board[i - 1])
-    if i < len(self.owner.board) - 1 and self.owner.board[i + 1]:
-      adjs.append(self.owner.board[i + 1])
+    if i > 0:
+      adjs.append(i - 1)
+    if i < len(self.owner.board) - 1:
+      adjs.append(i + 1)
+    return adjs
+
+  def get_adjacent(self):
+    adjs = self.get_adjacent_board_idxs()
+    adjs = [self.owner.board[i] for i in adjs if self.owner.board[i] is not None]
 
     return adjs
 
@@ -403,6 +491,8 @@ class Card:
       elif st[1] == 0:
         if st[0] == "PERISH":
           self.io.destroy(self)
+        if st[0] == "BANISH":
+          self.io.banish(self)
         pass # expire status (NEED TO CHECK WHAT STGE IT IS!!)
       else:
         st[1] = st[1] - 1
@@ -431,6 +521,15 @@ class Card:
     # source = [f]
     self.attack += attack
     self.health += health
+    self.owner.io.card_gain(self.uuid, None, attack, health)
+    self.oppon.io.card_gain(self.uuid, None, attack, health)
+
+  def original_gain(self, source, attack=0, health=0):
+    # source = [f]
+    self.attack += attack
+    self.health += health
+    self.original_attack += attack
+    self.original_health += health
     self.owner.io.card_gain(self.uuid, None, attack, health)
     self.oppon.io.card_gain(self.uuid, None, attack, health)
 
@@ -490,7 +589,9 @@ class Card:
 
   def default(self, trigger, *args):
     if trigger == "can_summon":
-      return True
+      return self.type == "monster"
+    if trigger == "can_summon_extradeck":
+      return hasattr(self.template, "summon_extradeck")
     elif trigger == "can_attack":
       return not self.has_status("CANNOT_ATTACK")
     elif trigger == "can_activate":
@@ -503,7 +604,10 @@ class Card:
         hasattr(self.template, "on_activate_hand")
       )
     elif trigger == "can_attack_directly":
-      return not self.has_status("CANNOT_ATTACK")
+      return (
+        not self.has_status("CANNOT_ATTACK")
+        and not len(self.oppon.field)
+      )
     elif trigger == "can_target":
       return not self.has_status("UNTARGETABLE")
     elif trigger == "attacker_damage_calc":

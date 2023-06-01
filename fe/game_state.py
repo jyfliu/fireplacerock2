@@ -113,6 +113,7 @@ class Player():
     self.life = 3000
     self.hand = CardList()
     self.deck = CardList()
+    self.extradeck = CardList()
     self.board = CardList([None] * 5)
     self.graveyard = CardList()
     self.banished = CardList()

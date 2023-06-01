@@ -32,27 +32,84 @@ class Headless:
     self.lock = threading.Lock()
 
 
+  def init_game_state(self, extradeck):
+    for card in extradeck:
+      self.owner.extradeck.add(card)
+    self.owner.extradeck.sort()
+
+
   def prompt_user_activate(self, effect_name):
     with self.lock:
-      print(f"Activate {effect_name}'s effect?' [y/n]")
-      x = input().strip().lower()
-      return x == "y"
-
+      while True:
+        print(f"Activate {effect_name}'s effect?' [y/n]")
+        x = input().strip().lower()
+        if x == "y": return True
+        if x == "n": return False
 
   def prompt_user_select(self, cards):
+    return self.prompt_user_select_multiple(cards, amounts=[1])[0]
+
+  def prompt_user_select_multiple(self, cards, amounts):
+    if not cards or not amounts:
+      return []
     with self.lock:
-      print(f"Select a card [0-{len(cards) - 1}]")
-      for i, (loc, card) in enumerate(cards):
+      if len(amounts) == 1:
+        if amounts[0] == 1:
+          amount_str = "a card"
+        else:
+          amount_str = f"{amounts[0]} cards"
+      elif amounts == list(range(len(amounts))):
+        amount_str = f"up to {amounts[-1]} cards"
+      else:
+        amount_str = f", ".join([str(amount) for amount in amounts[:-1]])
+        amount_str += f", or {amounts[-1]} cards"
+
+      remaining_cards = [c for c in cards]
+      selected = []
+      print(f"Select {amount_str} [0-{len(remaining_cards) - 1}], -1 to stop selecting")
+      done = False
+      for _ in range(max(amounts)):
+        if done:
+          break
+        for i, (loc, card) in enumerate(remaining_cards):
+          print(f"{i: >2} {loc + ':': <15} {game_state.Card(card)}")
+        while True:
+          idx = int(input())
+          if 0 <= idx < len(remaining_cards):
+            selected.append(remaining_cards[idx][1])
+            del remaining_cards[idx]
+            break
+          elif idx == -1:
+            done = True
+            break
+          print(f"Select {amount_str} [0-{len(remaining_cards) - 1}], -1 to stop selecting")
+      if len(selected) not in amounts:
+        print("Selected an invalid amounts")
+        return []
+      retval = []
+      for i, (_, card) in enumerate(cards):
+        if card in selected:
+          retval.append(i)
+      return retval
+
+  def prompt_user_select_text(self, options):
+    if not options:
+      return -1
+    with self.lock:
+      print(f"Select one [0-{len(options) - 1}]")
+      for i, opt in enumerate(options):
         # loc in ["hand", "field", "deck", "banished",
         # "oppon_hand", "oppon_field", "oppon_deck", "oppon_banished"]
-        print(f"{i: >2} {loc + ':': <15} {game_state.Card(card)}")
+        print(f"{i: >2} {opt}")
       while True:
         idx = int(input())
-        if 0 <= idx < len(cards):
+        if 0 <= idx < len(options):
           return idx
-        print(f"Select a card [0-{len(cards) - 1}]")
+        print(f"Select one [0-{len(options) - 1}]")
 
   def prompt_user_select_board(self, nums):
+    if not nums:
+      return -1
     with self.lock:
       print(f"Select an empty board index: {nums}")
       while True:
@@ -122,6 +179,8 @@ class Headless:
       case "deck":
         # player can't see into the deck
         pass
+      case "extradeck":
+        player.extradeck.add(card).sort()
     self.print_board()
 
   def move_card(self, card, from_loc, to_loc, idx):
@@ -234,13 +293,14 @@ class Headless:
         print("It is Main Phase 2")
       else:
         print("It is Main Phase")
-      print(f"Commands: info, summon, activate_spell, activate_board, pass, end")
+      print(f"Commands: info, summon, summon_extradeck, activate_spell, activate_board, pass, end")
       print(">>> ", end="")
     command = input().split()
     try:
       hand = [("hand", card) for card in self.owner.hand]
       field = [("field", card) for card in self.owner.field]
       oppon_field = [("oppon_field", card) for card in self.oppon.field]
+      extradeck = [("extradeck", card) for card in self.owner.extradeck]
 
       empty_board = [i for i in range(5) if self.owner.board[i] is None]
       filled_board = [i for i in range(5) if self.owner.board[i] is not None]
@@ -263,6 +323,13 @@ class Headless:
           return ["summon", hand_idx, board_idx]
         case ["summon", hand_idx, board_idx] | ["s", hand_idx, board_idx]:
           return ["summon", int(hand_idx), int(board_idx)]
+
+        case ["summon_extradeck"] | ["se"]:
+          ed_idx = self.prompt_user_select(extradeck)
+          board_idx = self.prompt_user_select_board(empty_board)
+          return ["summon_extradeck", ed_idx, board_idx]
+        case ["summon_extradeck", ed_idx, board_idx] | ["se", ed_idx, board_idx]:
+          return ["summon_extradeck", int(ed_idx), int(board_idx)]
 
         case ["activate_spell"] | ["as"]:
           hand_idx = self.prompt_user_select(hand)
@@ -321,6 +388,7 @@ class Headless:
           return ["attack_directly", int(attacker_idx)]
         case ["attack_directly"] | ["ad"]:
           attacker_idx = self.prompt_user_select(field)
+          attacker_idx = filled_board[attacker_idx]
           return ["attack_directly", attacker_idx]
 
         case ["pass"] | ["p"]:
