@@ -37,17 +37,25 @@ class Headless:
       self.owner.extradeck.add(card)
     self.owner.extradeck.sort()
 
+  def input(self):
+    return input(">>> ")
 
   def prompt_user_activate(self, effect_name):
     with self.lock:
       while True:
         print(f"Activate {effect_name}'s effect?' [y/n]")
-        x = input().strip().lower()
+        x = self.input().strip().lower()
         if x == "y": return True
         if x == "n": return False
 
   def prompt_user_select(self, cards):
-    return self.prompt_user_select_multiple(cards, amounts=[1])[0]
+    if not cards:
+      return -1
+    retval = self.prompt_user_select_multiple(cards, amounts=[1])
+    if len(retval) == 1:
+      return retval[0]
+    return -1
+
 
   def prompt_user_select_multiple(self, cards, amounts):
     if not cards or not amounts:
@@ -74,7 +82,7 @@ class Headless:
         for i, (loc, card) in enumerate(remaining_cards):
           print(f"{i: >2} {loc + ':': <15} {game_state.Card(card)}")
         while True:
-          idx = int(input())
+          idx = int(self.input())
           if 0 <= idx < len(remaining_cards):
             selected.append(remaining_cards[idx][1])
             del remaining_cards[idx]
@@ -102,7 +110,7 @@ class Headless:
         # "oppon_hand", "oppon_field", "oppon_deck", "oppon_banished"]
         print(f"{i: >2} {opt}")
       while True:
-        idx = int(input())
+        idx = int(self.input())
         if 0 <= idx < len(options):
           return idx
         print(f"Select one [0-{len(options) - 1}]")
@@ -113,7 +121,7 @@ class Headless:
     with self.lock:
       print(f"Select an empty board index: {nums}")
       while True:
-        idx = int(input())
+        idx = int(self.input())
         if idx in nums:
           return idx
         print(f"Select an empty board index: {nums}")
@@ -294,25 +302,28 @@ class Headless:
       else:
         print("It is Main Phase")
       print(f"Commands: info, summon, summon_extradeck, activate_spell, activate_board, pass, end")
-      print(">>> ", end="")
-    command = input().split()
+      command = self.input().split()
     try:
       hand = [("hand", card) for card in self.owner.hand]
       field = [("field", card) for card in self.owner.field]
-      oppon_field = [("oppon_field", card) for card in self.oppon.field]
+      graveyard = [("graveyard", card) for card in self.owner.graveyard]
       extradeck = [("extradeck", card) for card in self.owner.extradeck]
+
+      oppon_field = [("oppon_field", card) for card in self.oppon.field]
 
       empty_board = [i for i in range(5) if self.owner.board[i] is None]
       filled_board = [i for i in range(5) if self.owner.board[i] is not None]
 
       match command:
         case ["info"] | ["i"]:
-          cards = hand + field + oppon_field
-          _, card = cards[self.prompt_user_select(cards)]
-          self.print_card(card)
+          cards = hand + field + graveyard + oppon_field
+          sel_idx = self.prompt_user_select(cards)
+          if sel_idx >= 0:
+            _, card = cards[sel_idx]
+            self.print_card(card)
         case ["info", idx] | ["i", idx]:
           try:
-            cards = self.owner.hand + self.owner.field + self.oppon.field
+            cards = hand + field + graveyard + oppon_field
             self.print_card(cards[int(idx)])
           except:
             raise ValueError()
@@ -339,6 +350,8 @@ class Headless:
 
         case ["activate_board"] | ["ab"]:
           board_idx = self.prompt_user_select(field)
+          if board_idx == -1:
+            raise ValueError()
           board_idx = filled_board[board_idx]
 
           return ["activate_board", board_idx]
@@ -352,7 +365,7 @@ class Headless:
         case [other, *_]:
           raise ValueError(other)
         case _:
-          raise ValueError
+          raise ValueError()
     except ValueError:
       self.msg_history.append("Unable to Parse Command")
 
@@ -363,8 +376,7 @@ class Headless:
     with self.lock:
       print("It is Battle Phase")
       print(f"Commands: attack, attack_directly, pass, end")
-      print(">>> ", end="")
-    command = input().split()
+    command = self.input().split()
     try:
       hand = [("hand", card) for card in self.owner.hand]
       field = [("field", card) for card in self.owner.field]
@@ -388,6 +400,8 @@ class Headless:
           return ["attack_directly", int(attacker_idx)]
         case ["attack_directly"] | ["ad"]:
           attacker_idx = self.prompt_user_select(field)
+          if attacker_idx == -1:
+            raise ValueError()
           attacker_idx = filled_board[attacker_idx]
           return ["attack_directly", attacker_idx]
 
