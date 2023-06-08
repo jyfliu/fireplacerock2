@@ -1,0 +1,7 @@
+.BoardSpace {
+  border-color: #333333;
+  border-style: solid;
+  border-width: 1px;
+  width: 92px;
+  height: 140px;
+}

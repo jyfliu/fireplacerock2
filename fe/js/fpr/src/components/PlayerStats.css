@@ -1,0 +1,83 @@
+.owner-player-stats {
+  text-align: right;
+  position: absolute;
+  left: -10px;
+  top: -7px;
+  width: 150px;
+  transform: skew(15deg);
+}
+
+.oppon-player-stats {
+  text-align: left;
+  position: absolute;
+  right: -10px;
+  top: -7px;
+  width: 150px;
+  transform: skew(-15deg);
+}
+
+.owner-player-stats-border {
+  position: absolute;
+  left: min(calc(50% - 400px), 300px);
+  top: 770px;
+  height: 40px;
+  width: 150px;
+  transform: skew(-15deg);
+  border-color: #444444;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.oppon-player-stats-border {
+  position: absolute;
+  right: min(calc(50% - 400px), 300px);
+  top: 50px;
+  height: 40px;
+  width: 150px;
+  transform: skew(15deg);
+  border-color: #444444;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.owner-player-mana {
+  text-align: right;
+  position: absolute;
+  left: -10px;
+  top: -7px;
+  width: 150px;
+  transform: skew(15deg);
+}
+
+.oppon-player-mana {
+  text-align: left;
+  position: absolute;
+  right: -10px;
+  top: -7px;
+  width: 150px;
+  transform: skew(-15deg);
+}
+
+.owner-player-mana-border {
+  position: absolute;
+  right: min(calc(50% - 400px), 300px);
+  top: 770px;
+  height: 40px;
+  width: 150px;
+  transform: skew(-15deg);
+  border-color: #444444;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.oppon-player-mana-border {
+  position: absolute;
+  left: min(calc(50% - 400px), 300px);
+  top: 50px;
+  height: 40px;
+  width: 150px;
+  transform: skew(15deg);
+  border-color: #444444;
+  border-style: solid;
+  border-width: 1px;
+}

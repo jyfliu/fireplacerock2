@@ -68,7 +68,7 @@ class CardList:
     return self
 
   def sort(self):
-    self.cards.sort(key=lambda card: (card.type, card.cost, card.name))
+    self.cards.sort(key=lambda card: (card.type, card.cost, card.name, card.uuid))
     return self
 
   def remove(self, card):
