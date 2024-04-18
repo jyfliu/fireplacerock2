@@ -17,8 +17,9 @@ class InvalidSyntax(BaseException):
 
 class Headless:
 
-  def __init__(self, player_name="Player"):
+  def __init__(self, sio, player_name="Player"):
     self.player_name = player_name
+    self.sio = sio
 
     self.will_end_turn = False
     self.is_other_turn = True
@@ -285,6 +286,31 @@ class Headless:
     if card.flavour:
       self.msg_history.append("")
       self.msg_history.append(card.flavour)
+
+  def begin_phase(self, player, phase):
+    self.turn_p = player
+    self.cur_phase = phase
+    if phase == "draw":
+      self.draw_phase_prompt()
+
+  def wait_input(self, spell_speed):
+    match self.cur_phase:
+      case "draw":
+        self.draw_phase_prompt()
+        self.sio.emit("player_action", ["pass"])
+      case "standby":
+        self.sio.emit("player_action", ["pass"])
+      case "main":
+        response = self.main_phase_prompt()
+        self.sio.emit("player_action", response)
+      case "battle":
+        response = self.battle_phase_prompt()
+        self.sio.emit("player_action", response)
+      case "main_2":
+        response = self.main_phase_prompt()
+        self.sio.emit("player_action", response)
+      case "end":
+        self.sio.emit("player_action", ["pass"])
 
   def draw_phase_prompt(self):
     # YOU DREW X

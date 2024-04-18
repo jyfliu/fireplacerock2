@@ -11,7 +11,7 @@ player_name = input("Enter your name:\n")
 other = input("Enter name of who you want to challenge: [tmp]\n")
 
 sio = socketio.Client()
-io = headless.Headless(player_name)
+io = headless.Headless(sio, player_name)
 
 @sio.event
 def connect():
@@ -119,16 +119,12 @@ def card_set(uuid, source, attack, health):
   return io.card_set(uuid, source, attack, health)
 
 @sio.event
-def draw_phase_prompt():
-  return io.draw_phase_prompt()
+def begin_phase(player, phase):
+  return io.begin_phase(player, phase)
 
 @sio.event
-def main_phase_prompt(main_phase_2=False):
-  return io.main_phase_prompt(main_phase_2=False)
-
-@sio.event
-def battle_phase_prompt():
-  return io.battle_phase_prompt()
+def wait_input(spell_speed):
+  return io.wait_input(spell_speed)
 
 
 sio.connect(f'http://{ip}:9069')

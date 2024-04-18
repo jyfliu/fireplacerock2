@@ -53,6 +53,14 @@ def challenge(sid, challengee):
       sio.emit("challenged", challenger, room=state.name_to_sid[challengee])
 
 @sio.event
+def player_action(sid, action):
+  actor = state.sid_to_name[sid]
+  room_id = state.room_map[actor]
+  room = state.rooms[room_id]
+
+  room.player_action(actor, action)
+
+@sio.event
 def disconnect(sid):
   print(f"[EVENT-{sid}] disconnect")
   username = state.sid_to_name[sid]

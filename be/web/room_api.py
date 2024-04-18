@@ -125,17 +125,11 @@ class PlayerIO:
   def card_set(self, uuid, source, attack, health):
     se.sio.emit("card_set", (uuid, None, attack, health), room=self.sid)
 
-  def draw_phase_prompt(self):
-    response = se.sio.call("draw_phase_prompt", sid=self.sid, timeout=9999)
-    return response
+  def begin_phase(self, player, phase):
+    se.sio.emit("begin_phase", (player, phase), room=self.sid)
 
-  def main_phase_prompt(self, main_phase_2=False):
-    response = se.sio.call("main_phase_prompt", main_phase_2, sid=self.sid, timeout=9999)
-    return response
-
-  def battle_phase_prompt(self):
-    response = se.sio.call("battle_phase_prompt", sid=self.sid, timeout=9999)
-    return response
+  def wait_input(self, spell_speed):
+    se.sio.emit("wait_input", spell_speed, room=self.sid)
 
 
 class Room:
@@ -170,8 +164,17 @@ class Room:
     card_templates = {
         uuid: card_api.Template(card) for uuid, card in cards.items()
     }
-    duel = duel_api.Duel(card_templates, (sd1, ed1), (sd2, ed2), p1, p2)
+    self.duel = duel_api.Duel(card_templates, (sd1, ed1), (sd2, ed2), p1, p2)
 
-    duel.start_duel()
+    self.duel.start_duel()
+
+  def player_action(self, player, action):
+    if player == self.p1_name:
+      self.duel.player_action(1, action)
+    elif player == self.p2_name:
+      self.duel.player_action(2, action)
+    else:
+      print("ERROR? UNKNOWN PLAYER NAME ", player)
+
 
 

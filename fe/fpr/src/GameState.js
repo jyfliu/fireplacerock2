@@ -1,6 +1,91 @@
-export function PromptUserActivate(states) {
+export function OnPromptUserActivate(states) {
   return name => window.confirm(`Activate ${name}'s effect?'`);
 };
+
+export function OnPromptUserSelect(states) {
+  return cards => prompt(`Select a card ${cards.length}`);
+};
+
+export function OnPromptUserSelectMultiple(states) {
+  return (cards, amounts) => prompt(`Select a card ${cards.length}`);
+}
+
+export function OnPromptUserSelectText(states) {
+  return options => prompt(`Select an option ${options.length}`);
+}
+
+export function OnPromptUserSelectBoard(states) {
+  return nums => prompt(`Select an option ${nums.length}`);
+}
+
+export function OnTakeDamage(states) {
+  let { setOwnerStats } = states;
+  return (amount) => {
+    setOwnerStats(old => {
+      let stats = {...old};
+      stats.lp -= amount;
+      return stats;
+    })
+  }
+}
+
+export function OnOpponTakeDamage(states) {
+  let { setOpponStats } = states;
+  return (amount) => {
+    setOpponStats(old => {
+      let stats = {...old};
+      stats.lp -= amount;
+      return stats;
+    })
+  }
+}
+
+export function OnPayMana(states) {
+  let { setOwnerStats } = states;
+  return (amount) => {
+    setOwnerStats(old => {
+      let stats = {...old};
+      stats.mana -= amount;
+      return stats;
+    })
+  }
+}
+
+export function OnOpponPayMana(states) {
+  let { setOpponStats } = states;
+  return (amount) => {
+    setOpponStats(old => {
+      let stats = {...old};
+      stats.mana -= amount;
+      return stats;
+    })
+  }
+}
+
+export function OnRestoreMana(states) {
+  let { setOwnerStats } = states;
+  return (mana, manaMax) => {
+    setOwnerStats(old => {
+      let stats = {...old};
+      stats.mana = mana;
+      stats.manaMax = manaMax;
+      return stats;
+    })
+  }
+}
+
+export function OnOpponRestoreMana(states) {
+  let { setOpponStats } = states;
+  return (mana, manaMax) => {
+    setOpponStats(old => {
+      let stats = {...old};
+      stats.mana = mana;
+      stats.manaMax = manaMax;
+      return stats;
+    })
+  }
+}
+
 
 export function OnMoveCard(states) {
   let { setOwnerHand } = states;
@@ -105,6 +190,25 @@ export function OnMoveOpponCard(states) {
     }
   };
 
+}
+
+export function OnFlipCoin(states) {
+  return (result) => {
+    let res = result? "Heads" : "Tails";
+    alert(`Flipped a coin: ${res}!`);
+  }
+}
+
+export function OnDisplayMessage(states) {
+  return (message) => {
+    alert(message);
+  }
+}
+
+export function OnGameOver(states) {
+  return (winner) => {
+    alert(winner);
+  }
 }
 
 export function DrawPhasePrompt(states) {

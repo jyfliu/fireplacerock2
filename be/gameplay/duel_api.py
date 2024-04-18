@@ -152,6 +152,19 @@ class Player():
     )
 
 
+def entrypoint(inner):
+  def modified(self, *args, **kwargs):
+    try:
+      inner(self, *args, **kwargs)
+    except UnrecognizedCommand as e:
+      self.turn_p.io.display_message(f"Unrecognized command: {e.message}")
+    except InvalidMove as e:
+      self.turn_p.io.display_message(f"Illegal Move: {e.message}")
+    except GameOver as e:
+      self._handle_game_over(e)
+  return modified
+
+
 class Duel():
 
   def __init__(self, card_templates, deck1, deck2, p1_io, p2_io):
@@ -193,6 +206,7 @@ class Duel():
 
   ### MANDATORY STUFF ###
 
+  @entrypoint
   def start_duel(self):
     if random.random() < 0.5:
       # randomize who is going first
@@ -213,42 +227,37 @@ class Duel():
     self.turn_p.io.init_game_state(self.turn_p.extradeck)
     self.other_p.io.init_game_state(self.other_p.extradeck)
 
-    try:
-      # first player's turn
-      self.turn(first=True)
-      while True:
-        self.turn()
-    except GameOver as e:
-      if e.winner == 0:
-        # draw
-        self.p1.io.game_over(0)
-        self.p2.io.game_over(0)
-      else:
-        winner = self.p1 if e.winner == 1 else self.p2
-        loser = self.p2 if e.winner == 1 else self.p1
-        winner.io.game_over(1)
-        loser.io.game_over(-1)
+    self.is_first_turn = True
+    self.start_turn()
+    self.draw_phase()
 
 
-  def turn(self, first=False):
-    self.start_turn(first)
-
-    self.draw_phase(first)
-    self.standby_phase()
-
-    self.main_phase()
-
-    if not first:
-      self.battle_phase()
-      self.main_phase(main_phase_2=True)
-
-    self.end_phase()
-
-    self.end_turn()
-
-  def start_turn(self, first=False):
+  def start_turn(self):
     self.check_game_over()
     self.turn_p.restore_mana(self.turn_p.mana_max + 1, self.turn_p.mana_max + 1)
+
+  def end_cur_phase(self):
+    match self.cur_phase:
+      case "draw":
+        self.standby_phase()
+      case "standby":
+        self.main_phase()
+      case "main":
+        self.phase_effects("end")
+        if not self.is_first_turn:
+          self.battle_phase()
+        else:
+          self.end_phase()
+      case "battle":
+        self.phase_effects("end")
+        self.main_phase(main_phase_2=True)
+      case "main_2":
+        self.phase_effects("end")
+        self.end_phase()
+      case "end":
+        self.end_turn()
+        self.start_turn()
+        self.draw_phase()
 
   def end_turn(self):
     for card in self.turn_p.cards:
@@ -266,24 +275,34 @@ class Duel():
     self.turn_p = self.p1 if self.cur_turn == 1 else self.p2
     self.other_p = self.p2 if self.cur_turn == 1 else self.p1
 
+    self.is_first_turn = False
 
-  def draw_phase(self, first):
+  def draw_phase(self):
     self.cur_phase = "draw"
 
     # draw card
-    if not first:
+    if not self.is_first_turn:
       if not self.turn_p.deck:
         raise GameOver(3 - self.cur_turn)
       self.draw(self.turn_p)
 
-    self.turn_p.io.draw_phase_prompt()
+    self.turn_p.io.begin_phase("owner", self.cur_phase)
+    self.other_p.io.begin_phase("oppon", self.cur_phase)
 
     self.phase_effects()
+
+    self.turn_p.io.wait_input(spell_speed=2)
 
 
   def standby_phase(self):
     self.cur_phase = "standby"
+
+    self.turn_p.io.begin_phase("owner", self.cur_phase)
+    self.other_p.io.begin_phase("oppon", self.cur_phase)
+
     self.phase_effects()
+
+    self.turn_p.io.wait_input(spell_speed=2)
 
 
   def main_phase(self, main_phase_2=False):
@@ -291,71 +310,80 @@ class Duel():
       self.cur_phase = "main_2"
     else:
       self.cur_phase = "main"
+
+    self.turn_p.io.begin_phase("owner", self.cur_phase)
+    self.other_p.io.begin_phase("oppon", self.cur_phase)
+
     self.phase_effects()
 
-    while True:
-      response = self.turn_p.io.main_phase_prompt(main_phase_2)
-      try:
-        match response:
-          case ["pass"]:
-            break
-          case ["summon", hand_idx, board_idx]:
-            card = self.play_hand(hand_idx, action="summon")
-            self.summon(card, board_idx)
-          case ["summon_extradeck", extradeck_idx, board_idx]:
-            card = self.play_extradeck(extradeck_idx)
-            self.summon(card, board_idx)
-          case ["activate_spell", hand_idx]:
-            card = self.play_hand(hand_idx, action="activate_hand")
-            self.activate_spell(card)
-          case ["activate_board", board_idx]:
-            card = self.turn_p.board[board_idx]
-            self.activate_board(card)
-          case [other, *_] | [other]:
-            raise UnrecognizedCommand(other)
-      except UnrecognizedCommand as e:
-        self.turn_p.io.display_message(f"Unrecognized command: {e.message}")
-      except InvalidMove as e:
-        self.turn_p.io.display_message(f"Illegal Move: {e.message}")
-      self.check_field()
-      self.check_game_over()
-    self.phase_effects("end")
+    self.turn_p.io.wait_input(spell_speed=1)
+
+  @entrypoint
+  def player_action(self, player, action):
+    if player != self.cur_turn:
+      raise InvalidMove("quick effects not implemented")
+    match action:
+      case ["pass"]:
+        self.end_cur_phase()
+
+      case ["summon", hand_idx, board_idx]:
+        if not "main" in self.cur_phase:
+          raise InvalidMove("Not in main phase")
+        card = self.play_hand(hand_idx, action="summon")
+        self.summon(card, board_idx)
+
+      case ["summon_extradeck", extradeck_idx, board_idx]:
+        if not "main" in self.cur_phase:
+          raise InvalidMove("Not in main phase")
+        card = self.play_extradeck(extradeck_idx)
+        self.summon(card, board_idx)
+
+      case ["activate_spell", hand_idx]:
+        if not "main" in self.cur_phase:
+          raise InvalidMove("Not in main phase")
+        card = self.play_hand(hand_idx, action="activate_hand")
+        self.activate_spell(card)
+
+      case ["activate_board", board_idx]:
+        if not "main" in self.cur_phase:
+          raise InvalidMove("Not in main phase")
+        card = self.turn_p.board[board_idx]
+        self.activate_board(card)
+
+      case ["attack", attacker_idx, attackee_idx]:
+        if not self.cur_phase == "battle":
+          raise InvalidMove("Not in battle phase")
+        self.attack(attacker_idx, attackee_idx)
+
+      case ["attack_directly", attacker_idx]:
+        if not self.cur_phase == "battle":
+          raise InvalidMove("Not in battle phase")
+        self.attack_directly(attacker_idx)
+
+      case [other, *_] | [other]:
+        raise UnrecognizedCommand(other)
+
+    self.check_field()
+    self.check_game_over()
 
 
   def battle_phase(self):
     self.cur_phase = "battle"
+
+    self.turn_p.io.begin_phase("owner", self.cur_phase)
+    self.other_p.io.begin_phase("oppon", self.cur_phase)
+
     self.phase_effects()
 
-    while True:
-      response = self.turn_p.io.battle_phase_prompt()
-      try:
-        match response:
-          case ["pass"]:
-            break
-          case ["attack", attacker_idx, attackee_idx]:
-            self.attack(attacker_idx, attackee_idx)
-          case ["attack_directly", attacker_idx]:
-            self.attack_directly(attacker_idx)
-            # TODO
-          # QUICK EFFECTS ONLY
-          # case ["activate_hand", hand_idx]:
-          #   pass
-            # TODO
-          # case ["activate_board", board_idx]:
-           #  pass
-            # TODO
-          case [other, *_] | [other]:
-            raise UnrecognizedCommand(other)
-      except UnrecognizedCommand as e:
-        self.turn_p.io.display_message(f"Unrecognized command: {e.message}")
-      except InvalidMove as e:
-        self.turn_p.io.display_message(f"Illegal Move: {e.message}")
-      self.check_field()
-      self.check_game_over()
-    self.phase_effects("end")
+    self.turn_p.io.wait_input(spell_speed=1)
+
 
   def end_phase(self):
     self.cur_phase = "end"
+
+    self.turn_p.io.begin_phase("owner", self.cur_phase)
+    self.other_p.io.begin_phase("oppon", self.cur_phase)
+
     self.phase_effects()
     self.check_field()
     self.check_game_over()
@@ -368,6 +396,19 @@ class Duel():
       raise GameOver(self.other_p.id)
     if self.other_p.life <= 0:
       raise GameOver(self.turn_p.id)
+
+
+  def _handle_game_over(self, e):
+    if e.winner == 0:
+      # draw
+      self.p1.io.game_over(0)
+      self.p2.io.game_over(0)
+    else:
+      winner = self.p1 if e.winner == 1 else self.p2
+      loser = self.p2 if e.winner == 1 else self.p1
+      winner.io.game_over(1)
+      loser.io.game_over(-1)
+
 
   def check_field(self, source=None):
     to_gy = []
