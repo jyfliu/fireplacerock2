@@ -7,35 +7,49 @@ import gameplay.duel_api as duel_api
 import gameplay.card_api as card_api
 from . import server as se
 
-def serialize_card(card):
-  dict = {}
-  dict["name"] = card.name
-  dict["cost"] = card.cost
-  dict["type"] = card.type
-  if card.type == "monster":
-    dict["attack"] = card.attack
-    dict["health"] = card.health
-    dict["original_attack"] = card.original_attack
-    dict["original_health"] = card.original_health
-  dict["uuid"] = card.uuid
-
-  dict["description"] = card.template.description
-  dict["flavour"] = card.template.flavour
-
-  return dict
-
 # TODO HANDLE timeouts
 class PlayerIO:
 
   def __init__(self, name):
     self.name = name
+    self.duel = None
+    self.player_obj = None
+
+  def connect(self, duel, player_obj):
+    self.duel = duel
+    self.player_obj = player_obj
+
+  def serialize_card(self, card):
+    duel = self.duel
+    player = self.player_obj
+    dict = {}
+    dict["name"] = card.name
+    dict["cost"] = card.cost
+    dict["type"] = card.type
+    if card.type == "monster":
+      dict["attack"] = card.attack
+      dict["health"] = card.health
+      dict["original_attack"] = card.original_attack
+      dict["original_health"] = card.original_health
+    dict["uuid"] = card.uuid
+
+    dict["can_activate"] = card.can("activate")
+    dict["can_attack"] = card.can("attack")
+    dict["can_attack_directly"] = card.can("attack_directly")
+    dict["can_summon"] = card.can("summon")
+    dict["can_summon_extradeck"] = card.can("summon_extradeck")
+
+    dict["description"] = card.template.description
+    dict["flavour"] = card.template.flavour
+
+    return dict
 
   @property
   def sid(self):
     return se.state.name_to_sid[self.name]
 
   def init_game_state(self, extradeck):
-    extradeck = [serialize_card(card) for card in extradeck]
+    extradeck = [self.serialize_card(card) for card in extradeck]
     se.sio.emit("init_game_state", extradeck, room=self.sid)
 
   def prompt_user_activate(self, effect_name):
@@ -49,7 +63,7 @@ class PlayerIO:
       amount = list(range(len(cards) + 1))
     elif not isinstance(amount, list):
       amount = [amount]
-    cards = [(loc, serialize_card(card)) for loc, card in cards]
+    cards = [(loc, self.serialize_card(card)) for loc, card in cards]
     response = se.sio.call("prompt_user_select_cards", (cards, amount), sid=self.sid, timeout=9999)
 
     if len(response) == 1:
@@ -94,14 +108,17 @@ class PlayerIO:
   def display_message(self, msg):
     se.sio.emit("display_message", msg, room=self.sid)
 
+  def game_start(self):
+    se.sio.emit("game_start", room=self.sid)
+
   def game_over(self, winner):
     se.sio.emit("game_over", winner, room=self.sid)
 
   def move_card(self, card, from_loc, to_loc, idx):
-    se.sio.emit("move_card", (serialize_card(card), from_loc, to_loc, idx), room=self.sid)
+    se.sio.emit("move_card", (self.serialize_card(card), from_loc, to_loc, idx), room=self.sid)
 
   def move_oppon_card(self, card, from_loc, to_loc, idx):
-    se.sio.emit("move_oppon_card", (serialize_card(card), from_loc, to_loc, idx), room=self.sid)
+    se.sio.emit("move_oppon_card", (self.serialize_card(card), from_loc, to_loc, idx), room=self.sid)
 
   def apply_status(self, uuid, status, duration, expiry):
     se.sio.emit("apply_status", (uuid, status, duration, expiry), room=self.sid)
@@ -174,7 +191,10 @@ class Room:
     elif player == self.p2_name:
       self.duel.player_action(2, action)
     else:
-      print("ERROR? UNKNOWN PLAYER NAME ", player)
+      self.p1.display_message(f"Internal Error 528: unknown player name? {player}")
+      self.p2.display_message(f"Internal Error 528: unknown player name? {player}")
 
-
+  def card_can(self, card_id, action):
+    card = self.duel.get_card(card_id)
+    return card.can(action)
 

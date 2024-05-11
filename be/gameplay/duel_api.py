@@ -173,6 +173,9 @@ class Duel():
     self.p1 = Player(1, p1_io)
     self.p2 = Player(2, p2_io)
 
+    p1_io.connect(self, self.p1)
+    p2_io.connect(self, self.p2)
+
     self.p1.set_oppon(self.p2)
     self.p2.set_oppon(self.p1)
 
@@ -191,6 +194,10 @@ class Duel():
     extradeck2 = [card.create_instance(self.p2, self.p1, self) for card in extradeck2]
     self.p2.extradeck = CardList(extradeck2).sort()
 
+    self.cur_phase = "unknown"
+    p1_io.game_start()
+    p2_io.game_start()
+
   ### HELPER FUNCTIONS ###
   def get_active_player(self, player):
     if player == "turn":
@@ -203,6 +210,19 @@ class Duel():
       return self.other_p
     elif player == "other":
       return self.turn_p
+
+  def get_card(self, card_id):
+    for card in self.turn_p.cards + self.other_p.cards:
+      if card.uuid == card_id:
+        return card
+    self.turn_p.io.display_message(f"Internal Error 332: card {card_id} not found")
+    self.other_p.io.display_message(f"Internal Error 332: card {card_id} not found")
+
+  def has_initiative(self, player):
+    # are we actively waiting for an input from this player
+    # temporarily just set to true if its players turn
+    return self.turn_p == player
+
 
   ### MANDATORY STUFF ###
 
@@ -319,9 +339,11 @@ class Duel():
     self.turn_p.io.wait_input(spell_speed=1)
 
   @entrypoint
-  def player_action(self, player, action):
-    if player != self.cur_turn:
-      raise InvalidMove("quick effects not implemented")
+  def player_action(self, player_id, action):
+    if player_id != self.cur_turn:
+      # raise InvalidMove("quick effects not implemented")
+      return
+    # if self.has_initiative(player)
     match action:
       case ["pass"]:
         self.end_cur_phase()

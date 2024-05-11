@@ -18,7 +18,7 @@ export function Card(props) {
 
   return (
     <button class="card" ref={setNodeRef} style={style} {...listeners} {...attributes}>
-      <h3>{card.name}</h3>
+      <h3>{card.name} {card.uuid}</h3>
       <h4 class="attack">{card.attack}</h4>
       <h4 class="health">{card.health}</h4>
       <h4 class="cost">{card.cost}</h4>

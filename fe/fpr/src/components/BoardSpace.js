@@ -8,11 +8,12 @@ export function BoardSpace(props) {
   const { isOver, setNodeRef } = useDroppable({
     id: props.id,
   });
+  const { hiColor } = props;
   const style = {
-    "background-color": isOver ? '#449944' : undefined,
+    "background-color": isOver ? hiColor : undefined,
   };
-  
-  
+
+
   return (
     <div class="BoardSpace" ref={setNodeRef} style={style}>
       {props.children}

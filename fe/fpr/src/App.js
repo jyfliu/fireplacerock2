@@ -7,13 +7,19 @@ import { BoardSpace } from './components/BoardSpace';
 import { Card } from './components/Card';
 import { PlayerStats, PlayerMana } from './components/PlayerStats';
 
+import { CanSummon } from "./GameState"
+
 import {
   OnPromptUserActivate, OnPromptUserSelect, OnPromptUserSelectMultiple,
   OnPromptUserSelectText, OnPromptUserSelectBoard,
+  OnBeginPhase, OnEndTurn,
   OnTakeDamage, OnOpponTakeDamage, OnPayMana, OnOpponPayMana,
   OnRestoreMana, OnOpponRestoreMana, OnMoveCard, OnMoveOpponCard,
-  OnFlipCoin, OnDisplayMessage, OnGameOver,
-} from "./GameState"
+  OnFlipCoin, OnDisplayMessage,
+  OnGameStart, OnGameOver,
+} from "./GatewayIn"
+
+import { EmitNextPhase, Summon } from "./GatewayOut"
 
 import './App.css';
 
@@ -21,6 +27,7 @@ function App() {
   const [isConnected, setIsConnected] = useState(false);
 
   const [phase, setPhase] = useState(["owner", "draw"]);
+  const [hasInitiative, setHasInitiative] = useState(false);
   const [ownerHand, setOwnerHand] = useState([]);
   const [opponHand, setOpponHand] = useState(0);
   const [ownerStats, setOwnerStats] = useState({
@@ -33,6 +40,41 @@ function App() {
     mana: 0,
     manaMax: 0,
   });
+  const [field, setField] = useState({
+    opponTraps:    [null, null, null, null, null],
+    opponMonsters: [null, null, null, null, null],
+    ownerMonsters: [null, null, null, null, null],
+    ownerTraps:    [null, null, null, null, null],
+  });
+  const [ownerCards, setOwnerCards] = useState({
+    ownerGraveyard: [],
+    ownerBanished: [],
+    ownerMainDeck: 0,
+    ownerExtraDeck: [],
+  })
+  const [opponCards, setOpponCards] = useState({
+    opponGraveyard: [],
+    opponBanished: [],
+    opponMainDeck: 0,
+    opponExtraDeck: 0,
+  })
+
+  const states = {
+    ownerHand: ownerHand,
+    opponHand: opponHand,
+    ownerCards: ownerCards,
+    opponCards: opponCards,
+    phase: phase,
+    hasInitiative: hasInitiative,
+    field: field,
+    ownerStats: ownerStats,
+    opponStats: opponStats,
+  }
+
+  let canSummon = CanSummon(states);
+
+  let emitNextPhase = EmitNextPhase(socket);
+  let summon = Summon(socket);
 
   useEffect(() => {
     let onConnect = () => {
@@ -47,10 +89,14 @@ function App() {
       setIsConnected(false);
     };
 
-    let setStates = {
+    const setStates = {
       setOwnerHand: setOwnerHand,
       setOpponHand: setOpponHand,
+      setOwnerCards: setOwnerCards,
+      setOpponCards: setOpponCards,
       setPhase: setPhase,
+      setHasInitiative: setHasInitiative,
+      setField: setField,
       setOwnerStats: setOwnerStats,
       setOpponStats: setOpponStats,
     };
@@ -63,6 +109,9 @@ function App() {
     let onPromptUserSelectBoard = OnPromptUserSelectBoard(setStates);
 
     // update state functions
+    let onBeginPhase = OnBeginPhase(setStates);
+    let onEndTurn = OnEndTurn(setStates);
+
     let onTakeDamage = OnTakeDamage(setStates);
     let onOpponTakeDamage = OnOpponTakeDamage(setStates);
     let onPayMana = OnPayMana(setStates);
@@ -76,6 +125,7 @@ function App() {
     // display info
     let onFlipCoin = OnFlipCoin(setStates);
     let onDisplayMessage = OnDisplayMessage(setStates);
+    let onGameStart = OnGameStart(setStates);
     let onGameOver = OnGameOver(setStates);
 
     socket.on("connect", onConnect);
@@ -85,6 +135,9 @@ function App() {
     socket.on("prompt_user_select_multiple", onPromptUserSelectMultiple);
     socket.on("prompt_user_select_text", onPromptUserSelectText);
     socket.on("prompt_user_select_board", onPromptUserSelectBoard);
+
+    socket.on("begin_phase", onBeginPhase);
+    socket.on("end_turn", onEndTurn);
 
     socket.on("take_damage", onTakeDamage);
     socket.on("oppon_take_damage", onOpponTakeDamage);
@@ -97,6 +150,7 @@ function App() {
 
     socket.on("flip_coin", onFlipCoin);
     socket.on("display_message", onDisplayMessage);
+    socket.on("game_start", onGameStart);
     socket.on("game_over", onGameOver);
 
     return () => {
@@ -107,6 +161,9 @@ function App() {
       socket.off("prompt_user_select_multiple", onPromptUserSelectMultiple);
       socket.off("prompt_user_select_text", onPromptUserSelectText);
       socket.off("prompt_user_select_board", onPromptUserSelectBoard);
+
+      socket.off("begin_phase", onBeginPhase);
+      socket.off("end_turn", onEndTurn);
 
       socket.off("take_damage", onTakeDamage);
       socket.off("oppon_take_damage", onOpponTakeDamage);
@@ -119,11 +176,13 @@ function App() {
 
       socket.off("flip_coin", onFlipCoin);
       socket.off("display_message", onDisplayMessage);
+      socket.off("game_start", onGameStart);
       socket.off("game_over", onGameOver);
     };
   }, []);
 
 
+  // board state
   const containers = [
     0, 1, 2, 3, 4,
     5, 6, 7, 8, 9,
@@ -131,8 +190,11 @@ function App() {
     15, 16, 17, 18, 19
   ];
 
+
+
+  // display helpers
   const displayCard = card =>
-    <Card id={card.id} key={card.id} card={card} inDroppable={card.parent===null} />
+    <Card id={card.id} key={"card"+card.id} card={card} inDroppable={card.parent===null} />
 
 
   const statusStyle = {
@@ -140,7 +202,7 @@ function App() {
   }
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <p style={statusStyle} class="status-bar">
         {isConnected ? "Connected: ip=0.0.0.0:9069" : "Disconnected"}
       </p>
@@ -148,7 +210,7 @@ function App() {
         <div class="oppon-hand">
           {
             Array.from(Array(opponHand).keys()).map(id => ({
-              id: id,
+              id: "oppon" + id,
               name: "",
               parent: null,
             })).map(displayCard)
@@ -162,19 +224,42 @@ function App() {
           <button>{phase[0] === "owner"? "Your" : "Your opponent's"}<br />{phase[1]} phase</button>
         </div>
         <div class="phase-select">
-          <button>Next Phase</button>
+          <button onClick={emitNextPhase}>Next Phase</button>
           <button class="end-button">End Turn</button>
         </div>
         <div class="board-grid">
-          {containers.map((id) => (
+          {containers.map((id) => {
             // We updated the Droppable component so it would accept an `id`
             // prop and pass it to `useDroppable`
-            <div class="card-griditem">
-              <BoardSpace key={id} id={id}>
-                {ownerHand.filter(card => card.parent === id).map(displayCard)}
-              </BoardSpace>
-            </div>
-          ))}
+            let cardsOnSquare = ownerHand.filter(card => card.parent === id);
+            if ([0, 1, 2, 3, 4].includes(id) && field.opponTraps[id] != null) {
+              cardsOnSquare.push(field.opponTraps[id]);
+            }
+            if ([5, 6, 7, 8, 9].includes(id) && field.opponMonsters[id - 5] != null) {
+              cardsOnSquare.push(field.opponMonsters[id - 5]);
+            }
+            if ([10, 11, 12, 13, 14].includes(id) && field.ownerMonsters[id - 10] != null) {
+              cardsOnSquare.push(field.ownerMonsters[id - 10]);
+            }
+            if ([15, 16, 17, 18, 19].includes(id) && field.ownerTraps[id - 15] != null) {
+              cardsOnSquare.push(field.ownerTraps[id - 15]);
+            }
+            let cardsSelected = ownerHand.filter(card => card.isSelected);
+            let hiColor = "#000000";
+            if (cardsSelected.length > 0) {
+              let card = cardsSelected[0];
+              let cardCanSummon = canSummon(card) && [10, 11, 12, 13, 14].includes(id);
+              hiColor = cardCanSummon? "#449944" : "#994444";
+            }
+
+            return (
+              <div class="card-griditem">
+                <BoardSpace key={"board"+id} id={id} hiColor={hiColor}>
+                  {cardsOnSquare.length > 0? displayCard(cardsOnSquare[0]) : null}
+                </BoardSpace>
+              </div>
+            )
+          })}
         </div>
         <div class="owner-hand">
           {ownerHand.filter(card => card.parent === null).map(displayCard)}
@@ -183,16 +268,56 @@ function App() {
     </DndContext>
   );
 
+  function handleDragStart(event) {
+    const { active } = event;
+
+    setOwnerHand(ownerHand.map(
+      card =>
+        card.id === active.id?
+        {...card, isSelected: true}
+        : card
+    ))
+  }
+
   function handleDragEnd(event) {
     const { active, over } = event;
 
     // If the item is dropped over a container, set it as the parent
     // otherwise reset the parent to `null`
     setOwnerHand(ownerHand.map(
-      card =>
-        card.id === active.id?
-        {...card, parent: over? over.id : null}
-        : card
+      (card, hand_idx) => {
+        let shouldDrop = false;
+        if (
+          !over
+          || card.id !== active.id
+          || (card.type === "monster" && ![10, 11, 12, 13, 14].includes(over.id))
+          || (card.type === "spell" && ![15, 16, 17, 18, 19].includes(over.id))
+        ) {
+          return {...card, isSelected: false};
+        }
+        if (card.type === "monster") {
+          let idx = over.id - 10;
+          if (field.ownerMonsters[idx] != null) {
+            return {...card, isSelected: false};
+          }
+          summon(hand_idx, idx)
+        }
+        if (card.type === "spell") {
+          let idx = card.id - 10;
+          if (field.ownerTraps[idx] != null) {
+            return {...card, isSelected: false};
+          }
+        }
+
+        console.log(card.type, canSummon(card))
+        shouldDrop |= card.type === "monster" && canSummon(card);
+        shouldDrop |= card.type === "spell" && card.can_activate;
+        if (shouldDrop) {
+          return {...card, parent: over? over.id : null, isSelected: false};
+        } else {
+          return {...card, isSelected: false};
+        }
+      }
     ))
   }
 };

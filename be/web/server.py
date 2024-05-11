@@ -34,6 +34,7 @@ def login(sid, username):
 @sio.event
 def challenge(sid, challengee):
   challenger = state.sid_to_name[sid]
+  name = state.sid_to_name[sid]
   print(f"[EVENT-{sid}] challenge: {challenger} -> {challengee}")
   if challengee in state.challenge_map and state.challenge_map[challengee] == challenger:
     # if there was already an existing challenge
@@ -54,11 +55,21 @@ def challenge(sid, challengee):
 
 @sio.event
 def player_action(sid, action):
+  name = state.sid_to_name[sid]
+  print(f"[EVENT-{sid}] player {name} action {action}")
   actor = state.sid_to_name[sid]
   room_id = state.room_map[actor]
   room = state.rooms[room_id]
 
   room.player_action(actor, action)
+
+@sio.event
+def card_can(sid, card_uuid, action):
+  actor = state.sid_to_name[sid]
+  room_id = state.room_map[actor]
+  room = state.rooms[room_id]
+
+  room.card_can(actor, card_uuid, action)
 
 @sio.event
 def disconnect(sid):
