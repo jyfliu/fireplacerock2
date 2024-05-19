@@ -1,23 +1,30 @@
 // functions that change the game state based on server call
 
 export function OnPromptUserActivate(states) {
-  return name => window.confirm(`Activate ${name}'s effect?'`);
+  return (name, cb) => cb(window.confirm(`Activate ${name}'s effect?'`));
 };
 
-export function OnPromptUserSelect(states) {
-  return cards => prompt(`Select a card ${cards.length}`);
+export function OnPromptUserSelectCards(states) {
+  return (cards, amount, cb) => {
+    let cardsStr = (
+      cards
+        .map(([loc, card], idx) => `[${idx}: ${card.name} (${loc})]`)
+        .join(" ")
+    );
+    if (amount.length === 1 && amount[0] === 1) {
+      cb([prompt(`Select a card from ${cardsStr}`)]);
+    } else {
+      prompt("not implemented multiple select")
+    }
+  };
 };
-
-export function OnPromptUserSelectMultiple(states) {
-  return (cards, amounts) => prompt(`Select a card ${cards.length}`);
-}
 
 export function OnPromptUserSelectText(states) {
-  return options => prompt(`Select an option ${options.length}`);
+  return (options, cb) => cb(prompt(`Select an option ${options.length}`));
 }
 
 export function OnPromptUserSelectBoard(states) {
-  return nums => prompt(`Select an option ${nums.length}`);
+  return (nums, cb) => cb(prompt(`Select an option ${nums.length}`));
 }
 
 export function OnTakeDamage(states) {
@@ -107,7 +114,7 @@ let cardSortKey = (a, b) => {
 export function OnMoveCard(states) {
   let { setOwnerHand, setField, setOwnerCards } = states;
   return (card, from, to, idx) => {
-    let shouldKeep = c => c.uuid !== card.uuid;
+    let shouldKeep = c => c? c.uuid !== card.uuid : true;
     let keepOthers = c => shouldKeep(c)? c : null;
     // remove
     switch (from) {
@@ -152,17 +159,18 @@ export function OnMoveCard(states) {
       list.push(card);
       return list;
     };
+    card.id = card.uuid;
+    card.parent = null;
+    card.isSelected = false;
     // add
     switch (to) {
       case "hand":
-        card.id = card.uuid;
-        card.parent = null;
-        card.isSelected = false;
         setOwnerHand(ownerHand => copyAndAppend(ownerHand).toSorted(cardSortKey))
         break;
       case "field":
         setField(field => {
           let ownerMonsters = [...field.ownerMonsters];
+          card.parent = idx + 10;
           ownerMonsters[idx] = card;
           return ({
             ...field,
@@ -204,7 +212,7 @@ export function OnMoveCard(states) {
 export function OnMoveOpponCard(states) {
   let { setOpponHand, setField, setOpponCards } = states;
   return (card, from, to, idx) => {
-    let shouldKeep = c => c.uuid !== card.uuid;
+    let shouldKeep = c => c? c.uuid !== card.uuid : true;
     let keepOthers = c => shouldKeep(c)? c : null;
     // remove
     switch (from) {

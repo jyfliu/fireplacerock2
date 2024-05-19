@@ -7,10 +7,10 @@ import { BoardSpace } from './components/BoardSpace';
 import { Card } from './components/Card';
 import { PlayerStats, PlayerMana } from './components/PlayerStats';
 
-import { CanSummon } from "./GameState"
+import { CanSummon, CanAttack } from "./GameState"
 
 import {
-  OnPromptUserActivate, OnPromptUserSelect, OnPromptUserSelectMultiple,
+  OnPromptUserActivate, OnPromptUserSelectCards,
   OnPromptUserSelectText, OnPromptUserSelectBoard,
   OnBeginPhase, OnEndTurn,
   OnTakeDamage, OnOpponTakeDamage, OnPayMana, OnOpponPayMana,
@@ -19,7 +19,10 @@ import {
   OnGameStart, OnGameOver,
 } from "./GatewayIn"
 
-import { EmitNextPhase, Summon } from "./GatewayOut"
+import {
+  EmitNextPhase, EmitNextTurn,
+  Summon, Attack, AttackDirectly,
+} from "./GatewayOut"
 
 import './App.css';
 
@@ -72,9 +75,13 @@ function App() {
   }
 
   let canSummon = CanSummon(states);
+  let canAttack = CanAttack(states);
 
+  let emitNextTurn = EmitNextTurn(socket);
   let emitNextPhase = EmitNextPhase(socket);
   let summon = Summon(socket);
+  let attack = Attack(socket);
+  let attackDirectly = AttackDirectly(socket);
 
   useEffect(() => {
     let onConnect = () => {
@@ -103,8 +110,7 @@ function App() {
 
     // query user input
     let onPromptUserActivate = OnPromptUserActivate(setStates);
-    let onPromptUserSelect = OnPromptUserSelect(setStates);
-    let onPromptUserSelectMultiple = OnPromptUserSelectMultiple(setStates);
+    let onPromptUserSelectCards = OnPromptUserSelectCards(setStates);
     let onPromptUserSelectText = OnPromptUserSelectText(setStates);
     let onPromptUserSelectBoard = OnPromptUserSelectBoard(setStates);
 
@@ -131,8 +137,7 @@ function App() {
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on("prompt_user_activate", onPromptUserActivate);
-    socket.on("prompt_user_select", onPromptUserSelect);
-    socket.on("prompt_user_select_multiple", onPromptUserSelectMultiple);
+    socket.on("prompt_user_select_cards", onPromptUserSelectCards);
     socket.on("prompt_user_select_text", onPromptUserSelectText);
     socket.on("prompt_user_select_board", onPromptUserSelectBoard);
 
@@ -157,8 +162,7 @@ function App() {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("prompt_user_activate", onPromptUserActivate);
-      socket.off("prompt_user_select", onPromptUserSelect);
-      socket.off("prompt_user_select_multiple", onPromptUserSelectMultiple);
+      socket.off("prompt_user_select_cards", onPromptUserSelectCards);
       socket.off("prompt_user_select_text", onPromptUserSelectText);
       socket.off("prompt_user_select_board", onPromptUserSelectBoard);
 
@@ -194,12 +198,13 @@ function App() {
 
   // display helpers
   const displayCard = card =>
-    <Card id={card.id} key={"card"+card.id} card={card} inDroppable={card.parent===null} />
+    <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false} />
 
 
   const statusStyle = {
     "color": isConnected? "green" : "red"
   }
+  ownerHand.forEach(card => console.log(card))
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -225,7 +230,7 @@ function App() {
         </div>
         <div class="phase-select">
           <button onClick={emitNextPhase}>Next Phase</button>
-          <button class="end-button">End Turn</button>
+          <button onClick={emitNextTurn} class="end-button">End Turn</button>
         </div>
         <div class="board-grid">
           {containers.map((id) => {
@@ -285,7 +290,7 @@ function App() {
     // If the item is dropped over a container, set it as the parent
     // otherwise reset the parent to `null`
     setOwnerHand(ownerHand.map(
-      (card, hand_idx) => {
+      (card, handIdx) => {
         let shouldDrop = false;
         if (
           !over
@@ -300,7 +305,7 @@ function App() {
           if (field.ownerMonsters[idx] != null) {
             return {...card, isSelected: false};
           }
-          summon(hand_idx, idx)
+          summon(handIdx, idx)
         }
         if (card.type === "spell") {
           let idx = card.id - 10;
@@ -309,7 +314,6 @@ function App() {
           }
         }
 
-        console.log(card.type, canSummon(card))
         shouldDrop |= card.type === "monster" && canSummon(card);
         shouldDrop |= card.type === "spell" && card.can_activate;
         if (shouldDrop) {
@@ -318,7 +322,36 @@ function App() {
           return {...card, isSelected: false};
         }
       }
-    ))
+    ));
+
+    setField({
+      ...field,
+      ownerMonsters: field.ownerMonsters.map(
+        (card, boardIdx) => {
+          if (!card) { return card; }
+          if (
+            card.id !== active.id
+            || card.type !== "monster"
+            || ![5, 6, 7, 8, 9].includes(over.id)
+          ) {
+            return {...card, isSelected: false};
+          }
+          if (card.type === "monster" && over) {
+            let idx = over.id - 5;
+            if (field.opponMonsters[idx] !== null) {
+              attack(boardIdx, idx);
+              if (canAttack(card)) {
+                // TODO animate differently
+              }
+              return {...card, isSelected: false};
+            }
+          }
+          // else attack directly
+          attackDirectly(boardIdx);
+          return {...card, isSelected: false};
+        }
+      )
+    });
   }
 };
 

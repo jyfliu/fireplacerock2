@@ -8,3 +8,10 @@ export function CanSummon(state) {
   }
 };
 
+export function CanAttack(state) {
+  let { phase, hasInitiative, ownerStats } = state;
+  return (card) => {
+    return hasInitiative && phase === "battle" && card.can_attack;
+  }
+};
+

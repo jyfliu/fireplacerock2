@@ -2,7 +2,7 @@ __pycache__
 *.swp
 
 # dependencies
-*/node_modules
+node_modules
 */.pnp
 .pnp.js
 

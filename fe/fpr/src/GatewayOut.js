@@ -8,6 +8,16 @@ export function EmitNextPhase(socket) {
   }
 };
 
+
+export function EmitNextTurn(socket) {
+  return () => {
+    for (let i = 0; i < 6; ++i) {
+      console.log("player_action [pass]");
+      socket.emit("player_action", ["pass"]);
+    }
+  }
+};
+
 export function Summon(socket) {
   return (handIdx, boardIdx) => {
     console.log("summon", handIdx, boardIdx);
@@ -15,7 +25,19 @@ export function Summon(socket) {
   }
 }
 
+export function Attack(socket) {
+  return (attackerIdx, attackeeIdx) => {
+    console.log("attack", attackerIdx, attackeeIdx);
+    socket.emit("player_action", ["attack", attackerIdx, attackeeIdx]);
+  }
+}
 
+export function AttackDirectly(socket) {
+  return (attackerIdx) => {
+    console.log("attack_directly", attackerIdx);
+    socket.emit("player_action", ["attack_directly", attackerIdx]);
+  }
+}
 
 //export function callCardCan(socket, states, card_uuid, action) {
   //let { setCardCan } = states;

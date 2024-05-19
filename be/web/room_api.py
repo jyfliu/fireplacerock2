@@ -50,10 +50,10 @@ class PlayerIO:
 
   def init_game_state(self, extradeck):
     extradeck = [self.serialize_card(card) for card in extradeck]
-    se.sio.emit("init_game_state", extradeck, room=self.sid)
+    se.emit("init_game_state", extradeck, sid=self.sid)
 
   def prompt_user_activate(self, effect_name):
-    response = se.sio.call("prompt_user_activate", effect_name, sid=self.sid, timeout=9999)
+    response = se.call("prompt_user_activate", effect_name, sid=self.sid)
 
     assert response in [True, False]
     return response
@@ -64,7 +64,8 @@ class PlayerIO:
     elif not isinstance(amount, list):
       amount = [amount]
     cards = [(loc, self.serialize_card(card)) for loc, card in cards]
-    response = se.sio.call("prompt_user_select_cards", (cards, amount), sid=self.sid, timeout=9999)
+    response = se.call("prompt_user_select_cards", (cards, amount), sid=self.sid)
+    response = [int(i) for i in response]
 
     if len(response) == 1:
       assert response[0] in range(len(cards))
@@ -73,80 +74,80 @@ class PlayerIO:
       return response
 
   def prompt_user_select_text(self, options):
-    response = se.sio.call("prompt_user_select_text", options, sid=self.sid, timeout=9999)
+    response = se.call("prompt_user_select_text", options, sid=self.sid)
 
     assert response in range(len(options))
     return response
 
   def prompt_user_select_board(self, nums):
-    response = se.sio.call("prompt_user_select_board", nums, sid=self.sid, timeout=9999)
+    response = se.call("prompt_user_select_board", nums, sid=self.sid)
 
     assert response in nums
     return response
 
   def take_damage(self, amount):
-    se.sio.emit("take_damage", amount, room=self.sid)
+    se.emit("take_damage", amount, sid=self.sid)
 
   def oppon_take_damage(self, amount):
-    se.sio.emit("oppon_take_damage", amount, room=self.sid)
+    se.emit("oppon_take_damage", amount, sid=self.sid)
 
   def pay_mana(self, amount):
-    se.sio.emit("pay_mana", amount, room=self.sid)
+    se.emit("pay_mana", amount, sid=self.sid)
 
   def oppon_pay_mana(self, amount):
-    se.sio.emit("oppon_pay_mana", amount, room=self.sid)
+    se.emit("oppon_pay_mana", amount, sid=self.sid)
 
   def restore_mana(self, mana, mana_max):
-    se.sio.emit("restore_mana", (mana, mana_max), room=self.sid)
+    se.emit("restore_mana", (mana, mana_max), sid=self.sid)
 
   def oppon_restore_mana(self, mana, mana_max):
-    se.sio.emit("oppon_restore_mana", (mana, mana_max), room=self.sid)
+    se.emit("oppon_restore_mana", (mana, mana_max), sid=self.sid)
 
   def flip_coin(self, result):
-    se.sio.emit("flip_coin", result, room=self.sid)
+    se.emit("flip_coin", result, sid=self.sid)
 
   def display_message(self, msg):
-    se.sio.emit("display_message", msg, room=self.sid)
+    se.emit("display_message", msg, sid=self.sid)
 
   def game_start(self):
-    se.sio.emit("game_start", room=self.sid)
+    se.emit("game_start", sid=self.sid)
 
   def game_over(self, winner):
-    se.sio.emit("game_over", winner, room=self.sid)
+    se.emit("game_over", winner, sid=self.sid)
 
   def move_card(self, card, from_loc, to_loc, idx):
-    se.sio.emit("move_card", (self.serialize_card(card), from_loc, to_loc, idx), room=self.sid)
+    se.emit("move_card", (self.serialize_card(card), from_loc, to_loc, idx), sid=self.sid)
 
   def move_oppon_card(self, card, from_loc, to_loc, idx):
-    se.sio.emit("move_oppon_card", (self.serialize_card(card), from_loc, to_loc, idx), room=self.sid)
+    se.emit("move_oppon_card", (self.serialize_card(card), from_loc, to_loc, idx), sid=self.sid)
 
   def apply_status(self, uuid, status, duration, expiry):
-    se.sio.emit("apply_status", (uuid, status, duration, expiry), room=self.sid)
+    se.emit("apply_status", (uuid, status, duration, expiry), sid=self.sid)
 
   def end_turn(self):
-    se.sio.emit("end_turn", room=self.sid)
+    se.emit("end_turn", sid=self.sid)
 
   def card_change_name(self, uuid, new_name):
-    se.sio.emit("card_change_name", (uuid, new_name), room=self.sid)
+    se.emit("card_change_name", (uuid, new_name), sid=self.sid)
 
   # TODO do source
   def card_gain(self, uuid, source, attack, health):
-    se.sio.emit("card_gain", (uuid, None, attack, health), room=self.sid)
+    se.emit("card_gain", (uuid, None, attack, health), sid=self.sid)
 
   def card_lose(self, uuid, source, attack, health):
-    se.sio.emit("card_lose", (uuid, None, attack, health), room=self.sid)
+    se.emit("card_lose", (uuid, None, attack, health), sid=self.sid)
 
   def card_take_damage(self, uuid, source, amount):
-    se.sio.emit("card_take_damage", (uuid, None, amount), room=self.sid)
+    se.emit("card_take_damage", (uuid, None, amount), sid=self.sid)
 
   def card_set(self, uuid, source, attack, health):
-    se.sio.emit("card_set", (uuid, None, attack, health), room=self.sid)
+    se.emit("card_set", (uuid, None, attack, health), sid=self.sid)
 
   def begin_phase(self, player, phase):
-    se.sio.emit("begin_phase", (player, phase), room=self.sid)
+    se.emit("begin_phase", (player, phase), sid=self.sid)
 
   def wait_input(self, spell_speed):
-    se.sio.emit("wait_input", spell_speed, room=self.sid)
+    se.emit("wait_input", spell_speed, sid=self.sid)
 
 
 class Room:

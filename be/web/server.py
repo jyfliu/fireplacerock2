@@ -21,6 +21,8 @@ class State:
 
 state = State()
 
+# input
+
 @sio.event
 def connect(sid, environ):
   print(f"[EVENT-{sid}] connect")
@@ -73,11 +75,25 @@ def card_can(sid, card_uuid, action):
 
 @sio.event
 def disconnect(sid):
-  print(f"[EVENT-{sid}] disconnect")
   username = state.sid_to_name[sid]
+  print(f"[EVENT-{sid}] player {username} disconnect")
   del state.sid_to_name[sid]
   del state.name_to_sid[username]
 
+# output
+def emit(*args, sid):
+  name = state.sid_to_name[sid]
+  print(f"[EMIT-{sid}] player {name} emit {args}")
+  sio.emit(*args, room=sid)
+
+def call(*args, sid):
+  name = state.sid_to_name[sid]
+  print(f"[CALL-{sid}] player {name} call {args}")
+  response = sio.call(*args, sid=sid, timeout=9999)
+  print(f"[CALL-{sid}] player {name} {args[0]} response {response}")
+  return response
+
+# init
 def run():
   eventlet.wsgi.server(eventlet.listen(("", 9069)), app)
 
