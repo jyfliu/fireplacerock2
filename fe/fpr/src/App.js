@@ -5,6 +5,7 @@ import { socket } from './socket';
 
 import { BoardSpace } from './components/BoardSpace';
 import { Card } from './components/Card';
+import { ChatBox } from './components/ChatBox';
 import { PlayerStats, PlayerMana } from './components/PlayerStats';
 
 import { CanSummon, CanAttack } from "./GameState"
@@ -17,6 +18,7 @@ import {
   OnRestoreMana, OnOpponRestoreMana, OnMoveCard, OnMoveOpponCard,
   OnFlipCoin, OnDisplayMessage,
   OnGameStart, OnGameOver,
+  OnCardChangeName, OnCardGain, OnCardLose, OnCardTakeDamage, OnCardSet,
 } from "./GatewayIn"
 
 import {
@@ -28,6 +30,10 @@ import './App.css';
 
 function App() {
   const [isConnected, setIsConnected] = useState(false);
+  const [chat, setChat] = useState([]);
+  const pushChat = msg => {
+    setChat(chatLog => chatLog.concat([msg]));
+  }
 
   const [phase, setPhase] = useState(["owner", "draw"]);
   const [hasInitiative, setHasInitiative] = useState(false);
@@ -63,6 +69,7 @@ function App() {
   })
 
   const states = {
+    chat: chat,
     ownerHand: ownerHand,
     opponHand: opponHand,
     ownerCards: ownerCards,
@@ -97,6 +104,7 @@ function App() {
     };
 
     const setStates = {
+      pushChat: pushChat,
       setOwnerHand: setOwnerHand,
       setOpponHand: setOpponHand,
       setOwnerCards: setOwnerCards,
@@ -128,6 +136,12 @@ function App() {
     let onMoveCard = OnMoveCard(setStates);
     let onMoveOpponCard = OnMoveOpponCard(setStates);
 
+    let onCardChangeName = OnCardChangeName(setStates);
+    let onCardGain = OnCardGain(setStates);
+    let onCardLose = OnCardLose(setStates);
+    let onCardTakeDamage = OnCardTakeDamage(setStates);
+    let onCardSet = OnCardSet(setStates);
+
     // display info
     let onFlipCoin = OnFlipCoin(setStates);
     let onDisplayMessage = OnDisplayMessage(setStates);
@@ -152,6 +166,12 @@ function App() {
     socket.on("oppon_restore_mana", onOpponRestoreMana);
     socket.on("move_card", onMoveCard);
     socket.on("move_oppon_card", onMoveOpponCard);
+
+    socket.on("card_change_name", onCardChangeName);
+    socket.on("card_gain", onCardGain);
+    socket.on("card_lose", onCardLose);
+    socket.on("card_take_damage", onCardTakeDamage);
+    socket.on("card_set", onCardSet);
 
     socket.on("flip_coin", onFlipCoin);
     socket.on("display_message", onDisplayMessage);
@@ -204,13 +224,13 @@ function App() {
   const statusStyle = {
     "color": isConnected? "green" : "red"
   }
-  ownerHand.forEach(card => console.log(card))
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <p style={statusStyle} class="status-bar">
         {isConnected ? "Connected: ip=0.0.0.0:9069" : "Disconnected"}
       </p>
+      <ChatBox chat={chat} />
       <div class="battle">
         <div class="oppon-hand">
           {

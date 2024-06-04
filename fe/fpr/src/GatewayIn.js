@@ -1,10 +1,17 @@
 // functions that change the game state based on server call
 
 export function OnPromptUserActivate(states) {
-  return (name, cb) => cb(window.confirm(`Activate ${name}'s effect?'`));
+  let { pushChat } = states;
+  return (name, cb) => {
+    let response = window.confirm(`Activate ${name}'s effect?'`);
+    let responseStr = response? "Activated" : "Did not activate";
+    pushChat(`${responseStr} ${name}'s effect`);
+    cb(response);
+  };
 };
 
 export function OnPromptUserSelectCards(states) {
+  let { pushChat } = states;
   return (cards, amount, cb) => {
     let cardsStr = (
       cards
@@ -12,7 +19,9 @@ export function OnPromptUserSelectCards(states) {
         .join(" ")
     );
     if (amount.length === 1 && amount[0] === 1) {
-      cb([prompt(`Select a card from ${cardsStr}`)]);
+      let response = prompt(`Select a card from ${cardsStr}`);
+      pushChat(`Selected ${cards[response][1].name} from ${cards[response][0]}`);
+      cb([response]);
     } else {
       prompt("not implemented multiple select")
     }
@@ -20,16 +29,28 @@ export function OnPromptUserSelectCards(states) {
 };
 
 export function OnPromptUserSelectText(states) {
-  return (options, cb) => cb(prompt(`Select an option ${options.length}`));
+  let { pushChat } = states;
+  return (options, cb) => {
+    let optStr = options.map((txt, idx) => `[${idx}: ${txt}]`).join(" ");
+    let response = prompt(`Select an option ${optStr}`);
+    pushChat(`Selected ${options[response]}`);
+    cb(response);
+  }
 }
 
 export function OnPromptUserSelectBoard(states) {
-  return (nums, cb) => cb(prompt(`Select an option ${nums.length}`));
+  let { pushChat } = states;
+  return (nums, cb) => {
+    let response = prompt(`Select an option ${nums.length}`);
+    pushChat(`Selected board position ${response}`);
+    cb(response);
+  }
 }
 
 export function OnTakeDamage(states) {
-  let { setOwnerStats } = states;
+  let { pushChat, setOwnerStats } = states;
   return (amount) => {
+    pushChat(`You took ${amount} damage`);
     setOwnerStats(old => {
       let stats = {...old};
       stats.lp -= amount;
@@ -39,8 +60,9 @@ export function OnTakeDamage(states) {
 }
 
 export function OnOpponTakeDamage(states) {
-  let { setOpponStats } = states;
+  let { pushChat, setOpponStats } = states;
   return (amount) => {
+    pushChat(`Your opponent took ${amount} damage`);
     setOpponStats(old => {
       let stats = {...old};
       stats.lp -= amount;
@@ -50,8 +72,9 @@ export function OnOpponTakeDamage(states) {
 }
 
 export function OnPayMana(states) {
-  let { setOwnerStats } = states;
+  let { pushChat, setOwnerStats } = states;
   return (amount) => {
+    pushChat(`You paid ${amount} mana`);
     setOwnerStats(old => {
       let stats = {...old};
       stats.mana -= amount;
@@ -61,8 +84,9 @@ export function OnPayMana(states) {
 }
 
 export function OnOpponPayMana(states) {
-  let { setOpponStats } = states;
+  let { pushChat, setOpponStats } = states;
   return (amount) => {
+    pushChat(`Your opponent paid ${amount} mana`);
     setOpponStats(old => {
       let stats = {...old};
       stats.mana -= amount;
@@ -72,8 +96,9 @@ export function OnOpponPayMana(states) {
 }
 
 export function OnRestoreMana(states) {
-  let { setOwnerStats } = states;
+  let { pushChat, setOwnerStats } = states;
   return (mana, manaMax) => {
+    pushChat(`Your mana was restored to ${mana}`);
     setOwnerStats(old => {
       let stats = {...old};
       stats.mana = mana;
@@ -84,8 +109,9 @@ export function OnRestoreMana(states) {
 }
 
 export function OnOpponRestoreMana(states) {
-  let { setOpponStats } = states;
+  let { pushChat, setOpponStats } = states;
   return (mana, manaMax) => {
+    pushChat(`Your opponent's mana was restored to ${mana}`);
     setOpponStats(old => {
       let stats = {...old};
       stats.mana = mana;
@@ -112,8 +138,9 @@ let cardSortKey = (a, b) => {
 };
 
 export function OnMoveCard(states) {
-  let { setOwnerHand, setField, setOwnerCards } = states;
+  let { pushChat, setOwnerHand, setField, setOwnerCards } = states;
   return (card, from, to, idx) => {
+    pushChat(`Your ${card?.name} was sent from your ${from} to your ${to}`);
     let shouldKeep = c => c? c.uuid !== card.uuid : true;
     let keepOthers = c => shouldKeep(c)? c : null;
     // remove
@@ -210,8 +237,13 @@ export function OnMoveCard(states) {
 }
 
 export function OnMoveOpponCard(states) {
-  let { setOpponHand, setField, setOpponCards } = states;
+  let { pushChat, setOpponHand, setField, setOpponCards } = states;
   return (card, from, to, idx) => {
+    // should be moved server side
+    let isVisible = loc => ["field", "graveyard", "banished"].includes(loc);
+    let maybeCardName = isVisible(from) || isVisible(to)? card?.name : "card";
+
+    pushChat(`Your opponent's ${maybeCardName} was sent from their ${from} to their ${to}`);
     let shouldKeep = c => c? c.uuid !== card.uuid : true;
     let keepOthers = c => shouldKeep(c)? c : null;
     // remove
@@ -304,20 +336,23 @@ export function OnMoveOpponCard(states) {
 }
 
 export function OnFlipCoin(states) {
+  let { pushChat } = states;
   return (result) => {
     let res = result? "Heads" : "Tails";
-    alert(`Flipped a coin: ${res}!`);
+    pushChat(`Flipped a coin: ${res}!`);
   }
 }
 
 export function OnDisplayMessage(states) {
+  let { pushChat } = states;
   return (message) => {
-    alert(message);
+    pushChat(message);
   }
 }
 
 export function OnGameStart(states) {
   const {
+    pushChat,
     setPhase,
     setHasInitiative,
     setOwnerHand,
@@ -326,6 +361,7 @@ export function OnGameStart(states) {
     setOpponStats,
   } = states;
   return () => {
+    pushChat("Game started!");
     setPhase(x => ["owner", "draw"]);
     setHasInitiative(x => false);
     setOwnerHand(x => []);
@@ -350,23 +386,28 @@ export function OnGameOver(states) {
 }
 
 export function OnBeginPhase(states) {
-  let { setPhase, setHasInitiative } = states;
+  let { pushChat, setPhase, setHasInitiative } = states;
   return (player, phase) => {
+    let phaseText = player === "owner"? "Your" : "Your opponent's";
+    pushChat(`${phaseText} ${phase} phase`);
     setPhase(x => [player, phase]);
     setHasInitiative(x => true);
   }
 }
 
 export function OnEndTurn(states) {
-  let { setHasInitiative } = states;
+  let { pushChat, setHasInitiative } = states;
   return () => {
+    pushChat(`Your opponent's turn starts`);
     setHasInitiative(x => false);
   }
 }
 
 export function DrawPhasePrompt(states) {
   let { setPhase } = states;
-  return () => setPhase(phase => ["owner", "draw"]);
+  return () => {
+    setPhase(phase => ["owner", "draw"]);
+  }
 }
 
 export function MainPhasePrompt(states) {
@@ -375,4 +416,105 @@ export function MainPhasePrompt(states) {
     setPhase(phase => ["owner", "draw"]);
   }
 }
+
+
+function allCardsMap(states, lambda) {
+  let { setOwnerHand, setField, setOwnerCards, setOpponCards } = states;
+  let lambdaIfNotNull = card => card? lambda(card) : card;
+  setOwnerHand(hand => hand.map(lambdaIfNotNull));
+  setField(field =>
+    ({
+      opponTraps: field.opponTraps.map(lambdaIfNotNull),
+      opponMonsters: field.opponMonsters.map(lambdaIfNotNull),
+      ownerMonsters: field.ownerMonsters.map(lambdaIfNotNull),
+      ownerTraps: field.ownerTraps.map(lambdaIfNotNull),
+    })
+  );
+  setOwnerCards(cards =>
+    ({
+      ownerGraveyard: cards.ownerGraveyard.map(lambdaIfNotNull),
+      ownerBanished: cards.ownerBanished.map(lambdaIfNotNull),
+      ownerExtraDeck: cards.ownerExtraDeck.map(lambdaIfNotNull),
+    })
+  );
+  setOpponCards(cards =>
+    ({
+      opponGraveyard: cards.opponGraveyard.map(lambdaIfNotNull),
+      opponBanished: cards.opponBanished.map(lambdaIfNotNull),
+    })
+  );
+}
+
+export function OnCardChangeName(states) {
+  let { pushChat } = states;
+  return (uuid, newName) => allCardsMap(states,
+    (card) => {
+      if (card.uuid === uuid) {
+        pushChat(`${card.name}'s name was changed to ${newName}`);
+        return {...card, name: newName};
+      } else {
+        return card;
+      }
+    }
+  );
+}
+
+export function OnCardGain(states) {
+  let { pushChat } = states;
+  return (uuid, source, attack, health) => allCardsMap(states,
+    (card) => {
+      if (card.uuid === uuid) {
+        pushChat(`${card.name} gained ${attack} / ${health}`);
+        return {...card, attack: card.attack + attack, health: card.health + health};
+      } else {
+        return card;
+      }
+    }
+  );
+}
+
+export function OnCardLose(states) {
+  let { pushChat } = states;
+  return (uuid, source, attack, health) => allCardsMap(states,
+    (card) => {
+      if (card.uuid === uuid) {
+        pushChat(`${card.name} lost ${attack} / ${health}`);
+        return {...card, attack: card.attack - attack, health: card.health - health};
+      } else {
+        return card;
+      }
+    }
+  );
+}
+
+export function OnCardTakeDamage(states) {
+  let { pushChat } = states;
+  return (uuid, source, amount) => allCardsMap(states,
+    (card) => {
+      if (card.uuid === uuid) {
+        pushChat(`${card.name} took ${amount} damage`);
+        return {...card, health: card.health - amount};
+      } else {
+        return card;
+      }
+    }
+  );
+}
+
+export function OnCardSet(states) {
+  let { pushChat } = states;
+  return (uuid, source, attack, health) => allCardsMap(states,
+    (card) => {
+      if (card.uuid === uuid) {
+        if (card.attack !== attack || card.health !== health) {
+          pushChat(`${card.name} changed from ${card.attack} / ${card.health} to ${attack} / ${health}`);
+        }
+        return {...card, attack: attack, health: health};
+      } else {
+        return card;
+      }
+    }
+  );
+}
+
 

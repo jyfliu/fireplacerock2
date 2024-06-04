@@ -75,12 +75,14 @@ class PlayerIO:
 
   def prompt_user_select_text(self, options):
     response = se.call("prompt_user_select_text", options, sid=self.sid)
+    response = int(response)
 
     assert response in range(len(options))
     return response
 
   def prompt_user_select_board(self, nums):
     response = se.call("prompt_user_select_board", nums, sid=self.sid)
+    response = int(response)
 
     assert response in nums
     return response

@@ -1,0 +1,12 @@
+.chat-box {
+  position: absolute;
+  left: 50px;
+  top: 150px;
+  overflow-y: scroll;
+  width: 250px;
+  height: 500px;
+  overflow-wrap: break-word;
+  white-space: pre-line;
+}
+
+
