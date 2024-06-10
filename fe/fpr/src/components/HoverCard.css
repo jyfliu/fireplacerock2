@@ -1,0 +1,24 @@
+.card {
+  position: relative;
+  width: 368px;
+  height: 560px;
+}
+
+.attack {
+  position: absolute;
+  bottom: -40px;
+  left: 40px;
+}
+
+.health {
+  position: absolute;
+  bottom: -40px;
+  right: 40px;
+}
+
+.cost {
+  position: absolute;
+  top: -40px;
+  left: 40px;
+}
+

@@ -6,6 +6,7 @@ import { socket } from './socket';
 import { BoardSpace } from './components/BoardSpace';
 import { Card } from './components/Card';
 import { ChatBox } from './components/ChatBox';
+import { HoverCard } from './components/HoverCard';
 import { PlayerStats, PlayerMana } from './components/PlayerStats';
 
 import { CanSummon, CanAttack } from "./GameState"
@@ -29,12 +30,15 @@ import {
 import './App.css';
 
 function App() {
+  // meta state
   const [isConnected, setIsConnected] = useState(false);
   const [chat, setChat] = useState([]);
   const pushChat = msg => {
     setChat(chatLog => chatLog.concat([msg]));
   }
+  const [hoverCard, setHoverCard] = useState({});
 
+  // game state
   const [phase, setPhase] = useState(["owner", "draw"]);
   const [hasInitiative, setHasInitiative] = useState(false);
   const [ownerHand, setOwnerHand] = useState([]);
@@ -70,6 +74,8 @@ function App() {
 
   const states = {
     chat: chat,
+    hoverCard: hoverCard,
+
     ownerHand: ownerHand,
     opponHand: opponHand,
     ownerCards: ownerCards,
@@ -105,6 +111,8 @@ function App() {
 
     const setStates = {
       pushChat: pushChat,
+      setHoverCard: setHoverCard,
+
       setOwnerHand: setOwnerHand,
       setOpponHand: setOpponHand,
       setOwnerCards: setOwnerCards,
@@ -231,6 +239,7 @@ function App() {
         {isConnected ? "Connected: ip=0.0.0.0:9069" : "Disconnected"}
       </p>
       <ChatBox chat={chat} />
+      <HoverCard card={hoverCard} />
       <div class="battle">
         <div class="oppon-hand">
           {
