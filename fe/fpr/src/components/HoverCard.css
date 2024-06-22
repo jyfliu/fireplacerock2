@@ -1,24 +1,40 @@
-.card {
-  position: relative;
+.hc-card {
+  position: absolute;
+  left: calc(80% - 184px);
+  top: 10%;
   width: 368px;
   height: 560px;
+  background-color: pink;
 }
 
-.attack {
+.hc-title {
   position: absolute;
-  bottom: -40px;
-  left: 40px;
+  top: 0px;
+  left: 20px;
 }
 
-.health {
+.hc-description {
   position: absolute;
-  bottom: -40px;
-  right: 40px;
+  top: 300px;
+  left: 20px;
+  width: calc(368px - 40px);
 }
 
-.cost {
+.hc-attack {
   position: absolute;
-  top: -40px;
-  left: 40px;
+  bottom: 0px;
+  left: 20px;
+}
+
+.hc-health {
+  position: absolute;
+  bottom: 0px;
+  right: 20px;
+}
+
+.hc-cost {
+  position: absolute;
+  top: 0px;
+  right: 20px;
 }
 

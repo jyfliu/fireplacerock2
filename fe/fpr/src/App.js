@@ -36,7 +36,12 @@ function App() {
   const pushChat = msg => {
     setChat(chatLog => chatLog.concat([msg]));
   }
-  const [hoverCard, setHoverCard] = useState({});
+  const [hoverCard, setHoverCard] = useState({
+    card: {},
+    inCard: false,
+    inHoverCard: false,
+    inDrag: false,
+  });
 
   // game state
   const [phase, setPhase] = useState(["owner", "draw"]);
@@ -226,7 +231,8 @@ function App() {
 
   // display helpers
   const displayCard = card =>
-    <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false} />
+    <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
+          setHoverCard={setHoverCard} />
 
 
   const statusStyle = {
@@ -238,8 +244,6 @@ function App() {
       <p style={statusStyle} class="status-bar">
         {isConnected ? "Connected: ip=0.0.0.0:9069" : "Disconnected"}
       </p>
-      <ChatBox chat={chat} />
-      <HoverCard card={hoverCard} />
       <div class="battle">
         <div class="oppon-hand">
           {
@@ -250,10 +254,6 @@ function App() {
             })).map(displayCard)
           }
         </div>
-        <PlayerStats owner={true} hp={ownerStats.hp} />
-        <PlayerStats owner={false} hp={opponStats.hp} />
-        <PlayerMana owner={true} mana={ownerStats.mana} manaMax={ownerStats.manaMax} />
-        <PlayerMana owner={false} mana={opponStats.mana} manaMax={opponStats.manaMax} />
         <div class="phase-indicator">
           <button>{phase[0] === "owner"? "Your" : "Your opponent's"}<br />{phase[1]} phase</button>
         </div>
@@ -295,9 +295,15 @@ function App() {
             )
           })}
         </div>
+        <PlayerStats owner={true} hp={ownerStats.hp} />
+        <PlayerStats owner={false} hp={opponStats.hp} />
+        <PlayerMana owner={true} mana={ownerStats.mana} manaMax={ownerStats.manaMax} />
+        <PlayerMana owner={false} mana={opponStats.mana} manaMax={opponStats.manaMax} />
         <div class="owner-hand">
           {ownerHand.filter(card => card.parent === null).map(displayCard)}
         </div>
+      <ChatBox chat={chat} />
+      <HoverCard hoverCard={hoverCard} setHoverCard={setHoverCard} />
       </div>
     </DndContext>
   );
@@ -305,6 +311,7 @@ function App() {
   function handleDragStart(event) {
     const { active } = event;
 
+    setHoverCard(hoverCard => ({...hoverCard, inDrag: true}));
     setOwnerHand(ownerHand.map(
       card =>
         card.id === active.id?
@@ -316,6 +323,7 @@ function App() {
   function handleDragEnd(event) {
     const { active, over } = event;
 
+    setHoverCard(hoverCard => ({...hoverCard, inCard: false, inDrag: false}));
     // If the item is dropped over a container, set it as the parent
     // otherwise reset the parent to `null`
     setOwnerHand(ownerHand.map(
