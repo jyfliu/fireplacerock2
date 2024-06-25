@@ -527,6 +527,9 @@ class Duel():
 
     card.reset_stats()
 
+    # summoning sickness
+    card.apply_status("god", "CANNOT_ATTACK", 0, "END")
+
     card.effect("if_summon_cost")
     card.effect("if_summon")
     act = card.effect("opt_if_summon_cost")

@@ -4,13 +4,21 @@
   top: 10%;
   width: 368px;
   height: 560px;
-  background-color: pink;
+  background-color: lightgrey;
 }
 
 .hc-title {
   position: absolute;
   top: 0px;
   left: 20px;
+}
+
+.hc-flavour {
+  position: absolute;
+  bottom: 48px;
+  left: 24px;
+  font-size: 10px;
+  width: calc(368px - 48px);
 }
 
 .hc-description {

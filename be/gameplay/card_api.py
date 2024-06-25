@@ -606,7 +606,8 @@ class Card:
     elif trigger == "can_attack_directly":
       return (
         not self.has_status("CANNOT_ATTACK")
-        and not len(self.oppon.field)
+        # if everything has taunt uncomment
+        # and not len(self.oppon.field)
       )
     elif trigger == "can_target":
       return not self.has_status("UNTARGETABLE")

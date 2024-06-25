@@ -39,6 +39,19 @@ export function AttackDirectly(socket) {
   }
 }
 
+export function ActivateBoard(socket, states) {
+  const { field } = states;
+  return (boardIdx) => {
+    if (!field.ownerMonsters[boardIdx]) { return; }
+    const { name } = field.ownerMonsters[boardIdx];
+    let response = window.confirm(`Activate ${name}'s effect?'`);
+    if (response) {
+      console.log("activate_board", board_idx);
+      socket.emit("player_action", ["activate_board", board_idx]);
+    }
+  }
+}
+
 //export function callCardCan(socket, states, card_uuid, action) {
   //let { setCardCan } = states;
   //let ack = (yesno) => {

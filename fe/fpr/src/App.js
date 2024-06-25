@@ -100,6 +100,7 @@ function App() {
   let summon = Summon(socket);
   let attack = Attack(socket);
   let attackDirectly = AttackDirectly(socket);
+  let activateBoard = ActivateBoard(socket, states);
 
   useEffect(() => {
     let onConnect = () => {
@@ -258,7 +259,7 @@ function App() {
           <button>{phase[0] === "owner"? "Your" : "Your opponent's"}<br />{phase[1]} phase</button>
         </div>
         <div class="phase-select">
-          <button onClick={emitNextPhase}>Next Phase</button>
+          <button onClick={emitNextPhase} class="next-button">Next Phase</button>
           <button onClick={emitNextTurn} class="end-button">End Turn</button>
         </div>
         <div class="board-grid">
@@ -329,6 +330,9 @@ function App() {
     setOwnerHand(ownerHand.map(
       (card, handIdx) => {
         let shouldDrop = false;
+        if (!card) {
+          return card;
+        }
         if (
           !over
           || card.id !== active.id
@@ -369,13 +373,12 @@ function App() {
           if (
             card.id !== active.id
             || card.type !== "monster"
-            || ![5, 6, 7, 8, 9].includes(over.id)
           ) {
             return {...card, isSelected: false};
           }
           if (card.type === "monster" && over) {
             let idx = over.id - 5;
-            if (field.opponMonsters[idx] !== null) {
+            if (field.opponMonsters[idx]) {
               attack(boardIdx, idx);
               if (canAttack(card)) {
                 // TODO animate differently
