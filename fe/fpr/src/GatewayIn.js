@@ -1,5 +1,76 @@
 // functions that change the game state based on server call
 
+
+const unserializeCard = (card) => {
+  if (!card) {
+    return card;
+  }
+  card.id = card.uuid;
+  card.parent = null;
+  card.isSelected = false;
+  return card;
+};
+
+export function OnInitGameState(states) {
+  let {
+    setOwnerStats,
+    setOpponStats,
+    setOwnerHand,
+    setOwnerCards,
+    setOpponHand,
+    setOpponCards,
+    setField,
+    pushChat,
+  } = states;
+  return (
+    owner,
+    oppon,
+    ownerHand,
+    ownerMonsters,
+    ownerGraveyard,
+    ownerBanished,
+    ownerMainDeck,
+    ownerExtraDeck,
+    opponHand,
+    opponMonsters,
+    opponGraveyard,
+    opponBanished,
+    opponMainDeck,
+    opponExtraDeck,
+  ) => {
+    pushChat("[dbg] loaded game state");
+    setOwnerStats(stats => ({
+      hp: owner.life,
+      mana: owner.mana,
+      manaMax: owner.mana_max,
+    }));
+    setOpponStats(stats => ({
+      hp: oppon.life,
+      mana: oppon.mana,
+      manaMax: oppon.mana_max,
+    }));
+    setOwnerHand(ownerHand.map(unserializeCard).toSorted(cardSortKey));
+    setOpponHand(opponHand);
+    setOwnerCards(cards => ({
+      ownerGraveyard: ownerGraveyard.map(unserializeCard),
+      ownerBanished: ownerBanished.map(unserializeCard),
+      ownerMainDeck: ownerMainDeck,
+      ownerExtraDeck: ownerExtraDeck.map(unserializeCard),
+    }));
+    setOpponCards(cards => ({
+      opponGraveyard: opponGraveyard.map(unserializeCard),
+      opponBanished: opponBanished.map(unserializeCard),
+      opponMainDeck: opponMainDeck,
+      opponExtraDeck: opponExtraDeck,
+    }));
+    setField(field => ({
+      ...field,
+      ownerMonsters: ownerMonsters.map(unserializeCard),
+      opponMonsters: opponMonsters.map(unserializeCard),
+    }));
+  };
+}
+
 export function OnPromptUserActivate(states) {
   let { pushChat } = states;
   return (name, cb) => {
@@ -53,9 +124,9 @@ export function OnTakeDamage(states) {
     pushChat(`You took ${amount} damage`);
     setOwnerStats(old => {
       let stats = {...old};
-      stats.lp -= amount;
+      stats.hp -= amount;
       return stats;
-    })
+    });
   }
 }
 
@@ -65,9 +136,9 @@ export function OnOpponTakeDamage(states) {
     pushChat(`Your opponent took ${amount} damage`);
     setOpponStats(old => {
       let stats = {...old};
-      stats.lp -= amount;
+      stats.hp -= amount;
       return stats;
-    })
+    });
   }
 }
 

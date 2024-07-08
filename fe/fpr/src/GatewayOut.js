@@ -46,8 +46,8 @@ export function ActivateBoard(socket, states) {
     const { name } = field.ownerMonsters[boardIdx];
     let response = window.confirm(`Activate ${name}'s effect?'`);
     if (response) {
-      console.log("activate_board", board_idx);
-      socket.emit("player_action", ["activate_board", board_idx]);
+      console.log("activate_board", boardIdx);
+      socket.emit("player_action", ["activate_board", boardIdx]);
     }
   }
 }

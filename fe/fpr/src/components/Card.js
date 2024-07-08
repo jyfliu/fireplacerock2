@@ -5,23 +5,43 @@ import './Card.css';
 
 
 export function Card(props) {
-  const {attributes, listeners, setNodeRef, transform} = useDraggable({
+  const { card, setHoverCard } = props;
+  const { phase, activateBoard, boardId } = props;
+
+  const enterCard = () => setHoverCard(hoverCard => ({...hoverCard, card: card, inCard: true}));
+  const leaveCard = () => setHoverCard(hoverCard => ({...hoverCard, inCard: false}));
+
+  let {attributes, listeners, setNodeRef, transform} = useDraggable({
     id: props.id,
   });
-  const { card, setHoverCard } = props;
+
+  let isDraggable = false;
+  let onClick = () => {};
+  if (phase[0] === "owner") {
+    if (phase[1] === "battle" || !activateBoard) {
+      isDraggable = true;
+    }
+    if (activateBoard && phase[0] === "owner" && phase[1] !== "battle") {
+      // for some reason doesn't work with draggable -- debug with internet
+      if ([10, 11, 12, 13, 14].includes(boardId)) {
+        onClick = () => activateBoard(boardId - 10);
+      }
+    }
+  }
+
   const style = {
     "transform": transform?
       `perspective(1000px) translate3d(${transform.x}px, ${transform.y*0.86602540378}px, 0) ${card.isSelected? "rotateX(30deg)" : ""}`
     : undefined
   };
 
-  const enterCard = () => setHoverCard(hoverCard => ({...hoverCard, card: card, inCard: true}));
-  const leaveCard = () => setHoverCard(hoverCard => ({...hoverCard, inCard: false}));
-
   return (
-    <button class="card" ref={setNodeRef} style={style} {...listeners} {...attributes}
+    <button class="card" ref={setNodeRef} style={style}
+            {...(isDraggable && listeners)}
+            {...(isDraggable && attributes)}
             onMouseOver={enterCard}
             onMouseLeave={leaveCard}
+            onClick={onClick}
     >
       <h3>{card.name} {card.uuid}</h3>
       <h4 class="attack">{card.attack}</h4>

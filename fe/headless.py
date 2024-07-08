@@ -34,6 +34,7 @@ class Headless:
 
 
   def init_game_state(self, extradeck):
+    # TODO broken now
     for card in extradeck:
       self.owner.extradeck.add(card)
     self.owner.extradeck.sort()

@@ -20,6 +20,8 @@ class PlayerIO:
     self.player_obj = player_obj
 
   def serialize_card(self, card):
+    if card is None:
+      return None
     duel = self.duel
     player = self.player_obj
     dict = {}
@@ -48,9 +50,46 @@ class PlayerIO:
   def sid(self):
     return se.state.name_to_sid[self.name]
 
-  def init_game_state(self, extradeck):
-    extradeck = [self.serialize_card(card) for card in extradeck]
-    se.emit("init_game_state", extradeck, sid=self.sid)
+  def init_game_state(self, owner_player, oppon_player):
+    def serialize_player(player):
+      return {
+        "life": player.life,
+        "mana": player.mana,
+        "mana_max": player.mana_max,
+        "status": player.status,
+      }
+    owner_hand = [self.serialize_card(card) for card in owner_player.hand]
+    owner_monsters = [self.serialize_card(card) for card in owner_player.board]
+    owner_graveyard = [self.serialize_card(card) for card in owner_player.graveyard]
+    owner_banished = [self.serialize_card(card) for card in owner_player.banished]
+    owner_maindeck = len(owner_player.deck)
+    owner_extradeck = [self.serialize_card(card) for card in owner_player.extradeck]
+    oppon_hand = len(oppon_player.hand)
+    oppon_monsters = [self.serialize_card(card) for card in oppon_player.board]
+    oppon_graveyard = [self.serialize_card(card) for card in oppon_player.graveyard]
+    oppon_banished = [self.serialize_card(card) for card in oppon_player.banished]
+    oppon_maindeck = len(oppon_player.deck)
+    oppon_extradeck = len(oppon_player.extradeck)
+    se.emit(
+      "init_game_state",
+      (
+        serialize_player(owner_player),
+        serialize_player(oppon_player),
+        owner_hand,
+        owner_monsters,
+        owner_graveyard,
+        owner_banished,
+        owner_maindeck,
+        owner_extradeck,
+        oppon_hand,
+        oppon_monsters,
+        oppon_graveyard,
+        oppon_banished,
+        oppon_maindeck,
+        oppon_extradeck,
+      ),
+      sid=self.sid,
+    )
 
   def prompt_user_activate(self, effect_name):
     response = se.call("prompt_user_activate", effect_name, sid=self.sid)

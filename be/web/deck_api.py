@@ -64,6 +64,7 @@ sd_cs = [
   "blastoise", "garchomp",
   "jirachi", "hooh",
   "tyranitar",
+  "arceus",
   "technicalmachine", "technicalmachine", "technicalmachine",
   "megabracelet", "megabracelet", "megabracelet",
   "pokemonshuffle", "pokemonshuffle", "pokemonshuffle",

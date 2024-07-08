@@ -12,6 +12,7 @@ import { PlayerStats, PlayerMana } from './components/PlayerStats';
 import { CanSummon, CanAttack } from "./GameState"
 
 import {
+  OnInitGameState,
   OnPromptUserActivate, OnPromptUserSelectCards,
   OnPromptUserSelectText, OnPromptUserSelectBoard,
   OnBeginPhase, OnEndTurn,
@@ -25,9 +26,38 @@ import {
 import {
   EmitNextPhase, EmitNextTurn,
   Summon, Attack, AttackDirectly,
+  ActivateBoard,
 } from "./GatewayOut"
 
 import './App.css';
+
+const defaultHoverCard = {
+  card: {},
+  inCard: false,
+  inHoverCard: false,
+  inDrag: false,
+};
+
+const defaultField = {
+  opponTraps:    [null, null, null, null, null],
+  opponMonsters: [null, null, null, null, null],
+  ownerMonsters: [null, null, null, null, null],
+  ownerTraps:    [null, null, null, null, null],
+};
+
+const defaultOwnerCards = {
+  ownerGraveyard: [],
+  ownerBanished: [],
+  ownerMainDeck: 0,
+  ownerExtraDeck: [],
+};
+
+const defaultOpponCards = {
+  opponGraveyard: [],
+  opponBanished: [],
+  opponMainDeck: 0,
+  opponExtraDeck: 0,
+};
 
 function App() {
   // meta state
@@ -35,13 +65,8 @@ function App() {
   const [chat, setChat] = useState([]);
   const pushChat = msg => {
     setChat(chatLog => chatLog.concat([msg]));
-  }
-  const [hoverCard, setHoverCard] = useState({
-    card: {},
-    inCard: false,
-    inHoverCard: false,
-    inDrag: false,
-  });
+  };
+  const [hoverCard, setHoverCard] = useState(defaultHoverCard);
 
   // game state
   const [phase, setPhase] = useState(["owner", "draw"]);
@@ -58,24 +83,9 @@ function App() {
     mana: 0,
     manaMax: 0,
   });
-  const [field, setField] = useState({
-    opponTraps:    [null, null, null, null, null],
-    opponMonsters: [null, null, null, null, null],
-    ownerMonsters: [null, null, null, null, null],
-    ownerTraps:    [null, null, null, null, null],
-  });
-  const [ownerCards, setOwnerCards] = useState({
-    ownerGraveyard: [],
-    ownerBanished: [],
-    ownerMainDeck: 0,
-    ownerExtraDeck: [],
-  })
-  const [opponCards, setOpponCards] = useState({
-    opponGraveyard: [],
-    opponBanished: [],
-    opponMainDeck: 0,
-    opponExtraDeck: 0,
-  })
+  const [field, setField] = useState(defaultField);
+  const [ownerCards, setOwnerCards] = useState(defaultOwnerCards);
+  const [opponCards, setOpponCards] = useState(defaultOpponCards);
 
   const states = {
     chat: chat,
@@ -95,6 +105,7 @@ function App() {
   let canSummon = CanSummon(states);
   let canAttack = CanAttack(states);
 
+
   let emitNextTurn = EmitNextTurn(socket);
   let emitNextPhase = EmitNextPhase(socket);
   let summon = Summon(socket);
@@ -110,6 +121,12 @@ function App() {
       let oppo = prompt("Who would you like to challenge?");
       socket.emit("login", name)
       socket.emit("challenge", oppo)
+
+      setHoverCard(defaultHoverCard);
+      setField(defaultField);
+      setOwnerCards(defaultOwnerCards);
+      setOpponCards(defaultOpponCards);
+
     };
     let onDisconnect = () => {
       setIsConnected(false);
@@ -129,6 +146,8 @@ function App() {
       setOwnerStats: setOwnerStats,
       setOpponStats: setOpponStats,
     };
+
+    let onInitGameState = OnInitGameState(setStates);
 
     // query user input
     let onPromptUserActivate = OnPromptUserActivate(setStates);
@@ -164,6 +183,8 @@ function App() {
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+    socket.on("init_game_state", onInitGameState);
+
     socket.on("prompt_user_activate", onPromptUserActivate);
     socket.on("prompt_user_select_cards", onPromptUserSelectCards);
     socket.on("prompt_user_select_text", onPromptUserSelectText);
@@ -178,6 +199,7 @@ function App() {
     socket.on("oppon_pay_mana", onOpponPayMana);
     socket.on("restore_mana", onRestoreMana);
     socket.on("oppon_restore_mana", onOpponRestoreMana);
+
     socket.on("move_card", onMoveCard);
     socket.on("move_oppon_card", onMoveOpponCard);
 
@@ -195,6 +217,8 @@ function App() {
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.off("init_game_state", onInitGameState);
+
       socket.off("prompt_user_activate", onPromptUserActivate);
       socket.off("prompt_user_select_cards", onPromptUserSelectCards);
       socket.off("prompt_user_select_text", onPromptUserSelectText);
@@ -212,12 +236,19 @@ function App() {
       socket.off("move_card", onMoveCard);
       socket.off("move_oppon_card", onMoveOpponCard);
 
+      socket.off("card_change_name", onCardChangeName);
+      socket.off("card_gain", onCardGain);
+      socket.off("card_lose", onCardLose);
+      socket.off("card_take_damage", onCardTakeDamage);
+      socket.off("card_set", onCardSet);
+
       socket.off("flip_coin", onFlipCoin);
       socket.off("display_message", onDisplayMessage);
       socket.off("game_start", onGameStart);
       socket.off("game_over", onGameOver);
     };
   }, []);
+
 
 
   // board state
@@ -233,7 +264,14 @@ function App() {
   // display helpers
   const displayCard = card =>
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
-          setHoverCard={setHoverCard} />
+          phase={phase}
+          setHoverCard={setHoverCard} />;
+  const displayCardOnBoard = (card, id) =>
+    <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
+          activateBoard={activateBoard}
+          boardId={id}
+          phase={phase}
+          setHoverCard={setHoverCard} />;
 
 
   const statusStyle = {
@@ -290,7 +328,7 @@ function App() {
             return (
               <div class="card-griditem">
                 <BoardSpace key={"board"+id} id={id} hiColor={hiColor}>
-                  {cardsOnSquare.length > 0? displayCard(cardsOnSquare[0]) : null}
+                  {cardsOnSquare.length > 0? displayCardOnBoard(cardsOnSquare[0], id) : null}
                 </BoardSpace>
               </div>
             )
