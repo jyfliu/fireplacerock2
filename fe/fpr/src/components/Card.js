@@ -43,10 +43,32 @@ export function Card(props) {
             onMouseLeave={leaveCard}
             onClick={onClick}
     >
-      <h3>{card.name} {card.uuid}</h3>
+      <h3>{card.name}</h3>
       <h4 class="attack">{card.attack}</h4>
       <h4 class="health">{card.health}</h4>
       <h4 class="cost">{card.cost}</h4>
+    </button>
+  );
+}
+
+export function Deck(props) {
+  let { name, count, cards } = props;
+  if (count === undefined && cards !== undefined) {
+    count = cards.length;
+  }
+  let onClick = () => {};
+  if (cards !== undefined) {
+    let cardsStr = name + ":\n" + (
+      cards
+        .map(card => `[${card.name}]`)
+        .join("\n")
+    );
+    onClick = () => alert(cardsStr);
+  }
+  return (
+    <button class="card" onClick={onClick} >
+      <h4>{name}</h4>
+      <h1>{count}</h1>
     </button>
   );
 }

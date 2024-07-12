@@ -236,7 +236,7 @@ kyogre:
   health: 1000
   flavour: It is said to have widened the seas by causing downpours. It had been asleep
     in a marine trench.
-  description: 'When this card is summoned: Change both player’s field spells to Rainy
+  description: 'When this card is summoned: Change all face-up continuous spells to Rainy
     Day.'
   id: 14
   rarity: R
@@ -249,7 +249,7 @@ groudon:
   health: 1000
   flavour: It had been asleep in underground magma ever since it fiercely fought Kyogre
     long ago.
-  description: 'When this card is summoned: Change both player’s field spells to Harsh
+  description: 'When this card is summoned: Change all face-up continuous spells to Harsh
     Sunlight.'
   id: 15
   rarity: R
@@ -262,8 +262,10 @@ giratina:
   health: 1200
   flavour: It was banished for its violence. It silently gazed upon the old world
     from the Distortion World.
-  description: When a card would be destroyed as a result of battle with this card,
+  description: When a card is destroyed as a result of battle with this card,
     banish it instead.
+  if_destroy_battle: |-
+    io.banish(args[0])
   id: 16
   rarity: R
   uuid: giratina
@@ -322,7 +324,7 @@ heracross:
   type: monster
   cost: 3
   attack: 500
-  health: 300
+  health: 400
   flavour: It loves sweet honey. To keep all the honey to itself, it hurls rivals
     away with its prized horn.
   description: 'On attack declaration, flip a coin: if tails, this attack misses and
@@ -451,7 +453,16 @@ gyarados:
   health: 500
   description: This card can only be summoned by destroying a “Magikarp” you control.
     When this card is summoned, reduce the attack of each of your opponent’s monsters
-    by 100.
+    by 200.
+  can_summon: |-
+    for card in owner.board:
+      if "magikarp" in card.name.lower():
+        retval = True
+      else:
+        retval = False
+  if_summon: |-
+    target = select_owner_field(lambda card: "magikarp" in card.name.lower())
+    io.destroy(target)
   id: 26
   rarity: SR
   uuid: gyarados
@@ -471,9 +482,9 @@ lugia:
   name: Lugia
   type: monster
   cost: 7
-  attack: 400
+  attack: 300
   health: 1200
-  description: 'Once per turn: When this card is about to take battle damage: Half the damage
+  description: 'Opponent minions must attack this one first. Once per turn: When this card is about to take battle damage: Half the damage
     taken.'
   attackee_damage_calc: |-
     if not self.has_status("LUGIA_ACTIVATED_EFFECT"):
@@ -633,7 +644,9 @@ pokemonshuffle:
     has_space = can_select_owner_board()
     retval = has_target and has_space
   on_activate_hand_cost: |-
-    sends = select_owner_graveyard(lambda card: card.id in archetypes.pokemon and card.type == "monster", amount=-1)
+    costs = owner.extradeck.filter(lambda card: card.id in archetypes.pokemon and card.type == "monster" and card.cost <= self.num_gy).map(lambda x: x.cost)
+    costs = list(set(costs))
+    sends = select_owner_graveyard(lambda card: card.id in archetypes.pokemon and card.type == "monster", amount=costs)
     names = {card.name for card in sends}
     self.pkmn_shuffle_num_names = len(names)
     for card in sends:
@@ -839,11 +852,11 @@ livetwintroublesunny:
   uuid: livetwintroublesunny
 livetwinsmoonlitsnitch:
   name: Live Twin’s Moonlit Snitch
-  type: field spell
+  type: continuousspell
   cost: 2
   description: 'When this card is activated: You can add 1 "Live Twin" monster from
     your Deck to your hand. While you control a "Live Twin" monster, each time your
-    opponent Normal Summons, you gain 100 LP, and if you do, inflict 100 damage to
+    opponent summons a monster, you gain 100 LP, and inflict 100 damage to
     your opponent.'
   id: 48
   rarity: SR
@@ -906,16 +919,20 @@ cypher:
   id: 53
   rarity: R
   uuid: cypher
-killjoy:
-  name: Killjoy
+kiljoy:
+  name: Kiljoy
   type: monster
   cost: 2
   attack: 200
   health: 200
-  description: Add a 1-cost "Kiljoy Turret" to hand
+  description: When this card is summoned; Add a 1-cost "Kiljoy Turret" to hand
+  if_summon: |-
+    template = io.card_templates["kiljoyturret"]
+    turret = template.create_instance(owner, oppon, io)
+    io.add_to_hand(turret)
   id: 54
   rarity: SR
-  uuid: killjoy
+  uuid: kiljoy
 neon:
   name: Neon
   type: monster
@@ -1085,36 +1102,39 @@ emergencybutton:
   name: Emergency Button
   type: spell
   cost: -1
-  description: ''
+  description: 'Add 5 '
   id: 69
   rarity: C
   uuid: emergencybutton
 redamogus:
   name: Red Amogus
   type: monster
-  cost: -1
-  attack: -1
-  health: -1
-  description: ''
+  cost: 1
+  attack: 0
+  health: 1
+  flavour: 'sus'
+  description: 'When this card is summoned, select an empty square on the opposing field and move this card there.'
   id: 70
   rarity: C
   uuid: redamogus
-leagueplaceholder1:
-  name: League Placeholder 1
-  type: ''
-  cost: -1
-  description: ''
+zoe:
+  name: Zoe
+  type: monster
+  cost: 2
+  attack: 0
+  health: 2
+  description: 'When Zoe is summoned, target an opposing monster; put it to sleep until the end of your next turn (it cannot attack, and the next damage it takes is doubled)'
   id: 71
   rarity: C
-  uuid: leagueplaceholder1
-leagueplaceholder2:
-  name: League Placeholder 2
-  type: ''
-  cost: -1
-  description: ''
+  uuid: zoe
+xerath:
+  name: Xerath
+  type: continuousspell
+  cost: 5
+  description: 'You can pay 2 mana and target an opposing monster; deal 700 damage to it. When all your monsters are destroyed, Xerath is destroyed.'
   id: 72
   rarity: R
-  uuid: leagueplaceholder2
+  uuid: xerath
 leagueplaceholder3:
   name: League Placeholder 3
   type: ''
@@ -1155,14 +1175,14 @@ leagueplaceholder7:
   id: 77
   rarity: UR
   uuid: leagueplaceholder7
-zoe:
-  name: Zoe
+leagueplaceholder8:
+  name: League Placeholder 8
   type: ''
   cost: -1
   description: ''
   id: 78
   rarity: UR
-  uuid: zoe
+  uuid: leagueplaceholder8
 ancientruins:
   name: Ancient Ruins
   type: spell
@@ -1293,9 +1313,10 @@ megacharizardy:
   cost: 5
   attack: 600
   health: 300
-  description: This card can attack directly. You cannot summon
+  description: This card can attack on the turn it is summoned. You cannot summon
     any “Mega” for the rest of this duel, except “Mega Charizard”.
-  can_attack_directly: retval = not self.has_status("CANNOT_ATTACK")
+  if_summon: |-
+    self.clear_status("CANNOT_ATTACK")
   id: 86
   rarity: UR
   uuid: megacharizardy
@@ -1308,6 +1329,8 @@ megaheracross:
   description: This card cannot attack. In the end phase deal 100 damage 8 times
     randomly to opponent monsters. You cannot summon any “Mega” for the rest of this
     duel, except “Mega Heracross”.
+  if_summon: |-
+    self.apply_status(self, "CANNOT_ATTACK", -1)
   begin_phase_end: |-
     for _ in range(8):
       if len(oppon.field):
@@ -1432,10 +1455,10 @@ eevee:
   uuid: eevee
 megabracelet:
   name: Mega Bracelet
-  type: spell
+  type: continuousspell
   cost: 0
-  description: Send a Pokemon to the graveyard from your hand, field, or deck; Summon
-    a Mega Pokemon from your extra deck that mentions it and pay its mana cost
+  description: You can send a Pokemon to the graveyard from your hand, field, or deck; Summon
+    a Mega Pokemon from your extra deck that mentions it and pay its mana cost (discounted if the Pokemon you sent to the graveyard was on the field)
   can_activate_hand: |-
     ed_targets = owner.extradeck.filter(
       lambda card:
@@ -1525,7 +1548,7 @@ rainyday:
   name: Rainy Day
   type: field spell
   cost: 2
-  description: It is raining. The attack of fire type monsters are reduced by 100.
+  description: It is raining. The attack of all monsters are reduced by 100.
   id: -1
   rarity: "--"
   uuid: rainyday
@@ -1533,7 +1556,7 @@ harshsunlight:
   name: Harsh Sunlight
   type: field spell
   cost: 2
-  description: The sunlight is harsh. The attacks of water type monsters is reduced
+  description: The sunlight is harsh. The attacks of all monsters is increased
     by 100.
   id: -1
   rarity: "--"
@@ -1542,10 +1565,16 @@ kiljoyturret:
   name: Kiljoy Turret
   type: monster
   cost: 1
-  attack: 100
+  attack: 0
   health: 100
-  description: 'Once per turn: deal 100 damage to the opposing monster and the monsters
+  description: 'You can pay 1 mana; deal 100 damage to the opposing monster and the monsters
     adjacent to it.'
+  can_activate: |-
+    retval = owner.can_pay(1)
+  on_activate: |-
+    owner.pay(1)
+    for other in get_opposing() + get_opposing_adjacent():
+      other.take_damage(self, 100)
   id: -1
   rarity: "--"
   uuid: kiljoyturret

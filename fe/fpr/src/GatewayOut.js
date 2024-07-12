@@ -25,6 +25,13 @@ export function Summon(socket) {
   }
 }
 
+export function ActivateSpell(socket) {
+  return (handIdx, boardIdx) => {
+    console.log("activate_spell", handIdx, boardIdx);
+    socket.emit("player_action", ["activate_spell", handIdx, boardIdx]);
+  }
+}
+
 export function Attack(socket) {
   return (attackerIdx, attackeeIdx) => {
     console.log("attack", attackerIdx, attackeeIdx);

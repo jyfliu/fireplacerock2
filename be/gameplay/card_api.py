@@ -167,6 +167,8 @@ class Card:
     get_current_board_idx = self.get_current_board_idx
     get_adjacent_board_idxs = self.get_adjacent_board_idxs
     get_adjacent = self.get_adjacent
+    get_opposing = self.get_opposing
+    get_opposing_adjacent = self.get_opposing_adjacent
 
     # target card on the field
     # optionally accepts a lambda to filter
@@ -305,7 +307,7 @@ class Card:
       assert len(cards) > 0
       idx = self.owner.io.prompt_user_select(cards, amount=amount)
       if amount == 1:
-        _, card = cards[idx]
+        _, card = cards[idx[0]]
         return card
       else:
         retval = []
@@ -467,6 +469,29 @@ class Card:
 
     return adjs
 
+  def get_opposing(self):
+    # opposing card if exist
+    board_idx = self.get_current_board_idx()
+    if board_idx == -1:
+      return []
+    if self.oppon.board[board_idx] is not None:
+      return [self.oppon.board[board_idx]]
+    else:
+      return []
+
+  def get_opposing_adjacent(self):
+    # adjacent to opposing if exist
+    board_idx = self.get_current_board_idx()
+    if board_idx == -1:
+      return []
+    results = []
+    if board_idx > 0 and self.oppon.board[board_idx-1] is not None:
+      results += [self.oppon.board[board_idx-1]]
+    if board_idx < len(self.oppon.board) - 1 and self.oppon.board[board_idx+1] is not None:
+      results += [self.oppon.board[board_idx+1]]
+    return results
+
+
   ### STATUS ###
   # SILENCE
   # UNTARGETABLE
@@ -483,12 +508,19 @@ class Card:
     self.owner.io.apply_status(self.uuid, status, duration, expiry)
     self.oppon.io.apply_status(self.uuid, status, duration, expiry)
 
+  def clear_status(self, source, status):
+    self.status = [s for s in self.status if s[0] != status]
+    self.owner.io.clear_status(self.uuid, status)
+    self.oppon.io.clear_status(self.uuid, status)
+
   def on_end_turn(self):
     new_status = []
     for st in self.status:
       if st[1] < 0:
         new_status.append(st)
       elif st[1] == 0:
+        self.owner.io.clear_status(self.uuid, st[0])
+        self.oppon.io.clear_status(self.uuid, st[0])
         if st[0] == "PERISH":
           self.io.destroy(self)
         if st[0] == "BANISH":
@@ -624,7 +656,7 @@ class Card:
       other, amount = args
       return amount
     elif "opt" in trigger and "cost" in trigger:
-      return hasattr(self.template, trigger[:-5]) and self.io.prompt_user_activate(self.name)
+      return hasattr(self.template, trigger[:-5]) and self.prompt_user_activate()
     elif "cost" in trigger:
       return True
     else:

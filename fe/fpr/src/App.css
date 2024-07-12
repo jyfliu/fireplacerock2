@@ -79,12 +79,27 @@
   align-items: center;
 }
 
+.board {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: -80px;
+  gap: 10px;
+  transform: perspective(1000px) rotateX(30deg);
+}
+
 .board-grid {
   display: grid;
-  margin-top: -80px;
   grid-template-columns: 100px 100px 100px 100px 100px;
   grid-template-rows: 148px 148px 148px 148px;
-  transform: perspective(1000px) rotateX(30deg);
+}
+
+.decks {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 9px;
 }
 
 .owner-hand {

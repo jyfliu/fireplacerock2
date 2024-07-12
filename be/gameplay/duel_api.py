@@ -31,6 +31,9 @@ class CardList:
   def filter(self, fn):
     return CardList([card for card in self.cards if card is not None and fn(card)])
 
+  def map(self, fn):
+    return [fn(card) for card in self.cards if card is not None]
+
   def contains(self, fn):
     for card in self.cards:
       if card is None:
@@ -89,13 +92,14 @@ class Player():
     self.id = id
     self.io = io
     self.mana = 0
-    self.mana_max = 0
+    self.mana_max = 10
     self.life = 3000
 
     self.hand = CardList()
     self.deck = CardList()
     self.extradeck = CardList()
     self.board = CardList([None] * 5)
+    self.traps = CardList([None] * 5)
     self.graveyard = CardList()
     self.banished = CardList()
 
@@ -154,14 +158,17 @@ class Player():
 
 def entrypoint(inner):
   def modified(self, *args, **kwargs):
-    try:
-      inner(self, *args, **kwargs)
-    except UnrecognizedCommand as e:
-      self.turn_p.io.display_message(f"Unrecognized command: {e.message}")
-    except InvalidMove as e:
-      self.turn_p.io.display_message(f"Illegal Move: {e.message}")
-    except GameOver as e:
-      self._handle_game_over(e)
+    if self.game_running:
+      try:
+        inner(self, *args, **kwargs)
+      except UnrecognizedCommand as e:
+        self.turn_p.io.display_message(f"Unrecognized command: {e.message}")
+      except InvalidMove as e:
+        self.turn_p.io.display_message(f"Illegal Move: {e.message}")
+      except GameOver as e:
+        self._handle_game_over(e)
+    else:
+      self.turn_p.io.display_message("Game not running.")
   return modified
 
 
@@ -195,6 +202,8 @@ class Duel():
     self.p2.extradeck = CardList(extradeck2).sort()
 
     self.cur_phase = "unknown"
+    self.game_running = True
+
     p1_io.game_start()
     p2_io.game_start()
 
@@ -363,11 +372,11 @@ class Duel():
         card = self.play_extradeck(extradeck_idx)
         self.summon(card, board_idx)
 
-      case ["activate_spell", hand_idx]:
+      case ["activate_spell", hand_idx, board_idx]:
         if not "main" in self.cur_phase:
           raise InvalidMove("Not in main phase")
         card = self.play_hand(hand_idx, action="activate_hand")
-        self.activate_spell(card)
+        self.activate_spell(card, board_idx)
 
       case ["activate_board", board_idx]:
         if not "main" in self.cur_phase:
@@ -424,6 +433,7 @@ class Duel():
 
 
   def _handle_game_over(self, e):
+    self.game_running = False
     if e.winner == 0:
       # draw
       self.p1.io.game_over(0)
@@ -540,16 +550,18 @@ class Duel():
       card.effect("opt_if_summon")
 
 
-  def activate_spell(self, card):
+  def activate_spell(self, card, board_idx):
     if card is None:
       raise InvalidMove("Cannot activate effect; no spell")
     if not card.can("activate_hand"):
       raise InvalidMove("Card cannot activate effect")
 
-    self.move_to(card, "graveyard")
+    self.move_to(card, "traps", idx=board_idx)
 
     card.effect("on_activate_hand_cost")
     card.effect("on_activate_hand")
+
+    self.move_to(card, "graveyard")
 
 
   def activate_board(self, card):
@@ -580,7 +592,7 @@ class Duel():
   def determine_location(self, card):
     if card is None:
       return "unknown"
-    locs = ["field", "hand", "graveyard", "deck", "banished", "extradeck"]
+    locs = ["field", "traps", "hand", "graveyard", "deck", "banished", "extradeck"]
     for loc in locs:
       if card in getattr(card.owner, loc):
         return loc
@@ -592,6 +604,8 @@ class Duel():
     loc = self.determine_location(card)
     if loc == "field":
       card.owner.board.delete(card)
+    elif loc == "traps":
+      card.owner.traps.delete(card)
     elif loc != "unknown":
       getattr(card.owner, loc).remove(card)
 
@@ -600,7 +614,7 @@ class Duel():
   def move_to(self, card, destination, idx=-1):
     if card is None:
       return
-    # destination in [hand, field, graveyard, banished, deck]
+    # destination in [hand, field, traps, graveyard, banished, deck]
     from_loc = self.remove_card(card)
 
     match destination:
@@ -611,6 +625,11 @@ class Duel():
       case "field":
         assert idx >= 0
         card.owner.board[idx] = card
+        card.reset_stats()
+
+      case "traps":
+        assert idx >= 0
+        card.owner.traps[idx] = card
         card.reset_stats()
 
       case "graveyard":

@@ -10,5 +10,6 @@ blah blah blah
 
 display art
 dont send card info of hidden cards to frontend
-display card info when hover
-redo init game state (include all the cards to support reconnecting to middle of a game)
+continuous spell
+continuous effects
+

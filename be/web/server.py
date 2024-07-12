@@ -1,5 +1,6 @@
 import socketio
 import eventlet
+import json
 
 import web.room_api as room_api
 import web.deck_api as deck_api
@@ -18,6 +19,25 @@ class State:
     self.room_id = 0
     self.rooms = {}
     self.room_map = {}
+
+  def record_game_result(self, name, result):
+    with open("database/elo.json", "r") as f:
+      record = json.load(f)
+    if name not in record:
+      record[name] = {
+        "win": 0,
+        "loss": 0,
+        "draw": 0,
+      }
+    match result:
+      case -1:
+        record[name]["loss"] += 1
+      case 0:
+        record[name]["draw"] += 1
+      case 1:
+        record[name]["win"] += 1
+    with open("database/elo.json", "w") as f:
+      json.dump(record, f, indent=4)
 
 state = State()
 

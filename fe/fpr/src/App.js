@@ -4,12 +4,12 @@ import { DndContext } from '@dnd-kit/core';
 import { socket } from './socket';
 
 import { BoardSpace } from './components/BoardSpace';
-import { Card } from './components/Card';
+import { Card, Deck } from './components/Card';
 import { ChatBox } from './components/ChatBox';
 import { HoverCard } from './components/HoverCard';
 import { PlayerStats, PlayerMana } from './components/PlayerStats';
 
-import { CanSummon, CanAttack } from "./GameState"
+import { CanSummon, CanActivateHand, CanAttack } from "./GameState"
 
 import {
   OnInitGameState,
@@ -25,7 +25,8 @@ import {
 
 import {
   EmitNextPhase, EmitNextTurn,
-  Summon, Attack, AttackDirectly,
+  Summon, ActivateSpell,
+  Attack, AttackDirectly,
   ActivateBoard,
 } from "./GatewayOut"
 
@@ -103,12 +104,14 @@ function App() {
   }
 
   let canSummon = CanSummon(states);
+  let canActivateHand = CanActivateHand(states);
   let canAttack = CanAttack(states);
 
 
   let emitNextTurn = EmitNextTurn(socket);
   let emitNextPhase = EmitNextPhase(socket);
   let summon = Summon(socket);
+  let activateSpell = ActivateSpell(socket);
   let attack = Attack(socket);
   let attackDirectly = AttackDirectly(socket);
   let activateBoard = ActivateBoard(socket, states);
@@ -300,39 +303,54 @@ function App() {
           <button onClick={emitNextPhase} class="next-button">Next Phase</button>
           <button onClick={emitNextTurn} class="end-button">End Turn</button>
         </div>
-        <div class="board-grid">
-          {containers.map((id) => {
-            // We updated the Droppable component so it would accept an `id`
-            // prop and pass it to `useDroppable`
-            let cardsOnSquare = ownerHand.filter(card => card.parent === id);
-            if ([0, 1, 2, 3, 4].includes(id) && field.opponTraps[id] != null) {
-              cardsOnSquare.push(field.opponTraps[id]);
-            }
-            if ([5, 6, 7, 8, 9].includes(id) && field.opponMonsters[id - 5] != null) {
-              cardsOnSquare.push(field.opponMonsters[id - 5]);
-            }
-            if ([10, 11, 12, 13, 14].includes(id) && field.ownerMonsters[id - 10] != null) {
-              cardsOnSquare.push(field.ownerMonsters[id - 10]);
-            }
-            if ([15, 16, 17, 18, 19].includes(id) && field.ownerTraps[id - 15] != null) {
-              cardsOnSquare.push(field.ownerTraps[id - 15]);
-            }
-            let cardsSelected = ownerHand.filter(card => card.isSelected);
-            let hiColor = "#000000";
-            if (cardsSelected.length > 0) {
-              let card = cardsSelected[0];
-              let cardCanSummon = canSummon(card) && [10, 11, 12, 13, 14].includes(id);
-              hiColor = cardCanSummon? "#449944" : "#994444";
-            }
+        <div class="board">
+          <div class="decks">
+            <Deck name="Opponent's Graveyard" cards={opponCards.opponGraveyard}/>
+            <Deck name="Opponent's Banished" cards={opponCards.opponBanished}/>
+            <Deck name="Extra Deck" cards={ownerCards.ownerExtraDeck}/>
+            <Deck name="Deck" count={ownerCards.ownerMainDeck} />
+          </div>
+          <div class="board-grid">
+            {containers.map((id) => {
+              // We updated the Droppable component so it would accept an `id`
+              // prop and pass it to `useDroppable`
+              let cardsOnSquare = ownerHand.filter(card => card.parent === id);
+              if ([0, 1, 2, 3, 4].includes(id) && field.opponTraps[id] != null) {
+                cardsOnSquare.push(field.opponTraps[id]);
+              }
+              if ([5, 6, 7, 8, 9].includes(id) && field.opponMonsters[id - 5] != null) {
+                cardsOnSquare.push(field.opponMonsters[id - 5]);
+              }
+              if ([10, 11, 12, 13, 14].includes(id) && field.ownerMonsters[id - 10] != null) {
+                cardsOnSquare.push(field.ownerMonsters[id - 10]);
+              }
+              if ([15, 16, 17, 18, 19].includes(id) && field.ownerTraps[id - 15] != null) {
+                cardsOnSquare.push(field.ownerTraps[id - 15]);
+              }
+              let cardsSelected = ownerHand.filter(card => card.isSelected);
+              let hiColor = "#000000";
+              if (cardsSelected.length > 0) {
+                let card = cardsSelected[0];
+                let shouldHighlight = canSummon(card) && [10, 11, 12, 13, 14].includes(id);
+                shouldHighlight ||= canActivateHand(card) && [10, 11, 12, 13, 14].includes(id);
+                hiColor = shouldHighlight? "#449944" : "#994444";
+              }
 
-            return (
-              <div class="card-griditem">
-                <BoardSpace key={"board"+id} id={id} hiColor={hiColor}>
-                  {cardsOnSquare.length > 0? displayCardOnBoard(cardsOnSquare[0], id) : null}
-                </BoardSpace>
-              </div>
-            )
-          })}
+              return (
+                <div class="card-griditem">
+                  <BoardSpace key={"board"+id} id={id} hiColor={hiColor}>
+                    {cardsOnSquare.length > 0? displayCardOnBoard(cardsOnSquare[0], id) : null}
+                  </BoardSpace>
+                </div>
+              )
+            })}
+          </div>
+          <div class="decks">
+            <Deck name="Opponent's Deck" count={opponCards.opponMainDeck} />
+            <Deck name="Opponent's Extra Deck" count={opponCards.opponExtraDeck}/>
+            <Deck name="Banished" cards={ownerCards.ownerBanished} />
+            <Deck name="Graveyard" cards={ownerCards.ownerGraveyard} />
+          </div>
         </div>
         <PlayerStats owner={true} hp={ownerStats.hp} />
         <PlayerStats owner={false} hp={opponStats.hp} />
@@ -387,10 +405,11 @@ function App() {
           summon(handIdx, idx)
         }
         if (card.type === "spell") {
-          let idx = card.id - 10;
+          let idx = over.id - 15;
           if (field.ownerTraps[idx] != null) {
             return {...card, isSelected: false};
           }
+          activateSpell(handIdx, idx);
         }
 
         shouldDrop |= card.type === "monster" && canSummon(card);

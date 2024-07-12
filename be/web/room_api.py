@@ -36,6 +36,7 @@ class PlayerIO:
     dict["uuid"] = card.uuid
 
     dict["can_activate"] = card.can("activate")
+    dict["can_activate_hand"] = card.can("activate_hand")
     dict["can_attack"] = card.can("attack")
     dict["can_attack_directly"] = card.can("attack_directly")
     dict["can_summon"] = card.can("summon")
@@ -102,15 +103,13 @@ class PlayerIO:
       amount = list(range(len(cards) + 1))
     elif not isinstance(amount, list):
       amount = [amount]
+    else:
+      amount = list(sorted(amount))
     cards = [(loc, self.serialize_card(card)) for loc, card in cards]
     response = se.call("prompt_user_select_cards", (cards, amount), sid=self.sid)
     response = [int(i) for i in response]
 
-    if len(response) == 1:
-      assert response[0] in range(len(cards))
-      return response[0]
-    else:
-      return response
+    return response
 
   def prompt_user_select_text(self, options):
     response = se.call("prompt_user_select_text", options, sid=self.sid)
@@ -154,6 +153,7 @@ class PlayerIO:
     se.emit("game_start", sid=self.sid)
 
   def game_over(self, winner):
+    se.state.record_game_result(self.name, winner)
     se.emit("game_over", winner, sid=self.sid)
 
   def move_card(self, card, from_loc, to_loc, idx):
@@ -164,6 +164,9 @@ class PlayerIO:
 
   def apply_status(self, uuid, status, duration, expiry):
     se.emit("apply_status", (uuid, status, duration, expiry), sid=self.sid)
+
+  def clear_status(self, uuid, status):
+    se.emit("clear_status", (uuid, status), sid=self.sid)
 
   def end_turn(self):
     se.emit("end_turn", sid=self.sid)

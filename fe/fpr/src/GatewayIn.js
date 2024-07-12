@@ -94,7 +94,14 @@ export function OnPromptUserSelectCards(states) {
       pushChat(`Selected ${cards[response][1].name} from ${cards[response][0]}`);
       cb([response]);
     } else {
-      prompt("not implemented multiple select")
+      do {
+        let response = prompt(`Select ${amount} cards from ${cardsStr}, separated by commas`);
+        let cards = response.split(",").map(s => s.trim());
+        if (amount.includes(cards.length)) {
+          cb(cards);
+          break;
+        }
+      } while (true);
     }
   };
 };
@@ -112,7 +119,7 @@ export function OnPromptUserSelectText(states) {
 export function OnPromptUserSelectBoard(states) {
   let { pushChat } = states;
   return (nums, cb) => {
-    let response = prompt(`Select an option ${nums.length}`);
+    let response = prompt(`Select a board position [1-${nums.length}]`);
     pushChat(`Selected board position ${response}`);
     cb(response);
   }
@@ -225,6 +232,12 @@ export function OnMoveCard(states) {
           ownerMonsters: field.ownerMonsters.map(keepOthers),
         }));
         break;
+      case "traps":
+        setField(field => ({
+          ...field,
+          ownerTraps: field.ownerTraps.map(keepOthers),
+        }));
+        break;
       case "graveyard":
         setOwnerCards(cards => ({
           ...cards,
@@ -273,6 +286,17 @@ export function OnMoveCard(states) {
           return ({
             ...field,
             ownerMonsters: ownerMonsters,
+          });
+        });
+        break;
+      case "traps":
+        setField(field => {
+          let ownerTraps = [...field.ownerTraps];
+          card.parent = idx + 15;
+          ownerTraps[idx] = card;
+          return ({
+            ...field,
+            ownerTraps: ownerTraps,
           });
         });
         break;
@@ -452,7 +476,13 @@ export function OnGameStart(states) {
 
 export function OnGameOver(states) {
   return (winner) => {
-    alert(winner);
+    if (winner === 1) {
+      alert("You win! :D")
+    } else if (winner === -1) {
+      alert("You lose. :(")
+    } else {
+      alert("You draw. :|")
+    }
   }
 }
 
