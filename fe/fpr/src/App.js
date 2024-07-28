@@ -27,7 +27,7 @@ import {
   EmitNextPhase, EmitNextTurn,
   Summon, ActivateSpell,
   Attack, AttackDirectly,
-  ActivateBoard,
+  ActivateBoard, ActivateFieldSpell,
 } from "./GatewayOut"
 
 import './App.css';
@@ -68,6 +68,7 @@ function App() {
     setChat(chatLog => chatLog.concat([msg]));
   };
   const [hoverCard, setHoverCard] = useState(defaultHoverCard);
+  const [cardCache, setCardCache] = useState({});
 
   // game state
   const [phase, setPhase] = useState(["owner", "draw"]);
@@ -115,6 +116,7 @@ function App() {
   let attack = Attack(socket);
   let attackDirectly = AttackDirectly(socket);
   let activateBoard = ActivateBoard(socket, states);
+  let activateFieldSpell = ActivateFieldSpell(socket, states);
 
   useEffect(() => {
     let onConnect = () => {
@@ -138,6 +140,7 @@ function App() {
     const setStates = {
       pushChat: pushChat,
       setHoverCard: setHoverCard,
+      setCardCache: setCardCache,
 
       setOwnerHand: setOwnerHand,
       setOpponHand: setOpponHand,
@@ -268,12 +271,15 @@ function App() {
   const displayCard = card =>
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
           phase={phase}
+          cardCache={cardCache}
           setHoverCard={setHoverCard} />;
   const displayCardOnBoard = (card, id) =>
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
           activateBoard={activateBoard}
+          activateFieldSpell={activateFieldSpell}
           boardId={id}
           phase={phase}
+          cardCache={cardCache}
           setHoverCard={setHoverCard} />;
 
 
@@ -360,7 +366,7 @@ function App() {
           {ownerHand.filter(card => card.parent === null).map(displayCard)}
         </div>
       <ChatBox chat={chat} />
-      <HoverCard hoverCard={hoverCard} setHoverCard={setHoverCard} />
+      <HoverCard hoverCard={hoverCard} setHoverCard={setHoverCard} cardCache={cardCache} />
       </div>
     </DndContext>
   );
@@ -399,14 +405,14 @@ function App() {
         }
         if (card.type === "monster") {
           let idx = over.id - 10;
-          if (field.ownerMonsters[idx] != null) {
+          if (![10, 11, 12, 13, 14].includes(over.id) || field.ownerMonsters[idx] != null) {
             return {...card, isSelected: false};
           }
           summon(handIdx, idx)
         }
-        if (card.type === "spell") {
+        if (card.type === "spell" || card.type === "field spell") {
           let idx = over.id - 15;
-          if (field.ownerTraps[idx] != null) {
+          if (![15, 16, 17, 18, 19].includes(over.id) || field.ownerTraps[idx] != null) {
             return {...card, isSelected: false};
           }
           activateSpell(handIdx, idx);

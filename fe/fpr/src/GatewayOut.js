@@ -59,6 +59,19 @@ export function ActivateBoard(socket, states) {
   }
 }
 
+export function ActivateFieldSpell(socket, states) {
+  const { field } = states;
+  return (fieldIdx) => {
+    if (!field.ownerTraps[fieldIdx]) { return; }
+    const { name } = field.ownerTraps[fieldIdx];
+    let response = window.confirm(`Activate ${name}'s effect?'`);
+    if (response) {
+      console.log("activate_field_spell", fieldIdx);
+      socket.emit("player_action", ["activate_field_spell", fieldIdx]);
+    }
+  }
+}
+
 //export function callCardCan(socket, states, card_uuid, action) {
   //let { setCardCan } = states;
   //let ack = (yesno) => {

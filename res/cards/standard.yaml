@@ -1,0 +1,268 @@
+---
+leagueoflegends:
+  name: League of Legends
+  type: spell
+  cost: 5
+  description: Target a minion to transform it into a 0/100 zombie.
+  id: 1
+  rarity: C
+  can_activate_hand: |-
+    retval = can_select_oppon_field()
+  uuid: leagueoflegends
+cantendonloss:
+  name: Can't end on loss
+  type: fieldspell
+  cost: 3
+  description: Pay 2 mana to deal 100 damage to anything. This is increased by 100 every time one of your monsters gets destroyed by your opponent (the damage resets if you destroy one of your opponent's monsters).
+  id: 2
+  rarity: R
+  uuid: cantendonloss
+playtillose:
+  name: Play til lose
+  type: fieldspell
+  cost: 3
+  description: Pay 2 mana to deal 100 damage to anything. This is increased by 100 every time you destroy an opponent's monster (the damage resets if your opponent destroys one of your monsters).
+  id: 3
+  rarity: R
+  uuid: playtillose
+arcaneintellect:
+  name: Arcane Intellect
+  type: spell
+  cost: 3
+  description: Draw 2 cards.
+  id: 4
+  rarity: C
+  uuid: arcaneintellect
+potofgreed:
+  name: Pot of Greed
+  type: spell
+  cost: 3
+  description: Draw 2 cards.
+  flavour: You know what this does.
+  id: 5
+  rarity: UR
+  uuid: potofgreed
+wheeloffortune:
+  name: Wheel of Fortune
+  type: spell
+  cost: 5
+  description: Both players discard their hands. Then both players draw 7 cards.
+  id: 6
+  rarity: C
+  uuid: wheeloffortune
+fireball:
+  name: Fireball
+  type: spell
+  cost: 4
+  description: Target a card to deal 6 damage to it.
+  id: 7
+  rarity: C
+  uuid: fireball
+reflectingpool:
+  name: Reflecting Pool
+  type: fieldspell
+  cost: 1
+  description: You can send this card from the field to the graveyard; heal for 100 for each turn this card was set.
+  id: 8
+  rarity: C
+  uuid: reflectingpool
+fortunefavourstheold:
+  name: Fortune Favours the Old
+  type: fieldspell
+  cost: 0
+  description: At the beginning of every turn, flip a coin. If heads, destroy the most recently summoned monster.
+  id: 9
+  rarity: C
+  uuid: fortunefavourtheold
+luxurytax:
+  name: Luxury Tax
+  type: fieldspell
+  cost: 0
+  description: Both players must pay 25 health for each mana they spend.
+  id: 9
+  rarity: C
+  uuid: luxurytax
+crossoutdesignator:
+  name: X-out designator
+  type: spell
+  cost: 3
+  description: Banish a card from your extra deck. Then banish all cards in play with the same name.
+  id: 10
+  rarity: SR
+  uuid: crossoutdesignator
+monsterreborn:
+  name: Monster Reborn
+  type: spell
+  cost: 2
+  description: Target a monster in either graveyard; Summon it and pay its cost.
+  id: 11
+  rarity: R
+  uuid: monsterreborn
+monsterrebornreborn:
+  name: Monster Reborn Reborn
+  type: spell
+  cost: 0
+  description: Target three monsters in your graveyard; your opponent picks one for you to summon (you pay its cost), then banish the rest.
+  id: 12
+  rarity: UR
+  uuid: monsterrebornreborn.
+edmund:
+  name: Edmund
+  type: monster
+  cost: 5
+  attack: 400
+  health: 400
+  description: This monster costs 2 less if you control no minions.
+  id: 13
+  rarity: C
+  uuid: edmund
+an:
+  name: An
+  type: monster
+  cost: 2
+  attack: 300
+  health: 200
+  description: When this card is destroyed, deal 200 damage to a random enemy.
+  id: 14
+  rarity: C
+  uuid: an
+joy:
+  name: Joy
+  type: monster
+  cost: 2
+  attack: 400
+  health: 300
+  description: When this card is summoned, you take 300 damage.
+  id: 15
+  rarity: C
+  uuid: joy
+leo:
+  name: Leo
+  type: monster
+  cost: 3
+  attack: 600
+  health: 600
+  description: When this card is summoned, discard a random card.
+  id: 16
+  rarity: C
+  uuid: leo
+maxx:
+  name: Maxx
+  type: monster
+  cost: 1
+  attack: 0
+  health: 300
+  description: When your opponent summons a monster; draw a card.
+  id: 17
+  rarity: C
+  uuid: maxx
+mandy:
+  name: Mandy
+  type: monster
+  cost: 5
+  attack: 500
+  health: 500
+  description: If this card is summoned, you can target a face-up field spell; Destroy it.
+  id: 18
+  rarity: C
+  uuid: mandy
+julien:
+  name: Julien
+  type: monster
+  cost: 4
+  attack: 200
+  health: 600
+  description: Taunt.
+  id: 19
+  rarity: C
+  uuid: julien
+james:
+  name: James
+  type: monster
+  cost: 2
+  attack: 300
+  health: 200
+  description: Stealth.
+  id: 20
+  rarity: C
+  uuid: james
+vincent:
+  name: Vincent
+  type: monster
+  cost: 2
+  attack: 100
+  health: 200
+  description: If this card is summoned; you can add a field spell from your deck to your hand.
+  id: 21
+  rarity: C
+  uuid: vincent
+wilson:
+  name: Wilson
+  type: monster
+  cost: 12
+  attack: 800
+  health: 800
+  description: This monster costs 1 less for each card in your opponent's hand.
+  id: 22
+  rarity: C
+  uuid: wilson
+smalljameslin:
+  name: Small James
+  type: monster
+  cost: 8
+  attack: 0
+  health: 1400
+  description: You can also summon this card by banishing a monster from your hand, field, and graveyard. Once per turn, you can banish two monsters from your graveyard, then target a monster on the field; destroy it.
+  id: 23
+  rarity: C
+  uuid: smalljameslin
+jameslin:
+  name: James
+  type: monster
+  cost: 3
+  attack: 300
+  health: 1400
+  description: Link: 1 Small James + 2 other monsters. Once per turn, you can banish two monsters from your graveyard, then target a monster on the field; destroy it.
+  id: 24
+  rarity: C
+  uuid: jameslin
+smallvincentwang:
+  name: Small Vincent
+  type: monster
+  cost: 3
+  attack: 0
+  health: 800
+  id: 25
+  rarity: C
+  uuid: smallvincentwang
+vincentwang:
+  name: Vincent
+  type: monster
+  cost: 4
+  attack: 200
+  health: 800
+  description: Link: 1 Small Vincent. When this monster is summoned choose a number from 1-3; send that many cards from your deck to the graveyard. If any are plants, summon them.
+  id: 26
+  rarity: C
+  uuid: vincentwang
+smallwilsonwang:
+  name: Small Wilson
+  type: monster
+  cost: 9
+  attack: 700
+  health: 700
+  description: This monster costs 1 less for each monster on the field. 
+  id: 27
+  rarity: C
+  uuid: smallwilsonwang
+wilsonwang:
+  name: Wilson
+  type: monster
+  cost: 2
+  attack: 1000
+  health: 1000
+  description: Link: 1 Small Wilson + 2 other monsters. Monsters on the field cannot activate their effects.
+  id: 28
+  rarity: C
+  uuid: wilsonwang
+

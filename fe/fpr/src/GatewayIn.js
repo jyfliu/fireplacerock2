@@ -1,15 +1,34 @@
 // functions that change the game state based on server call
 
 
-const unserializeCard = (card) => {
-  if (!card) {
+function UnserializeCard(states) {
+  let { setCardCache } = states;
+  const unserializeCard = (card) => {
+    if (!card) {
+      return card;
+    }
+    card.id = card.uuid;
+    card.parent = null;
+    card.isSelected = false;
+
+    if (card.sprite) {
+      let sprite_img = new Image();
+      sprite_img.src = `data:image/jpg;base64,${card.sprite}`;
+
+      setCardCache(cache => ({...cache, [card.template_id]: {image: sprite_img, isMini: false}}));
+    }
+
+    if (card.mini_sprite) {
+      let sprite_img = new Image();
+      sprite_img.src = `data:image/jpg;base64,${card.mini_sprite}`;
+
+      setCardCache(cache => ({...cache, [card.template_id]: {image: sprite_img, isMini: true}}));
+    }
+
     return card;
-  }
-  card.id = card.uuid;
-  card.parent = null;
-  card.isSelected = false;
-  return card;
-};
+  };
+  return unserializeCard;
+}
 
 export function OnInitGameState(states) {
   let {
@@ -22,6 +41,7 @@ export function OnInitGameState(states) {
     setField,
     pushChat,
   } = states;
+  let unserializeCard = UnserializeCard(states);
   return (
     owner,
     oppon,
@@ -110,18 +130,28 @@ export function OnPromptUserSelectText(states) {
   let { pushChat } = states;
   return (options, cb) => {
     let optStr = options.map((txt, idx) => `[${idx}: ${txt}]`).join(" ");
-    let response = prompt(`Select an option ${optStr}`);
-    pushChat(`Selected ${options[response]}`);
-    cb(response);
+    do {
+      let response = prompt(`Select an option ${optStr}`);
+      if (options[response] !== undefined) {
+        pushChat(`Selected ${options[response]}`);
+        cb(response);
+        break;
+      }
+    } while (true);
   }
 }
 
 export function OnPromptUserSelectBoard(states) {
   let { pushChat } = states;
   return (nums, cb) => {
-    let response = prompt(`Select a board position [1-${nums.length}]`);
-    pushChat(`Selected board position ${response}`);
-    cb(response);
+    do {
+      let response = prompt(`Select a board position [${nums}]`);
+      if (nums.includes(parseInt(response))) {
+        pushChat(`Selected board position ${response}`);
+        cb(response);
+        break;
+      }
+    } while (true);
   }
 }
 
@@ -217,6 +247,7 @@ let cardSortKey = (a, b) => {
 
 export function OnMoveCard(states) {
   let { pushChat, setOwnerHand, setField, setOwnerCards } = states;
+  let unserializeCard = UnserializeCard(states);
   return (card, from, to, idx) => {
     pushChat(`Your ${card?.name} was sent from your ${from} to your ${to}`);
     let shouldKeep = c => c? c.uuid !== card.uuid : true;
@@ -270,9 +301,7 @@ export function OnMoveCard(states) {
       list.push(card);
       return list;
     };
-    card.id = card.uuid;
-    card.parent = null;
-    card.isSelected = false;
+    card = unserializeCard(card);
     // add
     switch (to) {
       case "hand":
@@ -333,6 +362,7 @@ export function OnMoveCard(states) {
 
 export function OnMoveOpponCard(states) {
   let { pushChat, setOpponHand, setField, setOpponCards } = states;
+  let unserializeCard = UnserializeCard(states);
   return (card, from, to, idx) => {
     // should be moved server side
     let isVisible = loc => ["field", "graveyard", "banished"].includes(loc);
@@ -341,6 +371,8 @@ export function OnMoveOpponCard(states) {
     pushChat(`Your opponent's ${maybeCardName} was sent from their ${from} to their ${to}`);
     let shouldKeep = c => c? c.uuid !== card.uuid : true;
     let keepOthers = c => shouldKeep(c)? c : null;
+
+    card = unserializeCard(card);
     // remove
     switch (from) {
       case "hand":
@@ -533,6 +565,7 @@ function allCardsMap(states, lambda) {
   );
   setOwnerCards(cards =>
     ({
+      ...cards,
       ownerGraveyard: cards.ownerGraveyard.map(lambdaIfNotNull),
       ownerBanished: cards.ownerBanished.map(lambdaIfNotNull),
       ownerExtraDeck: cards.ownerExtraDeck.map(lambdaIfNotNull),
@@ -540,6 +573,7 @@ function allCardsMap(states, lambda) {
   );
   setOpponCards(cards =>
     ({
+      ...cards,
       opponGraveyard: cards.opponGraveyard.map(lambdaIfNotNull),
       opponBanished: cards.opponBanished.map(lambdaIfNotNull),
     })
