@@ -69,7 +69,8 @@ def challenge(sid, challengee):
     state.room_id += 1
 
     # start duel
-    room.start_duel((deck_api.sd_pote, deck_api.ed_pote), (deck_api.sd_cs, deck_api.ed_cs))
+    # room.start_duel((deck_api.sd_pote, deck_api.ed_pote), (deck_api.sd_cs, deck_api.ed_cs))
+    room.start_duel((deck_api.deck1, deck_api.ed_pote), (deck_api.deck2, deck_api.ed_cs))
   else:
     state.challenge_map[challenger] = challengee
     if challengee in state.name_to_sid:
@@ -103,12 +104,18 @@ def disconnect(sid):
 # output
 def emit(*args, sid):
   name = state.sid_to_name[sid]
-  print(f"[EMIT-{sid}] player {name} emit {args}")
+  args_str = [str(arg) for arg in args]
+  args_str = [a[:30] + "..." + a[-30:] if len(a) > 60 else a for a in args_str]
+  args_str = ", ".join(args_str)
+  print(f"[EMIT-{sid}] player {name} emit ({args_str})")
   sio.emit(*args, room=sid)
 
 def call(*args, sid):
   name = state.sid_to_name[sid]
-  print(f"[CALL-{sid}] player {name} call {args}")
+  args_str = [str(arg) for arg in args]
+  args_str = [a[:30] + "..." + a[-30:] if len(a) > 60 else a for a in args_str]
+  args_str = ", ".join(args_str)
+  print(f"[CALL-{sid}] player {name} call ({args_str})")
   response = sio.call(*args, sid=sid, timeout=9999)
   print(f"[CALL-{sid}] player {name} {args[0]} response {response}")
   return response

@@ -1,3 +1,6 @@
+import os
+import matplotlib.pyplot as plt
+import base64
 import random
 import itertools
 
@@ -7,17 +10,17 @@ from . import archetypes
 triggers = [
   # MANDATORY TURN EFFECTS
   "begin_phase_draw", # after turn player draws a card
-  "begin_phase_standby", # "in your standby phase"
+  "begin_phase_standby", # "in the standby phase"
   "begin_phase_main", # "at the beginning of main phase"
-  "end_phase_main", # "at the end of main phase"
-  "begin_phase_battle", # "at the beginning of battle phase"
-  "end_phase_battle", # "at the end of battle phase"
-  "begin_phase_main_2", # "at the beginning of main phase 2"
-  "end_phase_main_2", # "at the end of main phase 2"
+  "end_phase_main", # "at the end of each main phase"
+  "begin_phase_battle", # "at the beginning of each battle phase"
+  "end_phase_battle", # "at the end of each battle phase"
+  "begin_phase_main_2", # "at the beginning of each main phase 2"
+  "end_phase_main_2", # "at the end of each main phase 2"
   "begin_phase_end", # "in your end phase"
   # OPTIONAL TURN EFFCTS
-  "opt_begin_phase_draw", # "in your draw phase you can"
-  "opt_begin_phase_standby", # "in your standby phase you can"
+  "opt_begin_phase_draw", # "in each draw phase you can"
+  "opt_begin_phase_standby", # "in each standby phase you can"
   "opt_begin_phase_main", # "at the beginning of main phase you can"
   "opt_end_phase_main", # "at the end of main phase you can"
   "opt_begin_phase_battle", # "at the beginning of battle phase you can"
@@ -25,6 +28,26 @@ triggers = [
   "opt_begin_phase_main_2", # "at the beginning of main phase 2 you can"
   "opt_end_phase_main_2", # "at the end of main phase 2 you can"
   "opt_end_phase_end", # "in your end phase you can"
+  # MANDATORY TURN EFFECTS
+  "begin_phase_your_draw", # after turn player draws a card
+  "begin_phase_your_standby", # "in the standby phase"
+  "begin_phase_your_main", # "at the beginning of main phase"
+  "end_phase_your_main", # "at the end of each main phase"
+  "begin_phase_your_battle", # "at the beginning of each battle phase"
+  "end_phase_your_battle", # "at the end of each battle phase"
+  "begin_phase_your_main_2", # "at the beginning of each main phase 2"
+  "end_phase_your_main_2", # "at the end of each main phase 2"
+  "begin_phase_your_end", # "in your end phase"
+  # OPTIONAL TURN EFFCTS
+  "opt_begin_phase_your_draw", # "in each draw phase you can"
+  "opt_begin_phase_your_standby", # "in each standby phase you can"
+  "opt_begin_phase_your_main", # "at the beginning of main phase you can"
+  "opt_end_phase_your_main", # "at the end of main phase you can"
+  "opt_begin_phase_your_battle", # "at the beginning of battle phase you can"
+  "opt_end_phase_your_battle", # "at the end of battle phase you can"
+  "opt_begin_phase_your_main_2", # "at the beginning of main phase 2 you can"
+  "opt_end_phase_your_main_2", # "at the end of main phase 2 you can"
+  "opt_end_phase_your_end", # "in your end phase you can"
   # CARD EFFECTS
   "can_summon",
   "on_summon", # summoning conditions (eg., tribute), doesn't start chain
@@ -82,6 +105,8 @@ statuses = [
 class Template:
 
   def __init__(self, data):
+    self.set, self.print = data.id.split(":")
+
     self.id = data.uuid
     self.name = data.name
     self.cost = data.cost
@@ -101,6 +126,23 @@ class Template:
         setattr(self, fn, script)
       else:
         continue
+
+    sprite_path = f"../res/cards/{self.set}/{self.id}.jpg"
+    sprite_mini_path = f"../res/cards/{self.set}/{self.id}.mini.jpg"
+    self.mini_sprite = None
+    self.sprite = None
+    if os.path.exists(sprite_path):
+      with open(sprite_path, "rb") as f:
+        self.sprite = base64.b64encode(f.read()).decode("utf-8")
+      r, g, b = plt.imread(sprite_path).mean(axis=0).mean(axis=0)
+    elif os.path.exists(sprite_mini_path):
+      with open(sprite_mini_path, "rb") as f:
+        self.mini_sprite = base64.b64encode(f.read()).decode("utf-8")
+      r, g, b = plt.imread(sprite_mini_path).mean(axis=0).mean(axis=0)
+    else:
+      r, g, b = 255, 255, 255
+    self.bkgd_colour = [r, g, b]
+
 
 
   def create_instance(self, owner, oppon, io):
@@ -647,7 +689,7 @@ class Card:
       return self.attack
     elif trigger == "attacker_direct_damage_calc":
       return self.attack
-    elif trigger == "attackee_damage_calc": # joy was here
+    elif trigger == "attackee_damage_calc":
       other, amount = args
       return amount
     elif trigger == "defender_damage_calc":

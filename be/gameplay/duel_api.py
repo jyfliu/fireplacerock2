@@ -92,7 +92,7 @@ class Player():
     self.id = id
     self.io = io
     self.mana = 0
-    self.mana_max = 10
+    self.mana_max = 0
     self.life = 3000
 
     self.hand = CardList()
@@ -144,6 +144,33 @@ class Player():
 
     self.io.pay_mana(amount)
     self.oppon.io.oppon_pay_mana(amount)
+
+  def has_status(self, status):
+    for st in self.status:
+      if st[0] == status:
+        return True
+    return False
+
+  def get_status(self, status):
+    for st in self.status:
+      if st[0] == status:
+        return st[3]
+    return None
+
+  def apply_status(self, source, status, duration=0, expiry="end", args=True):
+    self.status.append([status, duration, expiry, args])
+
+  def on_end_turn(self):
+    new_status = []
+    for st in self.status:
+      if st[1] < 0:
+        new_status.append(st)
+      elif st[1] == 0:
+        pass
+      else:
+        st[1] = st[1] - 1
+        new_status.append(st)
+    self.status = new_status
 
   def hand_str(self):
     return " | ".join(
@@ -299,6 +326,8 @@ class Duel():
       if card:
         card.on_end_turn()
 
+    self.turn_p.on_end_turn()
+    self.other_p.on_end_turn()
     self.turn_p.io.end_turn()
     self.other_p.io.end_turn()
     self.check_game_over()
@@ -382,6 +411,12 @@ class Duel():
         if not "main" in self.cur_phase:
           raise InvalidMove("Not in main phase")
         card = self.turn_p.board[board_idx]
+        self.activate_board(card)
+
+      case ["activate_field_spell", trap_idx]:
+        if not "main" in self.cur_phase:
+          raise InvalidMove("Not in main phase")
+        card = self.turn_p.traps[trap_idx]
         self.activate_board(card)
 
       case ["attack", attacker_idx, attackee_idx]:
@@ -469,24 +504,25 @@ class Duel():
 
   def phase_effects(self, timing="begin"):
     phase = self.cur_phase
-    # mandatory standby phase effects
-    for card in self.turn_p.board:
+    # mandatory phase effects
+    for card in self.turn_p.board + self.turn_p.traps:
+      if card:
+        card.effect(f"{timing}_phase_{phase}")
+        card.effect(f"{timing}_phase_your_{phase}")
+        self.check_field()
+
+    for card in self.other_p.board + self.other_p.traps:
       if card:
         card.effect(f"{timing}_phase_{phase}")
         self.check_field()
 
-    for card in self.other_p.board:
-      if card:
-        card.effect(f"{timing}_phase_{phase}")
-        self.check_field()
-
-    # optional standby phase effects
-    for card in self.turn_p.board:
+    # optional phase effects
+    for card in self.turn_p.board + self.turn_p.traps:
       if card:
         card.effect(f"opt_{timing}_phase_{phase}")
         self.check_field()
 
-    for card in self.other_p.board:
+    for card in self.other_p.board + self.other_p.traps:
       if card:
         card.effect(f"opt_{timing}_phase_{phase}")
         self.check_field()
@@ -561,7 +597,8 @@ class Duel():
     card.effect("on_activate_hand_cost")
     card.effect("on_activate_hand")
 
-    self.move_to(card, "graveyard")
+    if card.type == "spell":
+      self.move_to(card, "graveyard")
 
 
   def activate_board(self, card):
@@ -829,13 +866,13 @@ class Duel():
       attackee.effect("opt_if_destroyed_battle", attacker)
       attackee.effect("opt_if_destroyed", attackee)
 
+    attacker.apply_status("god", "CANNOT_ATTACK", 0, "END")
+
     attacker.effect("end_attack", attackee)
     attackee.effect("end_attacked", attacker)
 
     attacker.effect("opt_end_attack", attackee)
     attackee.effect("opt_end_attacked", attacker)
-
-    attacker.apply_status("god", "CANNOT_ATTACK", 0, "END")
 
     self.check_game_over()
 

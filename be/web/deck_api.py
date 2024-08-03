@@ -5,23 +5,29 @@ names = [ # all working cards
   "sprightelf", # targeting protection not working
   "magikarp", "mudkip", "pikachu", "grovyle", "ampharos",
   "blastoise", "wailord", "snorlax", "garchomp", "jirachi", "hooh",
+  "beedrill", "scizor", "kangaskhan",
   # "kyogre", "groudon",
   "giratina", "arceus", "gallade", "heracross", "shuckle", "breloom", "chansey",
   "tyranitar", "gengar", "dragonite",
   # "gyarados"
   "salamence", "lugia", "lapras", "turtwig",
   "sprightjet", "sprightblue", "sprightpixie", "windupkitten",
-  "livetwinlilla", "livetwinkisikil", "livetwintroublesunny", "omen",
+  "twinlatias", "twinlatios", "twinslatioslatias", "omen",
   # "brimstone", "viper",
   "reyna", "kiljoy",
   # "cypher", "neon",
   "jett", "phoenix", "dartmonkey",
   # "supermonkey", "johnnywyles", "riverwyles", "redamogus", "zoe"
-  "lopunny", "megalopunny",
+  "lopunny",
   "eevee",
   # Spells
   "ultraball", "repel", "squirtbottle", "technicalmachine", "1tap", "switchout",
   "sprightstarter", "odinspam", "ancientruins",
+]
+
+ed_names = [
+  "megascizor", "megalopunny", "megabeedrill", "megaheracross",
+  "megakangaskhan"
 ]
 
 deck1 = random.sample(names, k=16) * 3
@@ -39,9 +45,9 @@ sd_pote = [
   "sprightjet", "sprightjet", "sprightjet",
   "sprightpixie", "sprightpixie", "sprightpixie",
   "windupkitten",
-  "livetwinlilla", "livetwinlilla", "livetwinlilla",
-  "livetwinkisikil", "livetwinkisikil", "livetwinkisikil",
-  "livetwintroublesunny", "livetwintroublesunny", "livetwintroublesunny",
+  "twinlatias", "twinlatias", "twinlatias",
+  "twinlatios", "twinlatios", "twinlatios",
+  "twinslatiaslatios", "twinslatiaslatios", "twinslatiaslatios",
   "megabracelet", "megabracelet", "megabracelet",
   # "livetwinmoonlitsnitch", "livetwinmoonlitsnitch", "livetwinmoonlitsnitch",
   "squirtbottle", "squirtbottle", "squirtbottle",
@@ -72,6 +78,7 @@ sd_cs = [
 
 ed_cs = [
   "megalopunny", "megalopunny", "megalopunny",
+  "megabeedrill",
   "mew",
   "jirachi",
   "hooh",

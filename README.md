@@ -10,6 +10,7 @@ blah blah blah
 
 display art
 dont send card info of hidden cards to frontend
+quick spells
 continuous spell
 continuous effects
 

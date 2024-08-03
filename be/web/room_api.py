@@ -1,3 +1,4 @@
+import multiprocessing as mp
 import socketio
 import yaml
 from easydict import EasyDict as edict
@@ -14,6 +15,7 @@ class PlayerIO:
     self.name = name
     self.duel = None
     self.player_obj = None
+    self.sprite_cache = set()
 
   def connect(self, duel, player_obj):
     self.duel = duel
@@ -34,6 +36,7 @@ class PlayerIO:
       dict["original_attack"] = card.original_attack
       dict["original_health"] = card.original_health
     dict["uuid"] = card.uuid
+    dict["template_id"] = card.id
 
     dict["can_activate"] = card.can("activate")
     dict["can_activate_hand"] = card.can("activate_hand")
@@ -44,6 +47,12 @@ class PlayerIO:
 
     dict["description"] = card.template.description
     dict["flavour"] = card.template.flavour
+
+    if card.uuid not in self.sprite_cache and card.template.sprite:
+      dict["sprite"] = card.template.sprite
+    if card.uuid not in self.sprite_cache and card.template.mini_sprite:
+      dict["mini_sprite"] = card.template.mini_sprite
+    dict["bkgd_colour"] = card.template.bkgd_colour
 
     return dict
 
@@ -209,19 +218,20 @@ class Room:
       cards = yaml.safe_load(f)
       cards = edict(cards)
 
-    sd1, ed1 = deck1
-    sd1 = [cards[name] for name in sd1]
-    sd1 = [card_api.Template(card) for card in sd1]
+    with mp.Pool(16) as p:
+      sd1, ed1 = deck1
+      sd1 = [cards[name] for name in sd1]
+      sd1 = p.map(card_api.Template, sd1)
 
-    ed1 = [cards[name] for name in ed1]
-    ed1 = [card_api.Template(card) for card in ed1]
+      ed1 = [cards[name] for name in ed1]
+      ed1 = p.map(card_api.Template, ed1)
 
-    sd2, ed2 = deck2
-    sd2 = [cards[name] for name in sd2]
-    sd2 = [card_api.Template(card) for card in sd2]
+      sd2, ed2 = deck2
+      sd2 = [cards[name] for name in sd2]
+      sd2 = p.map(card_api.Template, sd2)
 
-    ed2 = [cards[name] for name in ed2]
-    ed2 = [card_api.Template(card) for card in ed2]
+      ed2 = [cards[name] for name in ed2]
+      ed2 = p.map(card_api.Template, ed2)
 
     card_templates = {
         uuid: card_api.Template(card) for uuid, card in cards.items()

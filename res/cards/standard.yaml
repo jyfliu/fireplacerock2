@@ -206,8 +206,8 @@ wilson:
   id: 22
   rarity: C
   uuid: wilson
-smalljameslin:
-  name: Small James
+smalljuliazhang:
+  name: Small Julia
   type: monster
   cost: 8
   attack: 0
@@ -215,23 +215,24 @@ smalljameslin:
   description: You can also summon this card by banishing a monster from your hand, field, and graveyard. Once per turn, you can banish two monsters from your graveyard, then target a monster on the field; destroy it.
   id: 23
   rarity: C
-  uuid: smalljameslin
-jameslin:
-  name: James
+  uuid: smalljuliazhang
+juliazhang:
+  name: Julia
   type: monster
   cost: 3
   attack: 300
   health: 1400
-  description: Link: 1 Small James + 2 other monsters. Once per turn, you can banish two monsters from your graveyard, then target a monster on the field; destroy it.
+  description: Link: 1 Small Julia + 2 other monsters. Once per turn, you can banish two monsters from your graveyard, then target a monster on the field; destroy it.
   id: 24
   rarity: C
-  uuid: jameslin
+  uuid: juliazhang
 smallvincentwang:
   name: Small Vincent
   type: monster
   cost: 3
   attack: 0
   health: 800
+  description: When this monster is summoned; You can look at the top 3 cards of your deck and rearrange them in any order.
   id: 25
   rarity: C
   uuid: smallvincentwang
