@@ -214,7 +214,7 @@ class Room:
     p1 = PlayerIO(self.p1_name)
     p2 = PlayerIO(self.p2_name)
 
-    with open("../res/cards/fireplacerock.yaml", "r") as f:
+    with open("../res/cards/fireplacerock.yaml", "r", encoding="utf8") as f:
       cards = yaml.safe_load(f)
       cards = edict(cards)
 
