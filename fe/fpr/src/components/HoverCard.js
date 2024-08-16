@@ -16,7 +16,7 @@ export function HoverCard(props) {
 
   const enterHover = () => setHoverCard(hoverCard => ({...hoverCard, inHoverCard: true}));
   const leaveHover = () => setHoverCard(hoverCard => ({...hoverCard, inHoverCard: false}));
-  const colour = pSBC(0.50, `rgba(${Math.round(card.bkgd_colour[0])},${Math.round(card.bkgd_colour[1])},${Math.round(card.bkgd_colour[2])}, 0.5)`);
+  const colour = pSBC(0.50, `rgba(${Math.round(card.bkgd_colour[0])},${Math.round(card.bkgd_colour[1])},${Math.round(card.bkgd_colour[2])}, 0.8)`);
   const bkgd_colour = pSBC(0.2, `rgba(${Math.round(card.bkgd_colour[0])},${Math.round(card.bkgd_colour[1])},${Math.round(card.bkgd_colour[2])}, 255)`);
   const hasSprite = cardCache[card.template_id];
 

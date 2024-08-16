@@ -6,8 +6,8 @@ import { pSBC } from '../Utils.js';
 
 
 export function Card(props) {
-  const { card, setHoverCard } = props;
-  const { cardCache, phase, activateBoard, activateFieldSpell, boardId } = props;
+  const { card, setHoverCard, style } = props;
+  const { isDraggable, onClick, cardCache } = props;
 
   const enterCard = () => setHoverCard(hoverCard => ({...hoverCard, card: card, inCard: true}));
   const leaveCard = () => setHoverCard(hoverCard => ({...hoverCard, inCard: false}));
@@ -15,25 +15,6 @@ export function Card(props) {
   let {attributes, listeners, setNodeRef, transform} = useDraggable({
     id: props.id,
   });
-
-  let isDraggable = false;
-  let onClick = () => {};
-  if (phase[0] === "owner") {
-    if (phase[1] === "battle" || !activateBoard) {
-      isDraggable = true;
-    }
-    if (activateBoard && phase[0] === "owner" && phase[1] !== "battle") {
-      // for some reason doesn't work with draggable -- debug with internet
-      if ([10, 11, 12, 13, 14].includes(boardId)) {
-        onClick = () => activateBoard(boardId - 10);
-      }
-    }
-    if (activateFieldSpell && phase[0] === "owner" && phase[1] !== "battle") {
-      if ([15, 16, 17, 18, 19].includes(boardId)) {
-        onClick = () => activateFieldSpell(boardId - 15);
-      }
-    }
-  }
 
   const hasSprite = cardCache[card.template_id];
   const colour = card.bkgd_colour? pSBC(0.50, `rgba(${Math.round(card.bkgd_colour[0])},${Math.round(card.bkgd_colour[1])},${Math.round(card.bkgd_colour[2])}, 0.5)`) : "lightgrey";
@@ -56,15 +37,16 @@ export function Card(props) {
     }
   };
 
-  const style = {
+  const fullStyle = {
     "transform": transform?
       `perspective(1000px) translate3d(${transform.x}px, ${transform.y*0.86602540378}px, 0) ${card.isSelected? "rotateX(30deg)" : ""}`
     : undefined,
     "background-color": bkgd_colour,
+    ...style,
   };
 
   return (
-    <button class="card" ref={setNodeRef} style={style}
+    <button class="card" ref={setNodeRef} style={fullStyle}
             {...(isDraggable && listeners)}
             {...(isDraggable && attributes)}
             onMouseOver={enterCard}
@@ -81,18 +63,13 @@ export function Card(props) {
 }
 
 export function Deck(props) {
-  let { name, count, cards } = props;
+  let { name, count, cards, displayCards } = props;
   if (count === undefined && cards !== undefined) {
     count = cards.length;
   }
   let onClick = () => {};
-  if (cards !== undefined) {
-    let cardsStr = name + ":\n" + (
-      cards
-        .map(card => `[${card.name}]`)
-        .join("\n")
-    );
-    onClick = () => alert(cardsStr);
+  if (cards !== undefined && displayCards !== undefined) {
+    onClick = () => displayCards(cards);
   }
   return (
     <button class="card" onClick={onClick} >

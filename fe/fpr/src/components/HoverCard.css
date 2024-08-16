@@ -5,6 +5,7 @@
   width: 368px;
   height: 560px;
   background-color: lightgrey;
+  z-index: 10001;
 }
 
 .hc-title {
@@ -20,7 +21,7 @@
   border-radius: 10px;
   overflow-wrap: anywhere;
   background-color: rgba(255,255,255,0.9);
-  z-index: 1;
+  z-index: 10002;
 }
 
 .hc-flavour {
@@ -29,7 +30,7 @@
   left: 24px;
   font-size: 10px;
   width: calc(368px - 48px);
-  z-index: 1;
+  z-index: 10002;
 }
 
 .hc-description {
@@ -39,15 +40,15 @@
   padding: 4px;
   width: calc(368px - 40px);
   height: 196px;
-  z-index: 1;
+  z-index: 10002;
   background-color: rgba(220,220,220,0.9);
 }
 
 .hc-attack {
   position: absolute;
   bottom: -56px;
-  z-index: 1;
   left: -12px;
+  z-index: 10002;
   color: black;
   background-color: orange;
   border: solid;
@@ -57,14 +58,13 @@
   border-radius: 24px;
   font-size: 36px;
   text-align: center;
-  z-index: 1;
 }
 
 .hc-health {
   position: absolute;
   bottom: -56px;
-  z-index: 1;
   right: -12px;
+  z-index: 10002;
   color: black;
   background-color: mediumseagreen;
   border: solid;
@@ -74,14 +74,13 @@
   border-radius: 24px;
   font-size: 36px;
   text-align: center;
-  z-index: 1;
 }
 
 .hc-cost {
   position: absolute;
   top: -30px;
   left: -12px;
-  z-index: 1;
+  z-index: 10002;
   color: black;
   background-color: skyblue;
   border: solid;
@@ -92,7 +91,6 @@
   border-radius: 50%;
   font-size: 32px;
   text-align: center;
-  z-index: 1;
 }
 
 .hc-sprite {
@@ -102,7 +100,7 @@
   width: 368px;
   height: 560px;
   object-fit: cover;
-  z-index: 0;
+  z-index: 10001;
 }
 
 .hc-mini-sprite {
@@ -112,5 +110,5 @@
   width: 328px;
   height: 207px;
   object-fit: cover;
-  z-index: 0;
+  z-index: 10001;
 }

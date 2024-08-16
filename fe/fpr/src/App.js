@@ -3,6 +3,7 @@ import { DndContext } from '@dnd-kit/core';
 
 import { socket } from './socket';
 
+import { Modal } from './Modal';
 import { BoardSpace } from './components/BoardSpace';
 import { Card, Deck } from './components/Card';
 import { ChatBox } from './components/ChatBox';
@@ -68,6 +69,8 @@ function App() {
     setChat(chatLog => chatLog.concat([msg]));
   };
   const [hoverCard, setHoverCard] = useState(defaultHoverCard);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalCards, setModalCards] = useState([]);
   const [cardCache, setCardCache] = useState({});
 
   // game state
@@ -270,17 +273,17 @@ function App() {
   // display helpers
   const displayCard = card =>
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
-          phase={phase}
           cardCache={cardCache}
           setHoverCard={setHoverCard} />;
-  const displayCardOnBoard = (card, id) =>
+  const displayCardOnBoard = (card, onClick, isDraggable) =>
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
-          activateBoard={activateBoard}
-          activateFieldSpell={activateFieldSpell}
-          boardId={id}
-          phase={phase}
           cardCache={cardCache}
+          onClick={onClick} isDraggable={isDraggable}
           setHoverCard={setHoverCard} />;
+  const displayCardsInModal = cards => {
+    setModalVisible(true);
+    setModalCards(cards);
+  };
 
 
   const statusStyle = {
@@ -293,6 +296,12 @@ function App() {
         {isConnected ? "Connected: ip=0.0.0.0:9069" : "Disconnected"}
       </p>
       <div class="battle">
+        <Modal cards={modalCards}
+               setHoverCard={setHoverCard}
+               setModalCards={setModalCards}
+               modalVisible={modalVisible}
+               setModalVisible={setModalVisible}
+               cardCache={cardCache} />
         <div class="oppon-hand">
           {
             Array.from(Array(opponHand).keys()).map(id => ({
@@ -311,9 +320,9 @@ function App() {
         </div>
         <div class="board">
           <div class="decks">
-            <Deck name="Opponent's Graveyard" cards={opponCards.opponGraveyard}/>
-            <Deck name="Opponent's Banished" cards={opponCards.opponBanished}/>
-            <Deck name="Extra Deck" cards={ownerCards.ownerExtraDeck}/>
+            <Deck name="Opponent's Graveyard" cards={opponCards.opponGraveyard} displayCards={displayCardsInModal}/>
+            <Deck name="Opponent's Banished" cards={opponCards.opponBanished} displayCards={displayCardsInModal}/>
+            <Deck name="Extra Deck" cards={ownerCards.ownerExtraDeck} displayCards={displayCardsInModal}/>
             <Deck name="Deck" count={ownerCards.ownerMainDeck} />
           </div>
           <div class="board-grid">
@@ -342,10 +351,29 @@ function App() {
                 hiColor = shouldHighlight? "#449944" : "#994444";
               }
 
+              let isDraggable = false;
+              let onClick = () => {};
+                if (phase && phase[0] === "owner") {
+                  if (phase[1] === "battle" || !activateBoard) {
+                    isDraggable = true;
+                  }
+                  if (phase[0] === "owner" && phase[1] !== "battle") {
+                    // for some reason doesn't work with draggable -- debug with internet
+                    if ([10, 11, 12, 13, 14].includes(id)) {
+                      onClick = () => activateBoard(id - 10);
+                    }
+                  }
+                  if (phase[0] === "owner" && phase[1] !== "battle") {
+                    if ([15, 16, 17, 18, 19].includes(id)) {
+                      onClick = () => activateFieldSpell(id - 15);
+                    }
+                  }
+                }
+
               return (
                 <div class="card-griditem">
                   <BoardSpace key={"board"+id} id={id} hiColor={hiColor}>
-                    {cardsOnSquare.length > 0? displayCardOnBoard(cardsOnSquare[0], id) : null}
+                    {cardsOnSquare.length > 0? displayCardOnBoard(cardsOnSquare[0], onClick, isDraggable) : null}
                   </BoardSpace>
                 </div>
               )
@@ -354,8 +382,8 @@ function App() {
           <div class="decks">
             <Deck name="Opponent's Deck" count={opponCards.opponMainDeck} />
             <Deck name="Opponent's Extra Deck" count={opponCards.opponExtraDeck}/>
-            <Deck name="Banished" cards={ownerCards.ownerBanished} />
-            <Deck name="Graveyard" cards={ownerCards.ownerGraveyard} />
+            <Deck name="Banished" cards={ownerCards.ownerBanished} displayCards={displayCardsInModal}/>
+            <Deck name="Graveyard" cards={ownerCards.ownerGraveyard} displayCards={displayCardsInModal}/>
           </div>
         </div>
         <PlayerStats owner={true} hp={ownerStats.hp} />
