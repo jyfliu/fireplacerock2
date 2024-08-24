@@ -8,6 +8,7 @@ import { pSBC } from '../Utils.js';
 export function Card(props) {
   const { card, setHoverCard, style } = props;
   const { isDraggable, onClick, cardCache } = props;
+  const { highlight } = props;
 
   const enterCard = () => setHoverCard(hoverCard => ({...hoverCard, card: card, inCard: true}));
   const leaveCard = () => setHoverCard(hoverCard => ({...hoverCard, inCard: false}));
@@ -41,24 +42,27 @@ export function Card(props) {
     "transform": transform?
       `perspective(1000px) translate3d(${transform.x}px, ${transform.y*0.86602540378}px, 0) ${card.isSelected? "rotateX(30deg)" : ""}`
     : undefined,
-    "background-color": bkgd_colour,
     ...style,
   };
 
   return (
-    <button class="card" ref={setNodeRef} style={fullStyle}
-            {...(isDraggable && listeners)}
-            {...(isDraggable && attributes)}
-            onMouseOver={enterCard}
-            onMouseLeave={leaveCard}
-            onClick={onClick}
-    >
-      {card.name && <h3 class="name" >{card.name}</h3>}
-      {cardCache[card.template_id] && renderSprite()}
-      {card.attack!==undefined && <h4 class="attack">{card.attack}</h4>}
-      {card.health!==undefined && <h4 class="health">{card.health}</h4>}
-      {card.cost !== undefined && <h4 class="cost">{card.cost}</h4>}
-    </button>
+    <div class="card" style={fullStyle}>
+      <button class="card-main" ref={setNodeRef}
+              style={{backgroundColor: bkgd_colour}}
+              {...(isDraggable && listeners)}
+              {...(isDraggable && attributes)}
+              onMouseOver={enterCard}
+              onMouseLeave={leaveCard}
+              onClick={onClick}
+      >
+        {card.name && <h3 class="name" >{card.name}</h3>}
+        {cardCache[card.template_id] && renderSprite()}
+        {card.attack!==undefined && <h4 class="attack">{card.attack}</h4>}
+        {card.health!==undefined && <h4 class="health">{card.health}</h4>}
+        {card.cost !== undefined && <h4 class="cost">{card.cost}</h4>}
+      </button>
+      {highlight && <div class="card-highlight" />}
+    </div>
   );
 }
 

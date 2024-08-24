@@ -70,7 +70,12 @@ function App() {
   };
   const [hoverCard, setHoverCard] = useState(defaultHoverCard);
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalCards, setModalCards] = useState([]);
+  const [modalState, setModalState] = useState({
+    cards: [],
+    title: "",
+    onClickCard: (card) => {},
+    onClickOK: undefined,
+  });
   const [cardCache, setCardCache] = useState({});
 
   // game state
@@ -94,6 +99,8 @@ function App() {
 
   const states = {
     chat: chat,
+    modalVisible: modalVisible,
+    modalState: modalState,
     hoverCard: hoverCard,
 
     ownerHand: ownerHand,
@@ -143,6 +150,8 @@ function App() {
     const setStates = {
       pushChat: pushChat,
       setHoverCard: setHoverCard,
+      setModalVisible: setModalVisible,
+      setModalState: setModalState,
       setCardCache: setCardCache,
 
       setOwnerHand: setOwnerHand,
@@ -271,9 +280,10 @@ function App() {
 
 
   // display helpers
-  const displayCard = card =>
+  const displayCard = (card, isDraggable) =>
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
           cardCache={cardCache}
+          isDraggable={isDraggable}
           setHoverCard={setHoverCard} />;
   const displayCardOnBoard = (card, onClick, isDraggable) =>
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
@@ -282,7 +292,10 @@ function App() {
           setHoverCard={setHoverCard} />;
   const displayCardsInModal = cards => {
     setModalVisible(true);
-    setModalCards(cards);
+    setModalState({
+      cards: cards,
+      title: ""
+    });
   };
 
 
@@ -296,9 +309,8 @@ function App() {
         {isConnected ? "Connected: ip=0.0.0.0:9069" : "Disconnected"}
       </p>
       <div class="battle">
-        <Modal cards={modalCards}
+        <Modal modalState={modalState}
                setHoverCard={setHoverCard}
-               setModalCards={setModalCards}
                modalVisible={modalVisible}
                setModalVisible={setModalVisible}
                cardCache={cardCache} />
@@ -391,7 +403,7 @@ function App() {
         <PlayerMana owner={true} mana={ownerStats.mana} manaMax={ownerStats.manaMax} />
         <PlayerMana owner={false} mana={opponStats.mana} manaMax={opponStats.manaMax} />
         <div class="owner-hand">
-          {ownerHand.filter(card => card.parent === null).map(displayCard)}
+          {ownerHand.filter(card => card.parent === null).map(card => displayCard(card, true))}
         </div>
       <ChatBox chat={chat} />
       <HoverCard hoverCard={hoverCard} setHoverCard={setHoverCard} cardCache={cardCache} />

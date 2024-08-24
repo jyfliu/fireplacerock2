@@ -1,7 +1,21 @@
 .card {
+  width: 96px;
+  height: 144px;
+}
+
+.card-main {
   position: relative;
   width: 92px;
   height: 140px;
+  z-index: 10;
+}
+
+.card-highlight {
+  position: relative;
+  width: 96px;
+  height: 144px;
+  top: -100%;
+  background-color: rgba(176, 239, 255);
 }
 
 .name {

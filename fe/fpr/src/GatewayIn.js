@@ -102,27 +102,39 @@ export function OnPromptUserActivate(states) {
 };
 
 export function OnPromptUserSelectCards(states) {
-  let { pushChat } = states;
-  return (cards, amount, cb) => {
-    let cardsStr = (
-      cards
-        .map(([loc, card], idx) => `[${idx}: ${card.name} (${loc})]`)
-        .join(" ")
-    );
-    if (amount.length === 1 && amount[0] === 1) {
-      let response = prompt(`Select a card from ${cardsStr}`);
-      pushChat(`Selected ${cards[response][1].name} from ${cards[response][0]}`);
-      cb([response]);
-    } else {
-      do {
-        let response = prompt(`Select ${amount} cards from ${cardsStr}, separated by commas`);
-        let cards = response.split(",").map(s => s.trim());
-        if (amount.includes(cards.length)) {
-          cb(cards);
-          break;
+  let { pushChat, setModalVisible, setModalState } = states;
+  let unserializeCard = UnserializeCard(states);
+  return (locAndCards, amount, cb) => {
+    let selected = [];
+    let highlightIds = [];
+    let cards = locAndCards.map(locAndCard => locAndCard[1]).map(unserializeCard);
+    setModalState(modal => ({
+      title: "Select a card",
+      cards: cards,
+      onClickCard: (card) => {
+        let response = cards.map(c => c.id).indexOf(card.id);
+        let loc = locAndCards[response][0];
+        if (!selected.includes(response)) {
+          pushChat(`Selected ${card.name} from ${loc}`);
+          selected.push(response);
+          highlightIds.push(card.id);
+        } else {
+          pushChat(`Unselected ${card.name} from ${loc}`);
+          selected = selected.filter(x => x !== response);
+          highlightIds = highlightIds.filter(x => x !== card.id);
         }
-      } while (true);
-    }
+        setModalState(m => ({...m, highlightIds: highlightIds}));
+      },
+      onClickOK: () => {
+        if (amount.includes(selected.length)) {
+          cb(selected);
+          setModalVisible(false);
+        } else {
+          alert("Incorrect number of cards selected");
+        }
+      }
+    }));
+    setModalVisible(true);
   };
 };
 
