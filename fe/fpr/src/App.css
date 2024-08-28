@@ -15,7 +15,7 @@
 
 .App-header {
   background-color: #282c34;
-  min-height: 100vh;
+  min-height: 97vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -46,37 +46,47 @@
 .phase-indicator {
   position: absolute;
   left: min(calc(50% - 400px), 330px);
-  top: 332px;
+  top: calc(50% - 48px);
+  z-index: 100;
+}
+
+.phase-indicator-button {
+  width: 108px;
+  height: 36px;
+  font-size: 12px;
 }
 
 .phase-select {
   position: absolute;
   right: min(calc(50% - 420px), 330px);
-  top: 302px;
+  top: calc(50% - 72px);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
+  z-index: 100;
 }
 
 .next-button {
-  height: 48px;
-  font-size: 16px;
-  width: 128px;
+  height: 36px;
+  font-size: 12px;
+  width: 96px;
 }
 
 .end-button {
-  margin-top: 6px;
-  height: 48px;
-  width: 128px;
-  font-size: 16px;
+  margin-top: 5px;
+  height: 36px;
+  width: 96px;
+  font-size: 12px;
 }
 
 .battle {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
+  position: relative;
+  height: 97vh;
 }
 
 .board {
@@ -84,22 +94,25 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  gap: 7.5px;
   margin-top: -80px;
-  gap: 10px;
+  margin-bottom: -40px;
   transform: perspective(1000px) rotateX(30deg);
 }
 
 .board-grid {
   display: grid;
-  grid-template-columns: 100px 100px 100px 100px 100px;
-  grid-template-rows: 148px 148px 148px 148px;
+  grid-template-columns: 80px 80px 80px 80px 80px;
+  grid-template-rows: 118px 118px 118px 118px;
 }
 
 .decks {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 9px;
+  gap: 7px;
+  margin-top: 10px;
+  margin-left: 10px;
 }
 
 .owner-hand {
@@ -108,8 +121,8 @@
   justify-content: flex-start;
   align-items: center;
   column-gap: 5px;
-  margin-top: 20px;
-  min-height: 140px;
+  margin-top: 15px;
+  min-height: 105px;
   transform: perspective(1000px) translateZ(100px);
 }
 
@@ -120,7 +133,8 @@
   align-items: center;
   column-gap: 5px;
   transform: perspective(1000px) translateZ(-300px);
-  min-height: 140px;
+  min-height: 105px;
+  scale: 0.9;
 }
 
 .card-griditem {

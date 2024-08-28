@@ -91,8 +91,8 @@ class Player():
   def __init__(self, id, io):
     self.id = id
     self.io = io
-    self.mana = 0
-    self.mana_max = 0
+    self.mana = 10
+    self.mana_max = 10
     self.life = 3000
 
     self.hand = CardList()

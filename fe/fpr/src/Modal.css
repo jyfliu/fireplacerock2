@@ -1,16 +1,16 @@
 .modal {
   text-align: center;
   z-index: 100;
-  width: 900px;
-  height: 568px;
+  width: 60%;
+  height: 60%;
   background-color: rgba(100,100,120,0.8);
   position: absolute;
-  top: 80px;
   padding: 64px;
   padding-top: 80px;
   display: flex;
   flex-wrap: wrap;
   overflow-y: scroll;
+  overflow-x: visible;
 }
 
 .modal-title {

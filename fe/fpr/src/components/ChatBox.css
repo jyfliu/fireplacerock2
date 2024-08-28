@@ -1,14 +1,15 @@
 .chat-box {
   position: absolute;
-  left: 50px;
+  left: 40px;
   top: 150px;
   overflow-y: scroll;
-  width: 250px;
-  height: 500px;
+  width: 15vw;
+  height: 60vh;
   overflow-wrap: break-word;
   white-space: pre-line;
   display: flex;
   flex-direction: column-reverse;
+  font-size: 12px;
 }
 
 

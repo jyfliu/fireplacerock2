@@ -25,6 +25,13 @@ export function Summon(socket) {
   }
 }
 
+export function SummonExtraDeck(socket) {
+  return (extraDeckIdx, boardIdx) => {
+    console.log("summon_extradeck", extraDeckIdx, boardIdx);
+    socket.emit("player_action", ["summon_extradeck", extraDeckIdx, boardIdx]);
+  }
+}
+
 export function ActivateSpell(socket) {
   return (handIdx, boardIdx) => {
     console.log("activate_spell", handIdx, boardIdx);

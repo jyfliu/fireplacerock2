@@ -30,7 +30,7 @@ ed_names = [
   "megakangaskhan"
 ]
 
-deck1 = random.sample(names, k=16) * 3
+deck1 = random.sample(names, k=16) * 3 + ["lopunny"] * 100
 deck2 = random.sample(names, k=16) * 3
 
 # structure decks

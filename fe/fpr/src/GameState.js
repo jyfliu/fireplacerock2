@@ -8,6 +8,13 @@ export function CanSummon(state) {
   }
 };
 
+export function CanSummonExtraDeck(state) {
+  let { phase, hasInitiative, ownerStats } = state;
+  return (card) => {
+    return hasInitiative && phase[1].includes("main") && ownerStats.mana >= card.cost && card.can_summon_extradeck;
+  }
+};
+
 export function CanActivateHand(state) {
   let { phase, hasInitiative, ownerStats } = state;
   return (card) => {

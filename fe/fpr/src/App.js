@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DndContext } from '@dnd-kit/core';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
 
 import { socket } from './socket';
 
@@ -10,7 +10,10 @@ import { ChatBox } from './components/ChatBox';
 import { HoverCard } from './components/HoverCard';
 import { PlayerStats, PlayerMana } from './components/PlayerStats';
 
-import { CanSummon, CanActivateHand, CanAttack } from "./GameState"
+import {
+  CanSummon, CanSummonExtraDeck,
+  CanActivateHand, CanAttack
+} from "./GameState"
 
 import {
   OnInitGameState,
@@ -26,7 +29,7 @@ import {
 
 import {
   EmitNextPhase, EmitNextTurn,
-  Summon, ActivateSpell,
+  Summon, SummonExtraDeck, ActivateSpell,
   Attack, AttackDirectly,
   ActivateBoard, ActivateFieldSpell,
 } from "./GatewayOut"
@@ -70,11 +73,13 @@ function App() {
   };
   const [hoverCard, setHoverCard] = useState(defaultHoverCard);
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisibleReset, setModalVisibleReset] = useState(false);
   const [modalState, setModalState] = useState({
     cards: [],
     title: "",
     onClickCard: (card) => {},
     onClickOK: undefined,
+    visibleCardId: undefined,
   });
   const [cardCache, setCardCache] = useState({});
 
@@ -115,6 +120,7 @@ function App() {
   }
 
   let canSummon = CanSummon(states);
+  let canSummonExtraDeck = CanSummonExtraDeck(states);
   let canActivateHand = CanActivateHand(states);
   let canAttack = CanAttack(states);
 
@@ -122,6 +128,7 @@ function App() {
   let emitNextTurn = EmitNextTurn(socket);
   let emitNextPhase = EmitNextPhase(socket);
   let summon = Summon(socket);
+  let summonExtraDeck = SummonExtraDeck(socket);
   let activateSpell = ActivateSpell(socket);
   let attack = Attack(socket);
   let attackDirectly = AttackDirectly(socket);
@@ -297,6 +304,14 @@ function App() {
       title: ""
     });
   };
+  const displayCardsInModalFromExtraDeck = cards => {
+    setModalVisible(true);
+    setModalState({
+      cards: cards,
+      title: "",
+      isDraggable: true,
+    });
+  };
 
 
   const statusStyle = {
@@ -304,10 +319,27 @@ function App() {
   }
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} >
       <p style={statusStyle} class="status-bar">
         {isConnected ? "Connected: ip=0.0.0.0:9069" : "Disconnected"}
       </p>
+      <div class="phase-indicator">
+        <button class="phase-indicator-button">
+          {phase[0] === "owner"? "Your" : "Your opponent's"}<br />{phase[1]} phase
+        </button>
+      </div>
+      <div class="phase-select">
+        <button onClick={emitNextPhase} class="next-button">Next Phase</button>
+        <button onClick={emitNextTurn} class="end-button">End Turn</button>
+      </div>
+      <PlayerStats owner={true} hp={ownerStats.hp} />
+      <PlayerStats owner={false} hp={opponStats.hp} />
+      <PlayerMana owner={true} mana={ownerStats.mana} manaMax={ownerStats.manaMax} />
+      <PlayerMana owner={false} mana={opponStats.mana} manaMax={opponStats.manaMax} />
+      <ChatBox chat={chat} />
+      <HoverCard hoverCard={hoverCard} setHoverCard={setHoverCard} cardCache={cardCache} />
+      <DragOverlay>
+      </DragOverlay>
       <div class="battle">
         <Modal modalState={modalState}
                setHoverCard={setHoverCard}
@@ -323,18 +355,11 @@ function App() {
             })).map(displayCard)
           }
         </div>
-        <div class="phase-indicator">
-          <button>{phase[0] === "owner"? "Your" : "Your opponent's"}<br />{phase[1]} phase</button>
-        </div>
-        <div class="phase-select">
-          <button onClick={emitNextPhase} class="next-button">Next Phase</button>
-          <button onClick={emitNextTurn} class="end-button">End Turn</button>
-        </div>
         <div class="board">
           <div class="decks">
             <Deck name="Opponent's Graveyard" cards={opponCards.opponGraveyard} displayCards={displayCardsInModal}/>
             <Deck name="Opponent's Banished" cards={opponCards.opponBanished} displayCards={displayCardsInModal}/>
-            <Deck name="Extra Deck" cards={ownerCards.ownerExtraDeck} displayCards={displayCardsInModal}/>
+            <Deck name="Extra Deck" cards={ownerCards.ownerExtraDeck} displayCards={displayCardsInModalFromExtraDeck}/>
             <Deck name="Deck" count={ownerCards.ownerMainDeck} />
           </div>
           <div class="board-grid">
@@ -398,33 +423,39 @@ function App() {
             <Deck name="Graveyard" cards={ownerCards.ownerGraveyard} displayCards={displayCardsInModal}/>
           </div>
         </div>
-        <PlayerStats owner={true} hp={ownerStats.hp} />
-        <PlayerStats owner={false} hp={opponStats.hp} />
-        <PlayerMana owner={true} mana={ownerStats.mana} manaMax={ownerStats.manaMax} />
-        <PlayerMana owner={false} mana={opponStats.mana} manaMax={opponStats.manaMax} />
         <div class="owner-hand">
           {ownerHand.filter(card => card.parent === null).map(card => displayCard(card, true))}
         </div>
-      <ChatBox chat={chat} />
-      <HoverCard hoverCard={hoverCard} setHoverCard={setHoverCard} cardCache={cardCache} />
       </div>
     </DndContext>
   );
 
   function handleDragStart(event) {
     const { active } = event;
+    const selectCardIf = card =>
+        card.id === active.id?
+          {...card, isSelected: true }
+          : card;
 
     setHoverCard(hoverCard => ({...hoverCard, inDrag: true}));
-    setOwnerHand(ownerHand.map(
-      card =>
-        card.id === active.id?
-        {...card, isSelected: true}
-        : card
-    ))
+    setOwnerHand(ownerHand.map(selectCardIf));
+    setOwnerCards(cards => ({
+      ...cards,
+      ownerExtraDeck: cards.ownerExtraDeck.map(selectCardIf),
+    }));
+    setModalVisibleReset(modalVisible);
+    setModalVisible(false);
+    setModalState(state => ({
+      ...state,
+      visibleCardId: active.id,
+      transformCard: selectCardIf,
+    }));
   }
 
   function handleDragEnd(event) {
     const { active, over } = event;
+
+    const resetCard = card => ({...card, isSelected: false });
 
     setHoverCard(hoverCard => ({...hoverCard, inCard: false, inDrag: false}));
     // If the item is dropped over a container, set it as the parent
@@ -441,19 +472,19 @@ function App() {
           || (card.type === "monster" && ![10, 11, 12, 13, 14].includes(over.id))
           || (card.type === "spell" && ![15, 16, 17, 18, 19].includes(over.id))
         ) {
-          return {...card, isSelected: false};
+          return resetCard(card);
         }
         if (card.type === "monster") {
           let idx = over.id - 10;
           if (![10, 11, 12, 13, 14].includes(over.id) || field.ownerMonsters[idx] != null) {
-            return {...card, isSelected: false};
+            return resetCard(card);
           }
           summon(handIdx, idx)
         }
         if (card.type === "spell" || card.type === "field spell") {
           let idx = over.id - 15;
           if (![15, 16, 17, 18, 19].includes(over.id) || field.ownerTraps[idx] != null) {
-            return {...card, isSelected: false};
+            return resetCard(card);
           }
           activateSpell(handIdx, idx);
         }
@@ -461,12 +492,46 @@ function App() {
         shouldDrop |= card.type === "monster" && canSummon(card);
         shouldDrop |= card.type === "spell" && card.can_activate;
         if (shouldDrop) {
-          return {...card, parent: over? over.id : null, isSelected: false};
+          return {...resetCard(card), parent: over? over.id : null};
         } else {
-          return {...card, isSelected: false};
+          return resetCard(card);
         }
       }
     ));
+
+    const ownerExtraDeck = ownerCards.ownerExtraDeck.map(
+      (card, extraDeckIdx) => {
+        let shouldDrop = false;
+        if (!card) {
+          return card;
+        }
+        if (
+          !over
+          || card.id !== active.id
+          || (card.type === "monster" && ![10, 11, 12, 13, 14].includes(over.id))
+        ) {
+          return resetCard(card);
+        }
+        if (card.type === "monster") {
+          let idx = over.id - 10;
+          if (![10, 11, 12, 13, 14].includes(over.id) || field.ownerMonsters[idx] != null) {
+            return resetCard(card);
+          }
+          summonExtraDeck(extraDeckIdx, idx)
+        }
+
+        shouldDrop |= card.type === "monster" && canSummonExtraDeck(card);
+        if (shouldDrop) {
+          return {...resetCard(card), parent: over? over.id : null };
+        } else {
+          return resetCard(card);
+        }
+      });
+
+    setOwnerCards(cards => ({
+      ...cards,
+      ownerExtraDeck: ownerExtraDeck,
+    }));
 
     setField({
       ...field,
@@ -477,7 +542,7 @@ function App() {
             card.id !== active.id
             || card.type !== "monster"
           ) {
-            return {...card, isSelected: false};
+            return resetCard(card);
           }
           if (card.type === "monster" && over) {
             let idx = over.id - 5;
@@ -486,15 +551,23 @@ function App() {
               if (canAttack(card)) {
                 // TODO animate differently
               }
-              return {...card, isSelected: false};
+              return resetCard(card);
             }
           }
           // else attack directly
           attackDirectly(boardIdx);
-          return {...card, isSelected: false};
+          return resetCard(card);
         }
       )
     });
+
+    setModalVisible(modalVisibleReset);
+    setModalVisibleReset(false);
+    setModalState(state => ({
+      ...state,
+      visibleCardId: undefined,
+      transformCard: undefined,
+    }));
   }
 };
 

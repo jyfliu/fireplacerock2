@@ -1,7 +1,8 @@
 .hc-card {
   position: absolute;
   left: calc(80% - 184px);
-  top: 10%;
+  top: 5%;
+  scale: 80%;
   width: 368px;
   height: 560px;
   background-color: lightgrey;

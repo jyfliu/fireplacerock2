@@ -76,9 +76,9 @@ export function Deck(props) {
     onClick = () => displayCards(cards);
   }
   return (
-    <button class="card" onClick={onClick} >
+    <button class="deck" onClick={onClick} >
       <h4>{name}</h4>
-      <h1>{count}</h1>
+      <h2>{count}</h2>
     </button>
   );
 }

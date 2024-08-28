@@ -5,6 +5,7 @@
   top: -7px;
   width: 150px;
   transform: skew(15deg);
+  z-index: 100;
 }
 
 .oppon-player-stats {
@@ -14,30 +15,35 @@
   top: -7px;
   width: 150px;
   transform: skew(-15deg);
+  z-index: 100;
 }
 
 .owner-player-stats-border {
   position: absolute;
   left: min(calc(50% - 400px), 300px);
-  top: 770px;
+  bottom: 15%;
   height: 40px;
   width: 150px;
   transform: skew(-15deg);
   border-color: #444444;
   border-style: solid;
   border-width: 1px;
+  background-color: white;
+  z-index: 100;
 }
 
 .oppon-player-stats-border {
   position: absolute;
   right: min(calc(50% - 400px), 300px);
-  top: 50px;
+  top: 10%;
   height: 40px;
   width: 150px;
   transform: skew(15deg);
   border-color: #444444;
   border-style: solid;
   border-width: 1px;
+  background-color: white;
+  z-index: 100;
 }
 
 .owner-player-mana {
@@ -47,6 +53,7 @@
   top: -7px;
   width: 150px;
   transform: skew(15deg);
+  z-index: 100;
 }
 
 .oppon-player-mana {
@@ -56,28 +63,33 @@
   top: -7px;
   width: 150px;
   transform: skew(-15deg);
+  z-index: 100;
 }
 
 .owner-player-mana-border {
   position: absolute;
   right: min(calc(50% - 400px), 300px);
-  top: 770px;
+  bottom: 15%;
   height: 40px;
   width: 150px;
   transform: skew(-15deg);
   border-color: #444444;
   border-style: solid;
   border-width: 1px;
+  background-color: white;
+  z-index: 100;
 }
 
 .oppon-player-mana-border {
   position: absolute;
   left: min(calc(50% - 400px), 300px);
-  top: 50px;
+  top: 10%;
   height: 40px;
   width: 150px;
   transform: skew(15deg);
   border-color: #444444;
   border-style: solid;
   border-width: 1px;
+  background-color: white;
+  z-index: 100;
 }

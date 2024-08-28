@@ -111,3 +111,9 @@
   z-index: 0;
 }
 
+.deck {
+  width: 72px;
+  height: 108px;
+  font-size: 11px;
+}
+
