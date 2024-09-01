@@ -20,8 +20,8 @@ function App() {
       </Route>
       <Route path={ROUTES.COLLECTION}>
         <Collection />
-      </Route>`
-      <Route path={'*'} >`
+      </Route>
+      <Route path={'*'} >
         <NotFound />
       </Route>
     </Switch>
