@@ -34,7 +34,7 @@ import {
   ActivateBoard, ActivateFieldSpell,
 } from "./GatewayOut"
 
-import './App.css';
+import './Game.css';
 
 const defaultHoverCard = {
   card: {},
@@ -64,7 +64,7 @@ const defaultOpponCards = {
   opponExtraDeck: 0,
 };
 
-function App() {
+function Game() {
   // meta state
   const [isConnected, setIsConnected] = useState(false);
   const [chat, setChat] = useState([]);
@@ -571,4 +571,4 @@ function App() {
   }
 };
 
-export default App;
+export default Game;
