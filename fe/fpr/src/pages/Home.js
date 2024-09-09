@@ -28,8 +28,14 @@ export default function Home() {
         });
       } else if (result === "wrong_password") {
         password = prompt("What is your favorite food? If you forgot, message Jeffrey.");
-        setUsername(user);
-        setPassphrase(password);
+        socket.emit("login", user, password, (r2) => {
+          if (r2 == "success") {
+            setUsername(user);
+            setPassphrase(password);
+          } else {
+            alert("Incorrect password");
+         }
+        });
       } else {
         alert("Log in failed (?)");
       }

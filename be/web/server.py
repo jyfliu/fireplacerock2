@@ -1,11 +1,11 @@
 import socketio
-import eventlet
 import json
+from gevent import pywsgi
 
 import web.room_api as room_api
 import web.deck_api as deck_api
 
-sio = socketio.Server(async_mode='eventlet', cors_allowed_origins='*')
+sio = socketio.Server(async_mode='gevent', cors_allowed_origins='*')
 app = socketio.WSGIApp(sio)
 
 class State:
@@ -158,5 +158,5 @@ def call(*args, sid):
 
 # init
 def run():
-  eventlet.wsgi.server(eventlet.listen(("", 9069)), app)
+  pywsgi.WSGIServer(("", 8443), app, certfile="/home/jeffr/.ssl/server.cert", keyfile="/home/jeffr/.ssl/server.key").serve_forever()
 

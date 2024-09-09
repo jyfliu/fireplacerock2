@@ -342,11 +342,12 @@ function Game() {
   const statusStyle = {
     "color": isConnected? "green" : "red"
   }
+  const URL = process.env.NODE_ENV === 'production' ? 'https://gamesby.jeffr.ee:8443' : 'http://localhost:9069';
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} >
       <p style={statusStyle} class="status-bar">
-        {isConnected ? "Connected: ip=0.0.0.0:9069" : "Disconnected"}
+        {isConnected ? `Connected: ip=${URL}` : "Disconnected"}
       </p>
       <div class="phase-indicator">
         <button class="phase-indicator-button">
