@@ -50,7 +50,7 @@ triggers = [
   "opt_end_phase_your_end", # "in your end phase you can"
   # CARD EFFECTS
   "can_summon",
-  "on_summon", # summoning conditions (eg., tribute), doesn't start chain
+  "on_summon", # summoning conditions (eg., tribute), doesn't start chain, TODO rename this?
   "if_summon_cost", # "if this card is summoned" cost
   "if_summon", # "if this card is summoned" effect
   "if_destroyed", # "if this card is destroyed"
@@ -95,14 +95,52 @@ triggers = [
   # extra deck
   "can_summon_extradeck",
   "summon_extradeck",
+  # movement
+  "on_remove", # remove from field
 ]
+# hooks are triggers that require event listeners on other cards
+hooks = [
+  "on_owner_summon",
+  "on_owner_remove",
+  "on_owner_destroyed",
+  "on_owner_send_graveyard",
+  "on_owner_pay_mana",
+  "on_oppon_summon",
+  "on_oppon_remove",
+  "on_oppon_destroyed",
+  "on_oppon_send_graveyard",
+  "on_oppon_pay_mana",
+]
+triggers += hooks
 
 statuses = [
+  "UNTARGETABLE",
   "SILENCE",
   "PERISH",
+  "BANISH",
+  "WEAKEN",
+  "STRENGTHEN",
+  "TRANSFORMED",
 ]
 
+class SpriteCache:
+
+  def __init__(self):
+    self.sprites = {}
+    self.rgb = {}
+
+  def load(self, path):
+    if path not in self.sprites:
+      print(f"READ {path}")
+      with open(path, "rb") as f:
+        self.sprites[path] = base64.b64encode(f.read()).decode("utf-8")
+      r, g, b = plt.imread(path).mean(axis=0).mean(axis=0)
+      self.rgb[path] = [r, g, b]
+    return self.sprites[path], self.rgb[path]
+
 class Template:
+
+  cache = SpriteCache()
 
   def __init__(self, data):
     self.set, self.print = data.id.split(":")
@@ -132,21 +170,25 @@ class Template:
     self.mini_sprite = None
     self.sprite = None
     if os.path.exists(sprite_path):
-      with open(sprite_path, "rb") as f:
-        self.sprite = base64.b64encode(f.read()).decode("utf-8")
-      r, g, b = plt.imread(sprite_path).mean(axis=0).mean(axis=0)
+      self.sprite, self.bkgd_colour = Template.cache.load(sprite_path)
     elif os.path.exists(sprite_mini_path):
-      with open(sprite_mini_path, "rb") as f:
-        self.mini_sprite = base64.b64encode(f.read()).decode("utf-8")
-      r, g, b = plt.imread(sprite_mini_path).mean(axis=0).mean(axis=0)
+      self.mini_sprite, self.bkgd_colour = Template.cache.load(sprite_mini_path)
     else:
       r, g, b = 255, 255, 255
-    self.bkgd_colour = [r, g, b]
-
+      self.bkgd_colour = [r, g, b]
 
 
   def create_instance(self, owner, oppon, io):
     return Card(self, owner, oppon, io)
+
+
+class God:
+  def __init__(self):
+    self.uuid = -1
+    self.name = "god"
+  def has_status(self, *args, **kwargs):
+    return False
+god = God()
 
 
 class Card:
@@ -221,6 +263,10 @@ class Card:
     target_owner_field = self.target_owner_field
     can_target_oppon_field = self.can_target_oppon_field
     target_oppon_field = self.target_oppon_field
+    can_target_owner_traps = self.can_target_owner_traps
+    target_owner_traps = self.target_owner_traps
+    can_target_oppon_traps = self.can_target_oppon_traps
+    target_oppon_traps = self.target_oppon_traps
 
     can_select = self.can_select
     select = self.select
@@ -234,6 +280,13 @@ class Card:
     select_owner_field = self.select_owner_field
     can_select_oppon_field = self.can_select_oppon_field
     select_oppon_field = self.select_oppon_field
+
+    can_select_traps = self.can_select_traps
+    select_traps = self.select_traps
+    can_select_owner_traps = self.can_select_owner_traps
+    select_owner_traps = self.select_owner_traps
+    can_select_oppon_traps = self.can_select_oppon_traps
+    select_oppon_traps = self.select_oppon_traps
 
     # select card from deck
     can_select_owner_deck = self.can_select_owner_deck
@@ -257,6 +310,8 @@ class Card:
     select_owner_graveyard = self.select_owner_graveyard
     can_select_oppon_graveyard = self.can_select_oppon_graveyard
     select_oppon_graveyard = self.select_oppon_graveyard
+    can_select_graveyard = self.can_select_graveyard
+    select_graveyard = self.select_graveyard
 
     # select empty spot
     can_select_owner_board = self.can_select_owner_board
@@ -281,6 +336,9 @@ class Card:
     except InvalidMove as e:
       print(e)
       pass
+    except e:
+      print(e)
+      raise
 
   ### IO ###
 
@@ -291,6 +349,10 @@ class Card:
     cards = [
         ("field", card)
         for card in self.owner.board
+        if card is not None and filter(card)
+    ] + [
+        ("spells", card)
+        for card in self.owner.traps
         if card is not None and filter(card)
     ] + [
         ("hand", card)
@@ -315,6 +377,10 @@ class Card:
     ] + [
         ("oppon_field", card)
         for card in self.oppon.board
+        if card is not None and filter(card)
+    ] + [
+        ("oppon_spells", card)
+        for card in self.oppon.traps
         if card is not None and filter(card)
     ] + [
         ("oppon_hand", card)
@@ -360,9 +426,16 @@ class Card:
     else:
       raise InvalidMove("No valid targets")
 
+  def can_target(self, other):
+    if self.type == "monster" or self.type == "boss monster":
+      return other.can("can_target_monster")
+    elif self.type == "spell" or self.type == "field spell":
+      return other.can("can_target_spell")
+    else:
+      return False
 
   def can_target_owner_field(self, filter=lambda x: True, amount=1):
-    return self.can_select(lambda x: x in self.owner.board and filter(x), amount=amount)
+    return self.can_select(lambda x: x in self.owner.board and filter(x) and can_target(other), amount=amount)
 
   def target_owner_field(self, filter=lambda x: True, amount=1):
     return self.select(lambda x: x in self.owner.board and filter(x), amount=amount)
@@ -396,6 +469,42 @@ class Card:
 
   def select_field(self, filter=lambda x: True, amount=1):
     return self.select(lambda x: (x in self.oppon.board or x in self.owner.board) and filter(x), amount=amount)
+
+  def can_target_owner_traps(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.owner.traps and filter(x) and can_target(other), amount=amount)
+
+  def target_owner_traps(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.owner.traps and filter(x), amount=amount)
+
+  def can_target_oppon_traps(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.oppon.traps and filter(x), amount=amount)
+
+  def target_oppon_traps(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.oppon.traps and filter(x), amount=amount)
+
+  def can_target_traps(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: (x in self.oppon.traps or x in self.owner.traps) and filter(x), amount=amount)
+
+  def target_traps(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: (x in self.oppon.traps or x in self.owner.traps) and filter(x), amount=amount)
+
+  def can_select_owner_traps(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.owner.traps and filter(x), amount=amount)
+
+  def select_owner_traps(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.owner.traps and filter(x), amount=amount)
+
+  def can_select_oppon_traps(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: x in self.oppon.traps and filter(x), amount=amount)
+
+  def select_oppon_traps(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: x in self.oppon.traps and filter(x), amount=amount)
+
+  def can_select_traps(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: (x in self.oppon.traps or x in self.owner.traps) and filter(x), amount=amount)
+
+  def select_traps(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: (x in self.oppon.traps or x in self.owner.traps) and filter(x), amount=amount)
 
   def can_select_owner_deck(self, filter=lambda x: True, amount=1):
     retval = self.can_select(lambda x: x in self.owner.deck and filter(x), amount=amount)
@@ -434,6 +543,12 @@ class Card:
   def select_oppon_graveyard(self, filter=lambda x: True, amount=1):
     return self.select(lambda x: x in self.oppon.graveyard and filter(x), amount=amount)
 
+  def can_select_graveyard(self, filter=lambda x: True, amount=1):
+    return self.can_select(lambda x: (x in self.owner.graveyard or x in self.oppon.graveyard) and filter(x), amount=amount)
+
+  def select_graveyard(self, filter=lambda x: True, amount=1):
+    return self.select(lambda x: (x in self.owner.graveyard or x in self.oppon.graveyard) and filter(x), amount=amount)
+
   def can_select_owner_board(self, idxs=None):
     if not idxs:
       return None in self.owner.board
@@ -471,12 +586,16 @@ class Card:
     return False
 
   def can_link(self, *reqs):
+    if not self.owner.can_pay(self.cost):
+      return False
     for cards in itertools.combinations(self.owner.field, len(reqs)):
       if self.link_satisfies_requirements(cards, reqs):
         return True
     return False
 
   def link(self, *reqs):
+    self.owner.pay(self.cost)
+
     cards = []
     for req in reqs:
       cards.append(self.select_owner_field(lambda card: card not in cards and req(card)))
@@ -534,42 +653,43 @@ class Card:
     return results
 
 
-  ### STATUS ###
-  # SILENCE
-  # UNTARGETABLE
-  #
-
   def has_status(self, status):
     for st in self.status:
-      if st[0] == status:
+      if st[0] == status and not st[3].has_status("SILENCE"):
         return True
     return False
 
-  def apply_status(self, source, status, duration=0, expiry="end"):
-    self.status.append([status, duration, expiry])
-    self.owner.io.apply_status(self.uuid, status, duration, expiry)
-    self.oppon.io.apply_status(self.uuid, status, duration, expiry)
+  def apply_status(self, source, status, duration=0, expiry="end", args=True):
+    self.status.append([status, duration, expiry, source, args])
+    self.owner.io.apply_status(self.uuid, status, duration, expiry, args)
+    self.oppon.io.apply_status(self.uuid, status, duration, expiry, args)
 
-  def clear_status(self, source, status):
-    self.status = [s for s in self.status if s[0] != status]
+  def clear_status(self, status, source=None):
+    if source is None:
+      self.status = [s for s in self.status if s[0] != status]
+    else:
+      self.status = [s for s in self.status if s[0] != status or s[3] != source]
     self.owner.io.clear_status(self.uuid, status)
     self.oppon.io.clear_status(self.uuid, status)
 
   def on_end_turn(self):
     new_status = []
     for st in self.status:
-      if st[1] < 0:
+      status, duration, expiry, source, args = st
+      if duration < 0:
         new_status.append(st)
-      elif st[1] == 0:
+      elif duration == 0:
         self.owner.io.clear_status(self.uuid, st[0])
         self.oppon.io.clear_status(self.uuid, st[0])
-        if st[0] == "PERISH":
+        if status == "PERISH":
           self.io.destroy(self)
-        if st[0] == "BANISH":
+        if status == "BANISH":
           self.io.banish(self)
+        if status == "TRANSFORMED":
+          self.template = args
         pass # expire status (NEED TO CHECK WHAT STGE IT IS!!)
       else:
-        st[1] = st[1] - 1
+        st[1] = duration - 1
         new_status.append(st)
     self.status = new_status
 
@@ -619,7 +739,6 @@ class Card:
       self.effect("on_take_battle_damage", amount)
       self.take_damage(source, amount)
 
-
   def take_damage(self, source, amount):
     if amount > 0:
       self.effect("on_take_damage", amount)
@@ -639,12 +758,41 @@ class Card:
     self.owner.io.card_set(self.uuid, None, attack, health)
     self.oppon.io.card_set(self.uuid, None, attack, health)
 
-  def effect(self, trigger, *args):
+  def transform(self, template, duration, source, keep_stats=False):
+    self.apply_status(self, source, "TRANSFORMED", duration=duration, args=self.template)
+    self.template = template
+    if not keep_stats:
+      self.reset_stats()
+
+  def add_hook(self, hook_name):
+    script = getattr(self.template, hook_name)
+    def hook_fn(card):
+      self.owner.io.display_message(f"Your {self.name} activates its effect {hook_name}")
+      self.oppon.io.display_message(f"Their {self.name} activates its effect {hook_name}")
+      return self.interp(script, card)
+    self.owner.hooks[hook_name].append((self, hook_fn))
+
+  def add_hooks(self):
+    for hook_name in hooks:
+      if hasattr(self.template, hook_name):
+        # print(f"{self.name} adds hook {hook_name}")
+        self.add_hook(hook_name)
+
+  def remove_hooks(self):
+    for hook_name in hooks:
+      if hasattr(self.template, hook_name):
+        # has_hook = any([c == self for c, _ in self.owner.hooks[hook_name]])
+        # if has_hook:
+          # print(f"{self.name} removes hook {hook_name}")
+        self.owner.hooks[hook_name] = [(c, h) for c, h in self.owner.hooks[hook_name] if c != self]
+
+  def effect(self, trigger, *args, check_field=True):
     if hasattr(self.template, trigger):
       self.owner.io.display_message(f"Your {self.name} activates its effect {trigger}")
       self.oppon.io.display_message(f"Their {self.name} activates its effect {trigger}")
       retval = self.interp(getattr(self.template, trigger), *args)
-      self.io.check_field(self)
+      if check_field:
+        self.io.check_field(self)
       return retval
     else:
       return self.default(trigger, *args)
@@ -683,8 +831,10 @@ class Card:
         # if everything has taunt uncomment
         # and not len(self.oppon.field)
       )
-    elif trigger == "can_target":
-      return not self.has_status("UNTARGETABLE")
+    elif trigger == "can_target_monster":
+      return not self.has_status("UNTARGETABLE") or not self.has_status("MONSTER_UNTARGETABLE")
+    elif trigger == "can_target_spell":
+      return not self.has_status("UNTARGETABLE") or not self.has_status("SPELL_UNTARGETABLE")
     elif trigger == "attacker_damage_calc":
       return self.attack
     elif trigger == "attacker_direct_damage_calc":

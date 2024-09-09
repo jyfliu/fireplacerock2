@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useCookie from 'react-use-cookie';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 
 import { socket } from './socket';
@@ -20,7 +21,8 @@ import {
   OnPromptUserActivate, OnPromptUserSelectCards,
   OnPromptUserSelectText, OnPromptUserSelectBoard,
   OnBeginPhase, OnEndTurn,
-  OnTakeDamage, OnOpponTakeDamage, OnPayMana, OnOpponPayMana,
+  OnTakeDamage, OnOpponTakeDamage, OnHeal, OnOpponHeal,
+  OnPayMana, OnOpponPayMana,
   OnRestoreMana, OnOpponRestoreMana, OnMoveCard, OnMoveOpponCard,
   OnFlipCoin, OnDisplayMessage,
   OnGameStart, OnGameOver,
@@ -43,6 +45,14 @@ const defaultHoverCard = {
   inDrag: false,
 };
 
+const defaultModalState = {
+  cards: [],
+  title: "",
+  onClickCard: (card) => {},
+  onClickOK: undefined,
+  visibleCardId: undefined,
+};
+
 const defaultField = {
   opponTraps:    [null, null, null, null, null],
   opponMonsters: [null, null, null, null, null],
@@ -57,6 +67,9 @@ const defaultOwnerCards = {
   ownerExtraDeck: [],
 };
 
+const defaultOwnerHand = [];
+const defaultOpponHand = 0;
+
 const defaultOpponCards = {
   opponGraveyard: [],
   opponBanished: [],
@@ -64,7 +77,16 @@ const defaultOpponCards = {
   opponExtraDeck: 0,
 };
 
+const defaultStats = {
+  hp: 0,
+  mana: 0,
+  manaMax: 0,
+};
+
 function Game() {
+  const [username] = useCookie("username", "");
+  const [passphrase] = useCookie("passphrase", "");
+
   // meta state
   const [isConnected, setIsConnected] = useState(false);
   const [chat, setChat] = useState([]);
@@ -74,30 +96,16 @@ function Game() {
   const [hoverCard, setHoverCard] = useState(defaultHoverCard);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalVisibleReset, setModalVisibleReset] = useState(false);
-  const [modalState, setModalState] = useState({
-    cards: [],
-    title: "",
-    onClickCard: (card) => {},
-    onClickOK: undefined,
-    visibleCardId: undefined,
-  });
+  const [modalState, setModalState] = useState(defaultModalState);
   const [cardCache, setCardCache] = useState({});
 
   // game state
   const [phase, setPhase] = useState(["owner", "draw"]);
   const [hasInitiative, setHasInitiative] = useState(false);
-  const [ownerHand, setOwnerHand] = useState([]);
-  const [opponHand, setOpponHand] = useState(0);
-  const [ownerStats, setOwnerStats] = useState({
-    hp: 0,
-    mana: 0,
-    manaMax: 0,
-  });
-  const [opponStats, setOpponStats] = useState({
-    hp: 0,
-    mana: 0,
-    manaMax: 0,
-  });
+  const [ownerHand, setOwnerHand] = useState(defaultOwnerHand);
+  const [opponHand, setOpponHand] = useState(defaultOpponHand);
+  const [ownerStats, setOwnerStats] = useState(defaultStats);
+  const [opponStats, setOpponStats] = useState(defaultStats);
   const [field, setField] = useState(defaultField);
   const [ownerCards, setOwnerCards] = useState(defaultOwnerCards);
   const [opponCards, setOpponCards] = useState(defaultOpponCards);
@@ -139,15 +147,23 @@ function Game() {
     let onConnect = () => {
       setIsConnected(true);
 
-      let name = prompt("[WIP] What is your name?");
-      let oppo = prompt("Who would you like to challenge?");
-      socket.emit("login", name)
-      socket.emit("challenge", oppo)
+      socket.emit("login", username, passphrase)
+      if (username) {
+        let oppo = prompt("Who would you like to challenge?");
+        socket.emit("challenge", oppo)
+      }
 
       setHoverCard(defaultHoverCard);
+      setModalState(defaultModalState);
+      setModalVisible(false);
+      setModalVisibleReset(false);
       setField(defaultField);
+      setOwnerHand(defaultOwnerHand);
+      setOpponHand(defaultOpponHand);
       setOwnerCards(defaultOwnerCards);
       setOpponCards(defaultOpponCards);
+      setOwnerStats(defaultStats);
+      setOpponStats(defaultStats);
 
     };
     let onDisconnect = () => {
@@ -185,7 +201,9 @@ function Game() {
     let onEndTurn = OnEndTurn(setStates);
 
     let onTakeDamage = OnTakeDamage(setStates);
-    let onOpponTakeDamage = OnOpponTakeDamage(setStates);
+    let onOpponTakeDamage = OnOpponTakeDamage(setStates)
+    let onHeal = OnHeal(setStates);
+    let onOpponHeal = OnOpponHeal(setStates);;
     let onPayMana = OnPayMana(setStates);
     let onOpponPayMana = OnOpponPayMana(setStates);
     let onRestoreMana = OnRestoreMana(setStates);
@@ -220,6 +238,8 @@ function Game() {
 
     socket.on("take_damage", onTakeDamage);
     socket.on("oppon_take_damage", onOpponTakeDamage);
+    socket.on("heal", onHeal);
+    socket.on("oppon_heal", onOpponHeal);
     socket.on("pay_mana", onPayMana);
     socket.on("oppon_pay_mana", onOpponPayMana);
     socket.on("restore_mana", onRestoreMana);
@@ -254,6 +274,8 @@ function Game() {
 
       socket.off("take_damage", onTakeDamage);
       socket.off("oppon_take_damage", onOpponTakeDamage);
+      socket.off("heal", onHeal);
+      socket.off("oppon_heal", onOpponHeal);
       socket.off("pay_mana", onPayMana);
       socket.off("oppon_pay_mana", onOpponPayMana);
       socket.off("restore_mana", onRestoreMana);
@@ -272,8 +294,11 @@ function Game() {
       socket.off("game_start", onGameStart);
       socket.off("game_over", onGameOver);
     };
-  }, []);
+  }, [username, passphrase]);
 
+  if (!username) {
+    return <div>Error, not logged in?</div>;
+  }
 
 
   // board state
@@ -444,18 +469,21 @@ function Game() {
       ownerExtraDeck: cards.ownerExtraDeck.map(selectCardIf),
     }));
     setModalVisibleReset(modalVisible);
-    setModalVisible(false);
-    setModalState(state => ({
-      ...state,
-      visibleCardId: active.id,
-      transformCard: selectCardIf,
-    }));
+    if (modalVisible) {
+      setModalState(state => ({
+        ...state,
+        visibleCardId: active.id,
+        transformCard: selectCardIf,
+      }));
+      setModalVisible(false);
+    }
   }
 
   function handleDragEnd(event) {
     const { active, over } = event;
 
     const resetCard = card => ({...card, isSelected: false });
+    const prefix = modalVisibleReset? "modal" : ""
 
     setHoverCard(hoverCard => ({...hoverCard, inCard: false, inDrag: false}));
     // If the item is dropped over a container, set it as the parent
@@ -507,7 +535,7 @@ function Game() {
         }
         if (
           !over
-          || card.id !== active.id
+          || prefix + card.id !== active.id
           || (card.type === "monster" && ![10, 11, 12, 13, 14].includes(over.id))
         ) {
           return resetCard(card);
@@ -538,12 +566,14 @@ function Game() {
       ownerMonsters: field.ownerMonsters.map(
         (card, boardIdx) => {
           if (!card) { return card; }
+
           if (
-            card.id !== active.id
+            prefix + card.id !== active.id
             || card.type !== "monster"
           ) {
             return resetCard(card);
           }
+          console.log("HI")
           if (card.type === "monster" && over) {
             let idx = over.id - 5;
             if (field.opponMonsters[idx]) {
@@ -554,6 +584,7 @@ function Game() {
               return resetCard(card);
             }
           }
+          console.log("attack i")
           // else attack directly
           attackDirectly(boardIdx);
           return resetCard(card);

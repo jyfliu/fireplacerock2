@@ -1,4 +1,9 @@
 
 export default function NotFound(){
-    return <div>idk how you got here</div>;
+    return (
+      <>
+        <div>404 Page not found</div>
+        <a href="/"> Go home</a>
+      </>
+    );
 }

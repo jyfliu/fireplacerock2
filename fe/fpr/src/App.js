@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { DndContext } from '@dnd-kit/core';
+import React from 'react';
 import Game from './Game';
-import { Redirect, Switch, Route, Router } from 'react-router-dom'
+import { /* Redirect, */ Switch, Route, Router } from 'react-router-dom'
 import { ROUTES } from './RouterUtils';
 import { history } from './pages/History.js'
 import Home from './pages/Home';
 import Collection from './pages/Collection';
+import Gacha from './pages/Gacha';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -20,6 +20,9 @@ function App() {
       </Route>
       <Route path={ROUTES.COLLECTION}>
         <Collection />
+      </Route>
+      <Route path={ROUTES.GACHA}>
+        <Gacha />
       </Route>
       <Route path={'*'} >
         <NotFound />

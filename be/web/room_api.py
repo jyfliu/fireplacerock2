@@ -140,6 +140,12 @@ class PlayerIO:
   def oppon_take_damage(self, amount):
     se.emit("oppon_take_damage", amount, sid=self.sid)
 
+  def heal(self, amount):
+    se.emit("heal", amount, sid=self.sid)
+
+  def oppon_heal(self, amount):
+    se.emit("oppon_heal", amount, sid=self.sid)
+
   def pay_mana(self, amount):
     se.emit("pay_mana", amount, sid=self.sid)
 
@@ -171,8 +177,8 @@ class PlayerIO:
   def move_oppon_card(self, card, from_loc, to_loc, idx):
     se.emit("move_oppon_card", (self.serialize_card(card), from_loc, to_loc, idx), sid=self.sid)
 
-  def apply_status(self, uuid, status, duration, expiry):
-    se.emit("apply_status", (uuid, status, duration, expiry), sid=self.sid)
+  def apply_status(self, uuid, status, duration, expiry, args):
+    se.emit("apply_status", (uuid, status, duration, expiry, args), sid=self.sid)
 
   def clear_status(self, uuid, status):
     se.emit("clear_status", (uuid, status), sid=self.sid)
@@ -218,20 +224,21 @@ class Room:
       cards = yaml.safe_load(f)
       cards = edict(cards)
 
-    with mp.Pool(16) as p:
-      sd1, ed1 = deck1
-      sd1 = [cards[name] for name in sd1]
-      sd1 = p.map(card_api.Template, sd1)
+    with mp.Pool(64) as p:
+      card_templates = dict(zip(
+        cards.keys(),
+        p.map(card_api.Template, cards.values()),
+      ))
 
-      ed1 = [cards[name] for name in ed1]
-      ed1 = p.map(card_api.Template, ed1)
+    sd1, ed1 = deck1
+    sd1 = [card_templates[name] for name in sd1]
 
-      sd2, ed2 = deck2
-      sd2 = [cards[name] for name in sd2]
-      sd2 = p.map(card_api.Template, sd2)
+    ed1 = [card_templates[name] for name in ed1]
 
-      ed2 = [cards[name] for name in ed2]
-      ed2 = p.map(card_api.Template, ed2)
+    sd2, ed2 = deck2
+    sd2 = [card_templates[name] for name in sd2]
+
+    ed2 = [card_templates[name] for name in ed2]
 
     card_templates = {
         uuid: card_api.Template(card) for uuid, card in cards.items()

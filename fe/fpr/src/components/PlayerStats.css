@@ -20,7 +20,7 @@
 
 .owner-player-stats-border {
   position: absolute;
-  left: min(calc(50% - 400px), 300px);
+  left: 5vw;
   bottom: 15%;
   height: 40px;
   width: 150px;
@@ -34,7 +34,7 @@
 
 .oppon-player-stats-border {
   position: absolute;
-  right: min(calc(50% - 400px), 300px);
+  right: 5vw;
   top: 10%;
   height: 40px;
   width: 150px;
@@ -68,7 +68,7 @@
 
 .owner-player-mana-border {
   position: absolute;
-  right: min(calc(50% - 400px), 300px);
+  right: 5vw;
   bottom: 15%;
   height: 40px;
   width: 150px;
@@ -82,7 +82,7 @@
 
 .oppon-player-mana-border {
   position: absolute;
-  left: min(calc(50% - 400px), 300px);
+  left: 5vw;
   top: 10%;
   height: 40px;
   width: 150px;

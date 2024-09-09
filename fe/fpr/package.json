@@ -12,6 +12,7 @@
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4",
     "react-scripts": "^5.0.1",
+    "react-use-cookie": "^1.6.1",
     "socket.io-client": "^4.6.2",
     "web-vitals": "^2.1.4"
   },

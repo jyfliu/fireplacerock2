@@ -28,14 +28,14 @@ export function Modal(props) {
   }
 
   let displayCard = card =>
-    <Card id={card.id} key={"card"+card.id} card={card}
+    <Card id={"modal"+card.id} key={"card"+card.id} card={card}
             cardCache={cardCache}
             setHoverCard={setHoverCard}
             onClick={() => onClickCard(card)}
             highlight={highlightIds && highlightIds.includes(card.id)}
             isDraggable={isDraggable}
             style={{margin: "20px", marginBottom: "35px", scale: "120%",
-                    visibility: visibleCardId === card.id? "visible" : "inherit"}}
+                    visibility: visibleCardId === "modal"+card.id? "visible" : "inherit"}}
       />;
   return (
     <div class="modal" style={{visibility: modalVisible? "visible": "hidden"}} >

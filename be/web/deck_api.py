@@ -6,23 +6,25 @@ names = [ # all working cards
   "magikarp", "mudkip", "pikachu", "grovyle", "ampharos",
   "blastoise", "wailord", "snorlax", "garchomp", "jirachi", "hooh",
   "beedrill", "scizor", "kangaskhan",
-  # "kyogre", "groudon",
-  "giratina", "arceus", "gallade", "heracross", "shuckle", "breloom", "chansey",
+  "kyogre", "groudon", "giratina", "arceus",
+  "gallade", "heracross", "shuckle", "breloom", "chansey",
   "tyranitar", "gengar", "dragonite",
-  # "gyarados"
+  "gyarados",
   "salamence", "lugia", "lapras", "turtwig",
   "sprightjet", "sprightblue", "sprightpixie", "windupkitten",
   "twinlatias", "twinlatios", "twinslatioslatias", "omen",
-  # "brimstone", "viper",
-  "reyna", "kiljoy",
-  # "cypher", "neon",
-  "jett", "phoenix", "dartmonkey",
+  "brimstone", "viper", "reyna", "kiljoy",
+  "cypher", # "neon",
+  "jett", "phoenix",
+  "dartmonkey",
   # "supermonkey", "johnnywyles", "riverwyles", "redamogus", "zoe"
   "lopunny",
   "eevee",
   # Spells
   "ultraball", "repel", "squirtbottle", "technicalmachine", "1tap", "switchout",
-  "sprightstarter", "odinspam", "ancientruins",
+  "pokemonsafari", "lavendertown", "ancientruins",
+  "sprightstarter",
+  "odinspam", "shortyangle", "cloudburst",
 ]
 
 ed_names = [
@@ -30,7 +32,7 @@ ed_names = [
   "megakangaskhan"
 ]
 
-deck1 = random.sample(names, k=16) * 3 + ["lopunny"] * 100
+deck1 = random.sample(names, k=16) * 3
 deck2 = random.sample(names, k=16) * 3
 
 # structure decks
@@ -47,7 +49,7 @@ sd_pote = [
   "windupkitten",
   "twinlatias", "twinlatias", "twinlatias",
   "twinlatios", "twinlatios", "twinlatios",
-  "twinslatiaslatios", "twinslatiaslatios", "twinslatiaslatios",
+  "twinslatioslatias", "twinslatioslatias", "twinslatioslatias",
   "megabracelet", "megabracelet", "megabracelet",
   # "livetwinmoonlitsnitch", "livetwinmoonlitsnitch", "livetwinmoonlitsnitch",
   "squirtbottle", "squirtbottle", "squirtbottle",
@@ -59,26 +61,24 @@ ed_pote = [
 ]
 
 sd_cs = [
-  "unown", "unown", "unown",
   "pikachu", "mudkip",
   "lopunny", "lopunny", "lopunny",
   "grovyle", "turtwig",
   "gallade", "heracross",
-  "ditto", "ditto", "ditto",
+  "ditto",
   "eevee", "eevee",
-  "ampharos", "ampharos",
+  "ampharos", "scizor", "lapras", "gengar",
   "blastoise", "garchomp",
-  "jirachi", "hooh",
-  "tyranitar",
-  "arceus",
+  "jirachi", "hooh", "lugia",
+  "dragonite", "tyranitar", "salamence",
   "technicalmachine", "technicalmachine", "technicalmachine",
   "megabracelet", "megabracelet", "megabracelet",
-  "pokemonshuffle", "pokemonshuffle", "pokemonshuffle",
+  "pokemonshuffle", "pokemonshuffle",
+  "pokemonsafari", "pokemonsafari", "pokemonsafari",
 ]
 
 ed_cs = [
   "megalopunny", "megalopunny", "megalopunny",
-  "megabeedrill",
   "mew",
   "jirachi",
   "hooh",
@@ -87,5 +87,31 @@ ed_cs = [
   "arceus",
   "arceus",
   "arceus",
+]
+
+
+sd_sv = [
+  "kiljoy", "kiljoy", "kiljoy",
+  "viper", "viper", "viper",
+  "reyna", "reyna", "reyna",
+  "omen", "omen",
+  "cypher", "cypher", "cypher",
+  "megabracelet", "megabracelet", "megabracelet",
+  "mewtwo", "mewtwo", "mewtwo",
+  "dartmonkey", "dartmonkey",
+  "supermonkeyfanclub", "supermonkeyfanclub",
+  "supermonkey", "supermonkey", "supermonkey",
+  "sprightblue", "sprightblue", "sprightblue",
+  "twinlatias", "twinlatias", "twinlatias",
+  "twinlatios", "twinlatios", "twinlatios",
+  "twinslatioslatias", "twinslatioslatias", "twinslatioslatias",
+  "odinspam", "cloudburst",
+  "shortyangle", "shortyangle", "shortyangle",
+]
+
+ed_sv = [
+  "megamewtwox", "megamewtwox", "megamewtwox",
+  "megamewtwoy", "megamewtwoy", "megamewtwoy",
+  "sprightelf", "sprightelf", "sprightelf",
 ]
 

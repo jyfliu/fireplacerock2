@@ -1,6 +1,7 @@
 import random
 from .callbacks import *
 
+from .card_api import hooks, god
 
 class CardList:
 
@@ -32,7 +33,7 @@ class CardList:
     return CardList([card for card in self.cards if card is not None and fn(card)])
 
   def map(self, fn):
-    return [fn(card) for card in self.cards if card is not None]
+    return [fn(card) if card is not None else None for card in self.cards]
 
   def contains(self, fn):
     for card in self.cards:
@@ -41,6 +42,12 @@ class CardList:
       if fn(card):
         return True
     return False
+
+  def index_of(self, card):
+    for i, c in enumerate(self.cards):
+      if c == card:
+        return i
+    return -1
 
   def add(self, card):
     self.cards.append(card)
@@ -85,15 +92,18 @@ class CardList:
     self.cards = [c if c != card else None for c in self.cards]
     return self
 
+  def to_list(self):
+    return [c for c in self.cards if c is not None]
+
 
 class Player():
 
   def __init__(self, id, io):
     self.id = id
     self.io = io
-    self.mana = 10
-    self.mana_max = 10
-    self.life = 3000
+    self.mana = 0
+    self.mana_max = 0
+    self.life = 4000
 
     self.hand = CardList()
     self.deck = CardList()
@@ -103,6 +113,7 @@ class Player():
     self.graveyard = CardList()
     self.banished = CardList()
 
+    self.hooks = { hook: [] for hook in hooks }
     self.status = []
     self.oppon = None
 
@@ -128,6 +139,12 @@ class Player():
     self.io.take_damage(amount)
     self.oppon.io.oppon_take_damage(amount)
 
+  def heal(self, source, amount):
+    self.life += amount
+
+    self.io.heal(amount)
+    self.oppon.io.oppon_heal(amount)
+
   def restore_mana(self, new_mana, new_mana_max=-1):
     self.mana = new_mana
     if new_mana_max > 0:
@@ -141,6 +158,11 @@ class Player():
   def pay(self, amount):
     assert self.mana >= amount
     self.mana -= amount
+
+    for _, hook in self.hooks["on_owner_pay_mana"]:
+      hook(amount)
+    for _, hook in self.oppon.hooks["on_oppon_pay_mana"]:
+      hook(amount)
 
     self.io.pay_mana(amount)
     self.oppon.io.oppon_pay_mana(amount)
@@ -275,7 +297,7 @@ class Duel():
       self.cur_turn = 2
 
     # both players draw 4
-    for _ in range(4):
+    for _ in range(9):
       self.draw(self.turn_p)
       self.draw(self.other_p)
 
@@ -497,6 +519,12 @@ class Duel():
     for card in to_gy:
       card.effect("if_destroyed", source)
     for card in to_gy:
+      for _, hook in card.owner.hooks["on_owner_destroyed"]:
+        hook(card)
+    for card in to_gy:
+      for _, hook in card.oppon.hooks["on_oppon_destroyed"]:
+        hook(card)
+    for card in to_gy:
       card.effect("opt_if_destroyed", source)
 
     self.send_graveyard_multiple(to_gy)
@@ -577,13 +605,19 @@ class Duel():
     card.reset_stats()
 
     # summoning sickness
-    card.apply_status("god", "CANNOT_ATTACK", 0, "END")
+    card.apply_status(god, "CANNOT_ATTACK", 0, "END")
 
     card.effect("if_summon_cost")
     card.effect("if_summon")
     act = card.effect("opt_if_summon_cost")
     if act:
       card.effect("opt_if_summon")
+    for _, hook in card.owner.hooks["on_owner_summon"]:
+      hook(card)
+    for _, hook in card.oppon.hooks["on_oppon_summon"]:
+      hook(card)
+
+    card.add_hooks()
 
 
   def activate_spell(self, card, board_idx):
@@ -597,6 +631,7 @@ class Duel():
     card.effect("on_activate_hand_cost")
     card.effect("on_activate_hand")
 
+    card.add_hooks()
     if card.type == "spell":
       self.move_to(card, "graveyard")
 
@@ -640,9 +675,18 @@ class Duel():
       return "unknown"
     loc = self.determine_location(card)
     if loc == "field":
+      for _, hook in card.oppon.hooks["on_oppon_remove"]:
+        hook(card)
+      for _, hook in card.owner.hooks["on_owner_remove"]:
+        hook(card)
+      card.remove_hooks()
+
+      card.effect("on_remove", check_field=False)
       card.owner.board.delete(card)
     elif loc == "traps":
       card.owner.traps.delete(card)
+
+      card.remove_hooks()
     elif loc != "unknown":
       getattr(card.owner, loc).remove(card)
 
@@ -705,35 +749,59 @@ class Duel():
       card.effect("if_send_graveyard")
       card.effect("opt_if_send_graveyard")
 
+  def discard(self, card):
+    return self.discard_multiple([card])
+
+  def discard_multiple(self, cards):
+    for card in cards:
+      if card is None:
+        continue
+      self.move_to(card, "graveyard")
+
   def destroy(self, card):
     return self.destroy_multiple([card])
 
   def destroy_multiple(self, cards):
     active = self.get_active_player("turn")
     inactive = self.get_inactive_player("turn")
+    cards = [card for card in cards if card is not None]
+
+    if not cards:
+      return
+
+    for card in cards:
+      card.effect("if_send_graveyard")
+    for card in cards:
+      for _, hook in card.owner.hooks["on_owner_send_graveyard"]:
+        hook(card)
+    for card in cards:
+      for _, hook in card.oppon.hooks["on_oppon_send_graveyard"]:
+        hook(card)
+    for card in cards:
+      card.effect("opt_if_send_graveyard")
 
     for card in cards:
       self.move_to(card, "graveyard")
 
     # destroyed effects
     for card in cards:
-      if card is not None and card.owner == self.turn_p:
+      if card.owner == self.turn_p:
         card.effect("if_destroyed")
     for card in cards:
-      if card is not None and card.owner == self.other_p:
+      if card.owner == self.other_p:
         card.effect("if_destroyed")
     for card in cards:
-      if card is not None and card.owner == self.turn_p:
+      for _, hook in card.owner.hooks["on_owner_destroyed"]:
+        hook(card)
+    for card in cards:
+      for _, hook in card.oppon.hooks["on_oppon_destroyed"]:
+        hook(card)
+    for card in cards:
+      if card.owner == self.turn_p:
         card.effect("opt_if_destroyed")
     for card in cards:
-      if card is not None and card.owner == self.other_p:
+      if card.owner == self.other_p:
         card.effect("opt_if_destroyed")
-
-    for card in cards:
-      if card is None:
-        continue
-      card.effect("if_send_graveyard")
-      card.effect("opt_if_send_graveyard")
 
 
   def activate_on_board(self, board_idx, player="turn"):
@@ -777,7 +845,7 @@ class Duel():
     attacker.effect("end_attack_directly")
     attacker.effect("opt_end_attack_directly")
 
-    attacker.apply_status("god", "CANNOT_ATTACK", 0, "END")
+    attacker.apply_status(god, "CANNOT_ATTACK", 0, "END")
 
     self.check_game_over()
 
@@ -847,12 +915,20 @@ class Duel():
     if attacker_destroyed:
       attacker.effect("if_destroyed_battle", attackee)
       attacker.effect("if_destroyed")
+      for _, hook in attacker.owner.hooks["on_owner_destroyed"]:
+        hook(attacker)
+      for _, hook in attacker.oppon.hooks["on_oppon_destroyed"]:
+        hook(attacker)
     # attackee effects
     if attacker_destroyed:
       attackee.effect("if_destroy_battle", attacker)
     if attackee_destroyed:
       attackee.effect("if_destroyed_battle", attacker)
       attackee.effect("if_destroyed", attackee)
+      for _, hook in attackee.owner.hooks["on_owner_destroyed"]:
+        hook(attackee)
+      for _, hook in attackee.oppon.hooks["on_oppon_destroyed"]:
+        hook(attackee)
     # optional attacker effects
     if attackee_destroyed:
       attacker.effect("opt_if_destroy_battle", attackee)
@@ -866,7 +942,7 @@ class Duel():
       attackee.effect("opt_if_destroyed_battle", attacker)
       attackee.effect("opt_if_destroyed", attackee)
 
-    attacker.apply_status("god", "CANNOT_ATTACK", 0, "END")
+    attacker.apply_status(god, "CANNOT_ATTACK", 0, "END")
 
     attacker.effect("end_attack", attackee)
     attackee.effect("end_attacked", attacker)

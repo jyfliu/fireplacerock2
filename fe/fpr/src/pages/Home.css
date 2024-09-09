@@ -1,13 +1,13 @@
 .button {
-    height: 60px;
-    font-size: 16px;
-    width: 400px;
+    height: 8vmin;
+    font-size: 2vmin;
+    width: 40vmin;
     margin: auto;
 }
 
 .title {
-    font-size: 48px;
-    margin-bottom: 40px;
+    font-size: 8vmin;
+    margin-bottom: 6vmin;
 }
 
 .buttonGroup {
@@ -15,10 +15,31 @@
     align-items: center;
     justify-content: center;
     display: flex;
-    gap: 9px;
+    gap: 1vmin;
     margin: auto;
     width: 100%;
     text-align: center;
     margin-top: 10%;
 
 }
+
+.username {
+    height: 3vmin;
+    font-size: 1.5vmin;
+    width: 10vmin;
+    margin: auto;
+    position: absolute;
+    right: 16vmin;
+    top: 2vmin;
+}
+
+.login {
+    height: 3vmin;
+    font-size: 1.5vmin;
+    width: 10vmin;
+    margin: auto;
+    position: absolute;
+    right: 4vmin;
+    top: 2vmin;
+}
+

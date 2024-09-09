@@ -7,7 +7,7 @@ function UnserializeCard(states) {
     if (!card) {
       return card;
     }
-    card.id = card.uuid;
+    card.id = card.uuid.toString();
     card.parent = null;
     card.isSelected = false;
 
@@ -186,6 +186,30 @@ export function OnOpponTakeDamage(states) {
     setOpponStats(old => {
       let stats = {...old};
       stats.hp -= amount;
+      return stats;
+    });
+  }
+}
+
+export function OnHeal(states) {
+  let { pushChat, setOwnerStats } = states;
+  return (amount) => {
+    pushChat(`You healed ${amount}`);
+    setOwnerStats(old => {
+      let stats = {...old};
+      stats.hp += amount;
+      return stats;
+    });
+  }
+}
+
+export function OnOpponHeal(states) {
+  let { pushChat, setOpponStats } = states;
+  return (amount) => {
+    pushChat(`Your opponent healed ${amount}`);
+    setOpponStats(old => {
+      let stats = {...old};
+      stats.hp += amount;
       return stats;
     });
   }
@@ -396,6 +420,12 @@ export function OnMoveOpponCard(states) {
           opponMonsters: field.opponMonsters.map(keepOthers),
         }));
         break;
+      case "traps":
+        setField(field => ({
+          ...field,
+          opponTraps: field.opponTraps.map(keepOthers),
+        }));
+        break;
       case "graveyard":
         setOpponCards(cards => ({
           ...cards,
@@ -436,10 +466,22 @@ export function OnMoveOpponCard(states) {
       case "field":
         setField(field => {
           let opponMonsters = [...field.opponMonsters];
+          card.parent = idx + 5;
           opponMonsters[idx] = card;
           return ({
             ...field,
             opponMonsters: opponMonsters,
+          });
+        });
+        break;
+      case "traps":
+        setField(field => {
+          let opponTraps = [...field.opponTraps];
+          card.parent = idx;
+          opponTraps[idx] = card;
+          return ({
+            ...field,
+            opponTraps: opponTraps,
           });
         });
         break;

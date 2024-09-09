@@ -20,6 +20,30 @@ class State:
     self.rooms = {}
     self.room_map = {}
 
+    with open("database/accounts.json", "r") as f:
+      self.accounts = json.load(f)
+
+  def login(self, username, password):
+    if username in self.accounts:
+      if password == self.accounts[username]["password"]:
+        state = "success"
+      else:
+        state = "wrong_password"
+    else:
+      state = "wrong_username"
+
+    return state
+
+  def new_user(self, username, password):
+    if username in self.accounts or not password:
+      return False
+    self.accounts[username] = {
+      "password": password,
+    }
+    with open("database/accounts.json", "w") as f:
+      json.dump(self.accounts, f, indent=4)
+    return True
+
   def record_game_result(self, name, result):
     with open("database/elo.json", "r") as f:
       record = json.load(f)
@@ -48,10 +72,22 @@ def connect(sid, environ):
   print(f"[EVENT-{sid}] connect")
 
 @sio.event
-def login(sid, username):
-  state.sid_to_name[sid] = username
-  state.name_to_sid[username] = sid
-  print(f"[EVENT-{sid}] login {username}")
+def login(sid, username, password):
+  result = state.login(username, password)
+  if result == "success":
+    state.sid_to_name[sid] = username
+    state.name_to_sid[username] = sid
+  print(f"[EVENT-{sid}] login {username} {result}")
+
+  return result
+
+@sio.event
+def new_user(sid, username, password):
+  success = state.new_user(username, password)
+  print(f"[EVENT-{sid}] new_user {username} {success}")
+
+  return success
+
 
 @sio.event
 def challenge(sid, challengee):
@@ -69,7 +105,7 @@ def challenge(sid, challengee):
     state.room_id += 1
 
     # start duel
-    # room.start_duel((deck_api.sd_pote, deck_api.ed_pote), (deck_api.sd_cs, deck_api.ed_cs))
+    # room.start_duel((deck_api.sd_cs, deck_api.ed_cs), (deck_api.sd_sv, deck_api.ed_sv))
     room.start_duel((deck_api.deck1, deck_api.ed_pote), (deck_api.deck2, deck_api.ed_cs))
   else:
     state.challenge_map[challenger] = challengee
