@@ -7,21 +7,61 @@ leagueoflegends:
   id: 1
   rarity: C
   can_activate_hand: |-
-    retval = can_select_oppon_field()
+    retval = can_select_field()
+  on_activate_hand_cost: |-
+    self.target = select_field()
+  on_activate_hand:
+    self.target.transform(io.card_templates["zombie"], -1, self)
   uuid: leagueoflegends
+zombie:
+  name: Zombie
+  type: monster
+  cost: 0
+  attack: 0
+  health: 100
+  flavour: Devoid of any emotion, this creature growls at those who approach it.
+  id: -1
+  rarity: C
+  uuid: zombie 
 cantendonloss:
   name: Can't end on loss
-  type: fieldspell
-  cost: 3
-  description: Pay 2 mana to deal 100 damage to anything. This is increased by 100 every time one of your monsters gets destroyed by your opponent (the damage resets if you destroy one of your opponent's monsters).
+  type: field spell
+  cost: 2
+  description: Pay 2 mana to deal 100 damage to anything (TODO cannot attack face yet). This is increased by 100 every time one of your monsters gets destroyed by your opponent (the damage resets if you destroy one of your opponent's monsters). (TODO does not check source of damage)
+  on_activate_hand: |-
+    self.bonus_damage = 0
+  on_owner_destroyed: |-
+    self.bonus_damage += 100
+  on_oppon_destroyed: |-
+    self.bonus_damage = 0
+  can_activate: |-
+    owner.can_pay(2)
+  on_activate_cost: |-
+    owner.pay(2)
+    self.target = select_field()
+  on_activate: |-
+    self.target.take_damage(self, 100 + self.bonus_damage)
   id: 2
   rarity: R
   uuid: cantendonloss
 playtillose:
   name: Play til lose
-  type: fieldspell
-  cost: 3
+  type: field spell
+  cost: 2
   description: Pay 2 mana to deal 100 damage to anything. This is increased by 100 every time you destroy an opponent's monster (the damage resets if your opponent destroys one of your monsters).
+  on_activate_hand: |-
+    self.bonus_damage = 0
+  on_owner_destroyed: |-
+    self.bonus_damage = 0
+  on_oppon_destroyed: |-
+    self.bonus_damage += 100
+  can_activate: |-
+    owner.can_pay(2)
+  on_activate_cost: |-
+    owner.pay(2)
+    self.target = select_field()
+  on_activate: |-
+    self.target.take_damage(self, 100 + self.bonus_damage)
   id: 3
   rarity: R
   uuid: playtillose
@@ -30,6 +70,9 @@ arcaneintellect:
   type: spell
   cost: 3
   description: Draw 2 cards.
+  on_activate_hand: |-
+    io.draw(owner)
+    io.draw(owner)
   id: 4
   rarity: C
   uuid: arcaneintellect
@@ -38,7 +81,9 @@ potofgreed:
   type: spell
   cost: 3
   description: Draw 2 cards.
-  flavour: You know what this does.
+  on_activate_hand: |-
+    io.draw(owner)
+    io.draw(owner)
   id: 5
   rarity: UR
   uuid: potofgreed
@@ -47,6 +92,11 @@ wheeloffortune:
   type: spell
   cost: 5
   description: Both players discard their hands. Then both players draw 7 cards.
+  on_activate_hand: |-
+    io.discard_multiple(owner.hand + oppon.hand)
+    for i in range(7):
+      io.draw(owner)
+      io.draw(oppon)
   id: 6
   rarity: C
   uuid: wheeloffortune
@@ -54,65 +104,110 @@ fireball:
   name: Fireball
   type: spell
   cost: 4
-  description: Target a card to deal 6 damage to it.
+  description: Target a card (TODO or face) to deal 600 damage to it.
+  can_activate_hand: |-
+    retval = can_target_field()
+  on_activate_hand_cost: |-
+    self.target = target_field()
+  on_activate_hand: |-
+    self.target.take_damage(self, 600)
   id: 7
   rarity: C
   uuid: fireball
 reflectingpool:
   name: Reflecting Pool
-  type: fieldspell
+  type: field spell
   cost: 1
-  description: You can send this card from the field to the graveyard; heal for 100 for each turn this card was set.
+  description: You can send this card from the field to the graveyard; heal for 50 for each turn this card was set.
+  begin_phase_end: |-
+    if hasattr(self, "heal_amount"):
+      self.heal_amount += 50
+    else:
+      self.heal_amount = 50
+  on_activate_cost: |-
+    io.send_graveyard(self)
+  on_activate: |-
+    owner.heal(self, self.heal_amount)
   id: 8
   rarity: C
   uuid: reflectingpool
-fortunefavourstheold:
-  name: Fortune Favours the Old
-  type: fieldspell
-  cost: 0
-  description: At the beginning of every turn, flip a coin. If heads, destroy the most recently summoned monster.
-  id: 9
-  rarity: C
-  uuid: fortunefavourtheold
 luxurytax:
   name: Luxury Tax
-  type: fieldspell
+  type: field spell
   cost: 0
   description: Both players must pay 25 health for each mana they spend.
+  on_owner_pay_mana: |-
+    owner.take_damage(self, 25 * args[0])
+  on_oppon_pay_mana: |-
+    oppon.take_damage(self, 25 * args[0])
   id: 9
   rarity: C
   uuid: luxurytax
-crossoutdesignator:
-  name: X-out designator
+cosmiccyclone:
+  name: Cosmic Cyclone
   type: spell
-  cost: 3
-  description: Banish a card from your extra deck. Then banish all cards in play with the same name.
+  cost: 0
+  description: Pay 500 health and target a spell on the field; banish it.
+  can_activate_hand: |-
+    retval = can_target_oppon_traps()
+  on_activate_hand_cost: |-
+    self.take_damage(self, 500)
+    self.target = target_oppon_traps()
+  on_activate_hand: |-
+    io.banish(self.target)
   id: 10
   rarity: SR
-  uuid: crossoutdesignator
+  uuid: cosmiccyclone
 monsterreborn:
   name: Monster Reborn
   type: spell
   cost: 2
-  description: Target a monster in either graveyard; Summon it and pay its cost.
+  description: Target a monster in either graveyard; Summon it and pay its cost, ignoring its summoning conditions.
+  can_activate_hand: |-
+    retval = can_select_graveyard(lambda x: owner.can_pay(x.cost)) and can_select_owner_board()
+  on_activate_hand_cost: |-
+    self.target = select_graveyard(lambda x: owner.can_pay(x.cost))
+  on_activate_hand: |-
+    idx = select_owner_board()
+    owner.pay(self.target.cost)
+    io.summon(self.target)
   id: 11
   rarity: R
   uuid: monsterreborn
-monsterrebornreborn:
-  name: Monster Reborn Reborn
+emergencyteleport:
+  name: Emergency Teleport
   type: spell
-  cost: 0
-  description: Target three monsters in your graveyard; your opponent picks one for you to summon (you pay its cost), then banish the rest.
+  cost: 2
+  description: Summon a monster that costs 3 or less from your deck. Banish it
+    in the end phase of this turn.
+  can_activate_hand: |-
+    retval = can_select_owner_deck(
+      lambda card: card.cost <= 3 and "monster" in card.type and card.can("summon")
+    )
+  on_activate_hand_cost: |-
+    self.target = select_owner_deck(
+      lambda card: card.cost <= 3 and "monster" in card.type and card.can("summon")
+    )
+  on_activate_hand: |-
+    io.summon(self.target)
+    self.target.apply_status(self, "BANISH", 0, "END")
   id: 12
-  rarity: UR
-  uuid: monsterrebornreborn.
+  rarity: C
+  uuid: emergencyteleport
 edmund:
   name: Edmund
   type: monster
-  cost: 5
+  cost: 3
   attack: 400
   health: 400
-  description: This monster costs 2 less if you control no minions.
+  description: This monster costs 2 more if you control a minion.
+  can_summon: |-
+    if len(owner.board.to_list()) > 0:
+      retval = owner.can_pay(self.cost + 2)
+    else:
+      retval = True
+  if_summon: |-
+    owner.pay(2)
   id: 13
   rarity: C
   uuid: edmund
@@ -123,6 +218,10 @@ an:
   attack: 300
   health: 200
   description: When this card is destroyed, deal 200 damage to a random enemy.
+  if_destroyed_battle: |-
+    targets = oppon.board.to_list() + [oppon]
+    target = random.sample(targets, k=1)
+    target.take_damage(self, 200)
   id: 14
   rarity: C
   uuid: an
@@ -133,6 +232,8 @@ joy:
   attack: 400
   health: 300
   description: When this card is summoned, you take 300 damage.
+  if_summon: |-
+    owner.take_damage(self, 300)
   id: 15
   rarity: C
   uuid: joy
@@ -143,6 +244,13 @@ leo:
   attack: 600
   health: 600
   description: When this card is summoned, discard a random card.
+  can_summon: |-
+    if self in owner.hand:
+      return len(owner.hand) > 1
+    else:
+      return len(owner.hand) > 0
+  if_summon: |-
+    io.discard(random.sample(owner.hand, 1))
   id: 16
   rarity: C
   uuid: leo
@@ -153,6 +261,8 @@ maxx:
   attack: 0
   health: 300
   description: When your opponent summons a monster; draw a card.
+  on_oppon_summon: |-
+    io.draw(owner)
   id: 17
   rarity: C
   uuid: maxx
@@ -163,6 +273,12 @@ mandy:
   attack: 500
   health: 500
   description: If this card is summoned, you can target a face-up field spell; Destroy it.
+  opt_if_summon_cost: |-
+    retval = can_target_traps() and prompt_user_activate()
+    if retval:
+      self.target = target_traps()
+  opt_if_summon: |-
+    io.destroy(self.target)
   id: 18
   rarity: C
   uuid: mandy
@@ -172,7 +288,9 @@ julien:
   cost: 4
   attack: 200
   health: 600
-  description: Taunt.
+  description: Taunt. (not working)
+  if_summon: |-
+    self.apply_status(self, "TAUNT", -1)
   id: 19
   rarity: C
   uuid: julien
@@ -183,6 +301,8 @@ james:
   attack: 300
   health: 200
   description: Stealth.
+  if_summon: |-
+    self.apply_status(self, "STEALTH", -1)
   id: 20
   rarity: C
   uuid: james
@@ -193,37 +313,78 @@ vincent:
   attack: 100
   health: 200
   description: If this card is summoned; you can add a field spell from your deck to your hand.
+  opt_if_summon_cost: |-
+    retval = can_select_owner_deck(lambda x: x.type == "field spell") and prompt_user_activate()
+    if retval:
+      self.target = select_owner_deck(lambda x: x.type == "field spell")
+  opt_if_summon: |-
+    io.add_to_hand(self.target)
   id: 21
   rarity: C
   uuid: vincent
 wilson:
   name: Wilson
   type: monster
-  cost: 12
+  cost: 1
   attack: 800
   health: 800
-  description: This monster costs 1 less for each card in your opponent's hand.
+  description: This monster costs 1 more for each empty space on the field.
   id: 22
   rarity: C
   uuid: wilson
+smalljameslin:
+  name: Small James
+  type: monster
+  cost: 3
+  attack: 100
+  health: 400
+  description: You can pay 200 health to summon 1 "Mystical Shine Ball" from your deck.
+  id: 23
+  rarity: C
+  uuid: smalljameslin
+jameslin:
+  name: James
+  type: monster
+  cost: 1
+  attack: 100
+  health: 600
+  description: |-
+    Tribute: 1 Small James + 1 other monster with 100 HP.
+    When this monster is summoned, you can add a card with 100 attack from your
+    deck to your hand. You can banish a "Small James" from your graveyard, then
+    select up to 3 "Mystical Shine Balls" in your graveyard or banished zone;
+    summon them all and pay 200 health for each.
+  id: 24
+  rarity: C
+  uuid: jameslin
+mysticalshineball:
+  name: Mystical Shine Ball
+  type: monster
+  cost: 2
+  attack: 100
+  health: 100
+  flavour: A soul of light covered by mystical shine. When you see its beautiful shape, your dream will come true.
+  id: 25
+  rarity: C
+  uuid: mysticalshineball
 smalljuliazhang:
   name: Small Julia
   type: monster
   cost: 8
-  attack: 0
+  attack: 100
   health: 1400
-  description: You can also summon this card by banishing a monster from your hand, field, and graveyard. Once per turn, you can banish two monsters from your graveyard, then target a monster on the field; destroy it.
-  id: 23
+  description: You can also summon this card by banishing a monster from your hand, field, and graveyard. 
+  id: 26
   rarity: C
   uuid: smalljuliazhang
 juliazhang:
   name: Julia
   type: monster
   cost: 3
-  attack: 300
+  attack: 600
   health: 1400
   description: Link: 1 Small Julia + 2 other monsters. Once per turn, you can banish two monsters from your graveyard, then target a monster on the field; destroy it.
-  id: 24
+  id: 27
   rarity: C
   uuid: juliazhang
 smallvincentwang:
@@ -233,7 +394,7 @@ smallvincentwang:
   attack: 0
   health: 800
   description: When this monster is summoned; You can look at the top 3 cards of your deck and rearrange them in any order.
-  id: 25
+  id: 28
   rarity: C
   uuid: smallvincentwang
 vincentwang:
@@ -243,7 +404,7 @@ vincentwang:
   attack: 200
   health: 800
   description: Link: 1 Small Vincent. When this monster is summoned choose a number from 1-3; send that many cards from your deck to the graveyard. If any are plants, summon them.
-  id: 26
+  id: 29
   rarity: C
   uuid: vincentwang
 smallwilsonwang:
@@ -253,7 +414,7 @@ smallwilsonwang:
   attack: 700
   health: 700
   description: This monster costs 1 less for each monster on the field. 
-  id: 27
+  id: 30
   rarity: C
   uuid: smallwilsonwang
 wilsonwang:
@@ -263,7 +424,7 @@ wilsonwang:
   attack: 1000
   health: 1000
   description: Link: 1 Small Wilson + 2 other monsters. Monsters on the field cannot activate their effects.
-  id: 28
+  id: 31
   rarity: C
   uuid: wilsonwang
 

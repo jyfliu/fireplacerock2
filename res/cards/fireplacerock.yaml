@@ -60,9 +60,10 @@ sprightelf:
   attack: 200
   health: 200
   description: |-
-    Link: 1 2-cost monster + 1 other monster. You can pay 1 mana; summon a 2 cost monster
-    from your graveyard to an adjacent space. While this card is on your field, adjacent
-    2-cost monsters on your field cannot be targeted.
+    Tribute: 1 2-cost monster + 1 other monster. You can pay 2 mana; summon a
+    2 cost monster from your graveyard to an adjacent space.
+    While this card is on your field, adjacent monsters on your field cannot be
+    targeted.
   id: fireplacerock:2
   rarity: UR
   can_summon_extradeck: |-
@@ -78,16 +79,28 @@ sprightelf:
   can_summon: retval = False
   can_activate: |-
     retval = (
-      owner.can_pay(1)
+      owner.can_pay(2)
       and owner.graveyard.contains(lambda card: card.cost == 2 and card.can("summon"))
       and can_select_owner_board(get_adjacent_board_idxs())
     )
   on_activate_cost: |-
-    owner.pay(1)
+    owner.pay(2)
   on_activate: |-
     card = select_owner_graveyard(lambda card: card.type == "monster" and card.cost == 2 and card.can("summon"))
     idx = select_owner_board(get_adjacent_board_idxs())
     io.summon(card, idx)
+  on_owner_summon: |-
+    if args[0] in get_adjacent():
+      args[0].apply_status(self, "UNTARGETABLE", -1)
+  on_owner_remove: |-
+    if args[0] in get_adjacent():
+      args[0].clear_status("UNTARGETABLE", self)
+  if_summon: |-
+    for card in get_adjacent():
+      card.apply_status(self, "UNTARGETABLE", -1)
+  on_remove: |-
+    for card in get_adjacent():
+      card.clear_status("UNTARGETABLE", self)
   uuid: sprightelf
 magikarp:
   name: Magikarp
@@ -238,6 +251,29 @@ kyogre:
     in a marine trench.
   description: 'When this card is summoned: Change all face-up field spells to Rainy
     Day.'
+  if_summon: |-
+    to_gy = []
+    owner_idxs = []
+    oppon_idxs = []
+    template = io.card_templates["rainyday"]
+    for i, card in enumerate(owner.traps):
+      if card is not None and card.type == "field spell":
+        to_gy.append(card)
+        owner_idxs.append(i)
+    for i, card in enumerate(oppon.traps):
+      if card is not None and card.type == "field spell":
+        to_gy.append(card)
+        oppon_idxs.append(i)
+    io.send_graveyard_multiple(to_gy)
+    
+    for idx in owner_idxs:
+      new_card = template.create_instance(owner, oppon, io)
+      new_card.cost = 0
+      io.activate_spell(new_card, idx)
+    for idx in oppon_idxs:
+      new_card = template.create_instance(oppon, owner, io)
+      new_card.cost = 0
+      io.activate_spell(new_card, idx)
   id: fireplacerock:14
   rarity: R
   uuid: kyogre
@@ -251,6 +287,29 @@ groudon:
     long ago.
   description: 'When this card is summoned: Change all face-up field spells to Harsh
     Sunlight.'
+  if_summon: |-
+    to_gy = []
+    owner_idxs = []
+    oppon_idxs = []
+    template = io.card_templates["harshsunlight"]
+    for i, card in enumerate(owner.traps):
+      if card is not None and card.type == "field spell":
+        to_gy.append(card)
+        owner_idxs.append(i)
+    for i, card in enumerate(oppon.traps):
+      if card is not None and card.type == "field spell":
+        to_gy.append(card)
+        oppon_idxs.append(i)
+    io.send_graveyard_multiple(to_gy)
+    
+    for idx in owner_idxs:
+      new_card = template.create_instance(owner, oppon, io)
+      new_card.cost = 0
+      io.activate_spell(new_card, idx)
+    for idx in oppon_idxs:
+      new_card = template.create_instance(oppon, owner, io)
+      new_card.cost = 0
+      io.activate_spell(new_card, idx)
   id: fireplacerock:15
   rarity: R
   uuid: groudon
@@ -277,22 +336,38 @@ arceus:
   health: 1200
   flavour: It emerged from an egg in a place where there was nothing, then shaped
     the world.
-  description: 'Once while face-up on the field: You can send all other cards on the
-    field to the graveyard.'
+  description: |-
+    Tribute: 1 Pokemon that costs 5 or more mana.
+    <br/>
+    This card cannot be targeted by spells.
+    <br/>
+    Once while face-up on the field: You can send all other cards on the
+    field to the graveyard.
   id: fireplacerock:17
-  rarity: SR
+  rarity: UR
+  can_summon_extradeck: |-
+    retval = can_link(
+      lambda card: card.cost >= 5
+    )
+  summon_extradeck: |-
+    link(
+      lambda card: card.cost >= 5
+    )
+  can_summon: retval = False
   can_activate: retval = not self.has_status("ARCEUS_ACTIVATED_EFFECT")
   on_activate: |-
     if not self.has_status("ARCEUS_ACTIVATED_EFFECT"):
       to_gy = []
-      for card in owner.board:
+      for card in owner.board + owner.traps:
         if card != self and card is not None:
           to_gy.append(card)
-      for card in oppon.board:
+      for card in oppon.board + oppon.traps:
         if card is not None:
           to_gy.append(card)
       io.send_graveyard_multiple(to_gy)
       self.apply_status(self, "ARCEUS_ACTIVATED_EFFECT", -1)
+  if_summon: |-
+    self.apply_status(self, "SPELL_UNTARGETABLE", -1)
   uuid: arceus
 gallade:
   name: Gallade
@@ -455,7 +530,7 @@ gyarados:
     When this card is summoned, reduce the attack of each of your opponent’s monsters
     by 200.
   can_summon: |-
-    for card in owner.board:
+    for card in owner.field:
       if "magikarp" in card.name.lower():
         retval = True
       else:
@@ -484,7 +559,7 @@ lugia:
   cost: 7
   attack: 300
   health: 1200
-  description: 'Opponent minions must attack this one first. Once per turn: When this card is about to take battle damage: Half the damage
+  description: 'Opponent minions must attack this one first (not working). Once per turn: When this card is about to take battle damage: Half the damage
     taken.'
   attackee_damage_calc: |-
     if not self.has_status("LUGIA_ACTIVATED_EFFECT"):
@@ -534,12 +609,13 @@ pokemonsafari:
   name: Pokemon Safari
   type: field spell
   cost: 2
-  description: 'At the beginning of each turn: Add a random 3 mana or lower Pokemon
+  description: 'At the beginning of each turn: Add a random 4 mana or lower Pokemon
     to your hand.'
   begin_phase_standby: |-
     if io.turn_p == owner:
       all_pokemon = [io.card_templates[p] for p in archetypes.pokemon]
-      all_pokemon = [t for t in all_pokemon if t.cost <= 3]
+      all_pokemon = [t for t in all_pokemon if t.cost <= 4]
+      all_pokemon = [t for t in all_pokemon if "twin" not in t.id]
       template = random.choice(all_pokemon)
       pokemon = template.create_instance(owner, oppon, io)
       io.add_to_hand(pokemon)
@@ -552,7 +628,41 @@ lavendertown:
   name: Lavender Town
   type: field spell
   cost: 2
-  description: 'Once per turn: When a pokemon dies, summon a 100/100 ghost.'
+  description: 'Once per turn: When a pokemon dies, summon a 100/100 ghost in its place.'
+  can_activate_hand: |-
+    retval = True
+  on_owner_remove: |-
+    if args[0].id in archetypes.pokemon and not self.has_status("LAVENDER_TOWN_ACTIVATED_EFFECT"):
+      if hasattr(self, "candidates"): 
+        self.candidates.append((args[0].uuid, owner.board.index_of(args[0])))
+      else:
+        self.candidates = [(args[0].uuid, owner.board.index_of(args[0]))]
+  on_owner_destroyed: |-
+    if hasattr(self, "candidates") and not self.has_status("LAVENDER_TOWN_ACTIVATED_EFFECT"):
+      for target_uuid, target_idx in self.candidates:
+        if target_uuid == args[0].uuid:
+          template = io.card_templates["pokemonghost"]
+          ghost = template.create_instance(owner, oppon, io)
+          io.summon(ghost, target_idx)
+          self.apply_status(self, "LAVENDER_TOWN_ACTIVATED_EFFECT", 0, "END")
+          break
+    self.candidates = []
+  on_oppon_remove: |-
+    if args[0].id in archetypes.pokemon and not self.has_status("LAVENDER_TOWN_ACTIVATED_EFFECT"):
+      if hasattr(self, "candidates"): 
+        self.candidates.append((args[0].uuid, oppon.board.index_of(args[0])))
+      else:
+        self.candidates = [(args[0].uuid, oppon.board.index_of(args[0]))]
+  on_oppon_destroyed: |-
+    if hasattr(self, "candidates") and not self.has_status("LAVENDER_TOWN_ACTIVATED_EFFECT"):
+      for target_uuid, target_idx in self.candidates:
+        if target_uuid == args[0].uuid:
+          template = io.card_templates["pokemonghost"]
+          ghost = template.create_instance(oppon, owner, io)
+          io.summon(ghost, target_idx)
+          self.apply_status(self, "LAVENDER_TOWN_ACTIVATED_EFFECT", 0, "END")
+          break
+    self.candidates = []
   id: fireplacerock:32
   rarity: R
   uuid: lavendertown
@@ -880,9 +990,9 @@ omen:
   id: fireplacerock:49
   rarity: R
   opt_if_summon_cost: |-
-    retval = can_target_oppon_field() and prompt_user_activate()
+    retval = can_target_owner_field() and prompt_user_activate()
     if retval:
-      self.target = target_oppon_field()
+      self.target = target_owner_field()
   opt_if_summon:
     self.target.apply_status(self, "STEALTH", -1)
   uuid: omen
@@ -892,18 +1002,42 @@ brimstone:
   cost: 4
   attack: 200
   health: 200
-  description: 'While this card is on the field: Adjacent monsters gain 200 ATK. Not working!! (no cont. effects yet)'
+  description: 'While this card is on the field: Adjacent monsters gain 200 ATK.'
+  on_owner_summon: |-
+    if args[0] in get_adjacent():
+      args[0].gain(self, 200)
+  on_owner_remove: |-
+    if args[0] in get_adjacent():
+      args[0].lose(self, 200)
+  if_summon: |-
+    for card in get_adjacent():
+      card.gain(self, 200)
+  on_remove: |-
+    for card in get_adjacent():
+      card.lose(self, 200)
   id: fireplacerock:50
   rarity: C
   uuid: brimstone
 viper:
   name: Viper
   type: monster
-  cost: -1
-  attack: -1
-  health: -1
+  cost: 4
+  attack: 300
+  health: 300
   description: 'While this card is on the field: Opponent monsters in the 3 spaces
-    in front of this monster lose 200 health (min. 1). Not working!! (no cont. effects yet)'
+    in front of this monster lose 200 health (min. 1).'
+  on_oppon_summon: |-
+    if args[0] in get_opposing() + get_opposing_adjacent():
+      args[0].lose(self, 0, 200)
+  on_oppon_remove: |-
+    if args[0] in get_opposing() + get_opposing_adjacent():
+      args[0].gain(self, 0, 200)
+  if_summon: |-
+    for card in get_opposing() + get_opposing_adjacent():
+      card.lose(self, 0, 200)
+  on_remove: |-
+    for card in get_opposing() + get_opposing_adjacent():
+      card.gain(self, 0, 200)
   id: fireplacerock:51
   rarity: R
   uuid: viper
@@ -913,10 +1047,10 @@ reyna:
   cost: 6
   attack: 400
   health: 600
-  description: 'When this card destroys another minion: heal 200 HP'
+  description: 'When this card destroys another minion: heal 400 HP'
   id: fireplacerock:52
   rarity: R
-  if_destroy_battle: self.heal(self, 200)
+  if_destroy_battle: self.heal(self, 400)
   uuid: reyna
 cypher:
   name: Cypher
@@ -924,7 +1058,19 @@ cypher:
   cost: 4
   attack: 200
   health: 400
-  description: The opposing monster and adjacent monsters to this card can’t attack. Not working!! (no cont. effects)
+  description: The diagonally adjacent enemy monsters to this card cannot attack.
+  on_oppon_summon: |-
+    if args[0] in get_opposing_adjacent():
+      args[0].apply_status(self, "CANNOT_ATTACK", -1)
+  on_oppon_remove: |-
+    if args[0] in get_opposing_adjacent():
+      args[0].clear_status("CANNOT_ATTACK", self)
+  if_summon: |-
+    for card in get_opposing_adjacent():
+      card.apply_status(self, "CANNOT_ATTACK", -1)
+  on_remove: |-
+    for card in get_opposing_adjacent():
+      card.clear_status("CANNOT_ATTACK", self)
   id: fireplacerock:53
   rarity: R
   uuid: cypher
@@ -1005,15 +1151,21 @@ shortyangle:
   name: Shorty Angle
   type: spell
   cost: 2
-  description: 'Target a friendly monster: deal 500 damage to the opposing monster.'
+  description: 'Select a friendly monster: deal 500 damage to the opposing monster.'
   id: fireplacerock:59
+  can_activate_hand: retval = can_select_owner_field()
+  on_activate_hand_cost: self.target = select_owner_field()
+  on_activate_hand: |-
+    oppos = self.target.get_opposing()
+    if oppos:
+      oppos[0].take_damage(self, 500)
   rarity: R
   uuid: shortyangle
 cloudburst:
   name: Cloud Burst
   type: spell
   cost: 1
-  description: 'Target a monster: give it stealth. Add another “Cloud burst” to your
+  description: 'Give a friendly agent stealth. Add another “Cloud burst” to your
     hand.'
   id: fireplacerock:60
   rarity: UR
@@ -1035,8 +1187,7 @@ haven:
   name: Haven
   type: field spell
   cost: 2
-  description: 'Once per turn: If an “agent” monster is about to attack, you can
-    (Quick) activate this effect, it takes no recoil.'
+  description: 'Once per turn: If an “agent” monster is about to attack, it takes no recoil.'
   id: fireplacerock:62
   rarity: C
   uuid: haven
@@ -1044,7 +1195,7 @@ bind:
   name: Bind
   type: field spell
   cost: 2
-  description: 'Once per turn (Quick): swap an “agent” monster to a new space'
+  description: 'Draw a card. Once per turn: swap an “agent” monster to a new space.'
   id: fireplacerock:63
   rarity: SR
   uuid: bind
@@ -1072,9 +1223,9 @@ supermonkey:
   name: Super Monkey
   type: monster
   cost: 6
-  attack: 600
-  health: 600
-  description: 'At the beginning of your turn: this card turns into "Sun Avatar." Not working!!'
+  attack: 200
+  health: 700
+  description: 'This card can attack 3 times each turn.'
   id: fireplacerock:65
   rarity: SR
   uuid: supermonkey
@@ -1087,42 +1238,64 @@ supermonkeyfanclub:
   id: fireplacerock:66
   rarity: R
   uuid: supermonkeyfanclub
-johnnywyles:
-  name: Johnny Wyles
+rayquaza:
+  name: Rayquaza
   type: monster
-  cost: -1
-  attack: -1
-  health: -1
-  description: ''
+  cost: 8
+  attack: 1100
+  health: 900
+  flavour: Rayquaza has lived for hundreds of millions of years in the ozone layer.
+    When it flies at night, it resembles a shooting star.
+  description: |-
+    Tribute: 3 pokemon. Your pokemon cannot be targeted by effects while this
+      card is on the field.
+  id: fireplacerock:2
+  rarity: SR
+  can_summon_extradeck: |-
+    retval = can_link(
+      lambda card: card.id in archetypes.pokemon,
+      lambda card: card.id in archetypes.pokemon,
+      lambda card: card.id in archetypes.pokemon,
+    )
+  summon_extradeck: |-
+    link(
+      lambda card: card.id in archetypes.pokemon,
+      lambda card: card.id in archetypes.pokemon,
+      lambda card: card.id in archetypes.pokemon,
+    )
+  can_summon: retval = False
   id: fireplacerock:67
-  rarity: C
-  uuid: johnnywyles
-riverwyles:
-  name: River Wyles
+  rarity: UR
+  uuid: rayquaza
+darkrai:
+  name: Darkrai
   type: monster
-  cost: -1
-  attack: -1
-  health: -1
-  description: ''
+  cost: 4
+  attack: 400
+  health: 300
+  flavour: On moonless nights, Darkrai afflicts those around it with horrific nightmares.
+  description: |-
+    Tribute: 1 Pokemon Ghost + 1 pokemon. You can pay 2 mana and target an enemy monster; put it to sleep until the end of your next turn (it cannot attack or use abilities, and the next damage it takes is doubled)'
   id: fireplacerock:68
-  rarity: C
-  uuid: riverwyles
-emergencybutton:
-  name: Emergency Button
-  type: spell
-  cost: -1
-  description: 'Add 5 '
+  rarity: UR
+  uuid: darkrai
+pokemonduel:
+  name: Duel
+  type: field spell
+  cost: 2
+  description: |-
+    For both players, each monster can only attack the monster directly in front of it (or directly if no opposing monster exists).
   id: fireplacerock:69
-  rarity: C
-  uuid: emergencybutton
+  rarity: R
+  uuid: pokemonduel
 redamogus:
   name: Red Amogus
   type: monster
   cost: 1
   attack: 0
-  health: 1
+  health: 100
   flavour: 'sus'
-  description: 'When this card is summoned, select an empty square on the opposing field and move this card there.'
+  description: 'When this card is summoned, you can change its name to anything you want. This card cannot be used as tribute material.'
   id: fireplacerock:70
   rarity: C
   uuid: redamogus
@@ -1131,8 +1304,8 @@ zoe:
   type: monster
   cost: 2
   attack: 0
-  health: 2
-  description: 'When Zoe is summoned, target an opposing monster; put it to sleep until the end of your next turn (it cannot attack, and the next damage it takes is doubled)'
+  health: 200
+  description: 'When Zoe is summoned, target an opposing monster; put it to sleep until the end of your next turn (it cannot attack or use abilities, and the next damage it takes is doubled)'
   id: fireplacerock:71
   rarity: C
   uuid: zoe
@@ -1140,7 +1313,7 @@ xerath:
   name: Xerath
   type: field spell
   cost: 5
-  description: 'You can pay 2 mana and target an opposing monster; deal 700 damage to it. When all your monsters are destroyed, Xerath is destroyed.'
+  description: 'You can pay 2 mana and target an opposing monster; deal 600 damage to it. When all your monsters are destroyed, Xerath is destroyed.'
   id: fireplacerock:72
   rarity: R
   uuid: xerath
@@ -1148,7 +1321,9 @@ jinx:
   name: Jinx
   type: ''
   cost: 3
-  description: If Jinx destroys a monster; it gains 500 attack.
+  attack: 200
+  health: 200
+  description: Each time Jinx destroys a monster; it takes no recoil, gains 300 attack and can attack one more time this turn.
   id: fireplacerock:73
   rarity: SR
   uuid: leagueplaceholder3
@@ -1230,17 +1405,21 @@ megalopunny:
   cost: 3
   attack: 400
   health: 200
+  flavour: Must first be summoned by the effect of Mega Bracelet.
   description: When this card is summoned, you can target one enemy monster on the field;
     deal 200 damage to it, and if you do, it is silenced and cannot attack until the
-    end of the next turn.
+    end of the next turn. This card can attack on the turn it is summoned.
   id: fireplacerock:81
   rarity: UR
   opt_if_summon_cost: |-
     retval = can_target_oppon_field() and prompt_user_activate()
     if retval:
       self.target = target_oppon_field()
-  opt_if_summon: self.target.take_damage(self, 200);self.target.apply_status(self, 'SILENCE',
-    1, 'END')
+  opt_if_summon: |-
+    self.target.take_damage(self, 200)
+    self.target.apply_status(self, 'SILENCE', 1, 'END')
+  if_summon: |-
+    self.clear_status("CANNOT_ATTACK", source=god)
   uuid: megalopunny
 beedrill:
   name: Beedrill
@@ -1251,7 +1430,9 @@ beedrill:
   flavour: 'Flies at high speed and attacks using its large venomous stingers on its
     forelegs and tail. '
   description: When this card attacks, all your “Beedrill” cards everywhere
-    gain 50 original attack.
+    gain 50 original attack. This card can attack on the turn it is summoned.
+  if_summon: |-
+    self.clear_status("CANNOT_ATTACK", source=god)
   if_attack: |-
     for card in all_cards.filter(lambda card: "beedrill" in card.id):
       card.original_gain(self, 50, 0)
@@ -1265,17 +1446,20 @@ megabeedrill:
   name: Mega Beedrill
   type: monster
   cost: 2
-  attack: 300
+  attack: 100
   health: 100
+  flavour: Must first be summoned by the effect of Mega Bracelet.
   description: When this card attacks, all of your “Beedrill” cards everywhere
-    gain 100 attack. You can pay 1 mana; Add a “Beedrill”
-    from your graveyard to your hand.
+    gain 75 attack. You can pay 1 mana; Add a “Beedrill”
+    from your graveyard to your hand. This card can attack on the turn it is summoned.
+  if_summon: |-
+    self.clear_status("CANNOT_ATTACK", source=god)
   if_attack: |-
     for card in all_cards.filter(lambda card: "beedrill" in card.id):
-      card.original_gain(self, 100, 0)
+      card.original_gain(self, 75, 0)
   if_attack_directly: |-
     for card in all_cards.filter(lambda card: "beedrill" in card.id):
-      card.original_gain(self, 100, 0)
+      card.original_gain(self, 75, 0)
   can_activate: |-
     retval = can_select_owner_graveyard(lambda card: "beedrill" in card.id) and owner.can_pay(1)
   on_activate_cost: owner.pay(1)
@@ -1302,10 +1486,11 @@ megacharizardx:
   type: monster
   cost: 5
   attack: 600
-  health: 500
-  description: 'In the standby phase of each turn: This card gains 300 attack.'
+  health: 600
+  flavour: Must first be summoned by the effect of Mega Bracelet.
+  description: 'In the standby phase of each turn: This card gains 200 attack.'
   begin_phase_standby: |-
-    self.gain(self, 300)
+    self.gain(self, 200)
   id: fireplacerock:85
   rarity: UR
   uuid: megacharizardx
@@ -1314,10 +1499,11 @@ megacharizardy:
   type: monster
   cost: 5
   attack: 600
-  health: 300
+  health: 600
+  flavour: Must first be summoned by the effect of Mega Bracelet.
   description: This card can attack on the turn it is summoned.
   if_summon: |-
-    self.clear_status("CANNOT_ATTACK")
+    self.clear_status("CANNOT_ATTACK", source=god)
   id: fireplacerock:86
   rarity: UR
   uuid: megacharizardy
@@ -1326,7 +1512,7 @@ megaheracross:
   type: monster
   cost: 8
   attack: 800
-  health: 800
+  health: 1000
   description: This card cannot attack. In the end phase deal 100 damage 8 times
     randomly to opponent monsters.
   if_summon: |-
@@ -1366,9 +1552,9 @@ megascizor:
   name: Mega Scizor
   type: monster
   cost: 5
-  attack: 400
+  attack: 300
   health: 400
-  description: When this monster is attacked, deal 300 damage to the attacking monster. If it dies, this monster takes no damage.
+  description: When this monster enters battle, deal 300 damage to the attacking monster. If it dies, this monster takes no damage. TODO if attacker
   if_attacked: |-
     attacker = args[0]
     attacker_alive_before = attacker.health > 0
@@ -1397,7 +1583,7 @@ megakangaskhan:
   type: monster
   cost: 7
   attack: 800
-  health: 600
+  health: 700
   description: This card can attack twice. The second attack does half damage.
   begin_phase_your_standby: |-
     self.num_attacks = 0
@@ -1410,7 +1596,7 @@ megakangaskhan:
       retval = self.attack // 2
   end_attack: |-
     if self.num_attacks == 1:
-      self.clear_status("CANNOT_ATTACK")
+      self.clear_status("CANNOT_ATTACK", source=god)
   id: fireplacerock:92
   rarity: R
   uuid: megakangaskhan
@@ -1473,11 +1659,11 @@ eevee:
 megabracelet:
   name: Mega Bracelet
   type: field spell
-  cost: 0
+  cost: 1
   description: You can send a Pokemon to the graveyard from your field; Summon
     a Mega Pokemon from your extra deck that mentions it and pay the difference in mana cost
-  on_activate_hand: |-
-    pass
+  can_activate_hand: |-
+    retval = True
   can_activate: |-
     def is_valid_target(card):
       if "Mega" not in card.name:
@@ -1550,23 +1736,22 @@ megabracelet:
 megamewtwox:
   name: Mega Mewtwo X
   type: monster
-  cost: 10
+  cost: 12
   attack: 600
   health: 1000
   description: When this card is summoned, deal 600 damage to yourself, then you can
-    deal 1000 damage to anything. If this card is destroyed, draw 3 cards.
+    deal 1000 damage to anything, and then 300 damage to all enemies.
   id: fireplacerock:98
   rarity: SR
   uuid: megamewtwox
 megamewtwoy:
   name: Mega Mewtwo Y
   type: monster
-  cost: 10
+  cost: 12
   attack: 1000
   health: 600
   description: When this card is summoned, deal 1000 damage to yourself, then you
-    can take control of up to two enemy monsters until the end of the turn. If this
-    card is destroyed, draw 3 cards.
+    can take control of up to two enemy monsters until the end of the next turn and draw 2 cards.
   id: fireplacerock:99
   rarity: SR
   uuid: megamewtwoy
@@ -1576,9 +1761,7 @@ mewtwo:
   cost: 7
   attack: 500
   health: 600
-  description: When this card is summoned, deal 500 damage to yourself, then 
-    increase your max mana by 2. If this card is sent to the graveyard,
-    you can draw a card.
+  description: If this card is sent to the graveyard, you can draw a card.
   id: fireplacerock:100
   rarity: UR
   uuid: mewtwo
@@ -1599,6 +1782,28 @@ rainyday:
   type: field spell
   cost: 2
   description: It is raining. The attack of all monsters are reduced by 100.
+  on_owner_summon: |-
+    args[0].lose(self, 100)
+  on_oppon_summon: |-
+    args[0].lose(self, 100)
+  on_owner_remove: |-
+    args[0].gain(self, 100)
+  on_oppon_remove: |-
+    args[0].gain(self, 100)
+  on_activate_hand: |-
+    for card in owner.board:
+      if card is not None:
+        card.lose(self, 100)
+    for card in oppon.board:
+      if card is not None:
+        card.lose(self, 100)
+  on_remove: |-
+    for card in owner.board:
+      if card is not None:
+        card.gain(self, 100)
+    for card in oppon.board:
+      if card is not None:
+        card.gain(self, 100)
   id: fireplacerock:-1
   rarity: "--"
   uuid: rainyday
@@ -1608,6 +1813,28 @@ harshsunlight:
   cost: 2
   description: The sunlight is harsh. The attacks of all monsters is increased
     by 100.
+  on_owner_summon: |-
+    args[0].gain(self, 100)
+  on_oppon_summon: |-
+    args[0].gain(self, 100)
+  on_owner_remove: |-
+    args[0].lose(self, 100)
+  on_oppon_remove: |-
+    args[0].lose(self, 100)
+  on_activate_hand: |-
+    for card in owner.board:
+      if card is not None:
+        card.gain(self, 100)
+    for card in oppon.board:
+      if card is not None:
+        card.gain(self, 100)
+  on_remove: |-
+    for card in owner.board:
+      if card is not None:
+        card.lose(self, 100)
+    for card in oppon.board:
+      if card is not None:
+        card.lose(self, 100)
   id: fireplacerock:-1
   rarity: "--"
   uuid: harshsunlight
@@ -1678,7 +1905,7 @@ lakeofragegyarados:
   id: fireplacerock:102
   rarity: XR
   can_summon: |-
-    for card in owner.board:
+    for card in owner.field:
       if "magikarp" in card.name.lower():
         retval = True
       else:
