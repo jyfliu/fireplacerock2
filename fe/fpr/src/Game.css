@@ -95,15 +95,15 @@
   justify-content: space-between;
   align-items: center;
   gap: 7.5px;
-  margin-top: -80px;
-  margin-bottom: -40px;
+  margin-top: -12vmin;
+  margin-bottom: -2vmin;
   transform: perspective(1000px) rotateX(30deg);
 }
 
 .board-grid {
   display: grid;
-  grid-template-columns: 80px 80px 80px 80px 80px;
-  grid-template-rows: 118px 118px 118px 118px;
+  grid-template-columns: 9.05vmin 9.05vmin 9.05vmin 9.05vmin 9.05vmin;
+  grid-template-rows: 13.25vmin 13.25vmin 13.25vmin 13.25vmin;
 }
 
 .decks {

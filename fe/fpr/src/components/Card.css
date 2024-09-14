@@ -1,93 +1,93 @@
 .card {
-  width: 96px;
-  height: 144px;
+  width: 2.4in;
+  height: 3.6in;
 }
 
 .card-main {
   position: relative;
-  width: 92px;
-  height: 140px;
+  width: 2.3in;
+  height: 3.5in;
   z-index: 10;
 }
 
 .card-highlight {
   position: relative;
-  width: 96px;
-  height: 144px;
+  width: 2.4in;
+  height: 3.6in;
   top: -100%;
   background-color: rgba(176, 239, 255);
 }
 
 .name {
   position: absolute;
-  top: -10px;
-  left: 5px;
+  top: -0.21in;
+  left: 0.125in;
   color: black;
   background-color: white;
   border: solid;
   border-color: black;
   border-width: 2px;
-  width: 84px;
-  border-radius: 10px;
-  font-size: 12px;
+  width: 2.05in;
+  border-radius: 0.25in;
+  font-size: 1.5rem;
   overflow-wrap: anywhere;
   z-index: 1;
 }
 
 .description {
   position: absolute;
-  top: 80px;
-  left: 5px;
-  padding: 4px;
-  width: calc(92px - 22px);
-  height: 40px;
+  top: 1.8in;
+  left: 0.125in;
+  padding: 0.1in;
+  width: calc(2.3in - 0.55in);
+  height: 1.1in;
   z-index: 1;
 }
 
 .attack {
   position: absolute;
-  bottom: -20px;
-  left: -3px;
+  bottom: -0.4in;
+  left: -0.075in;
   color: black;
   background-color: orange;
   border: solid;
   border-color: black;
   border-width: 2px;
-  width: 42px;
-  border-radius: 10px;
-  font-size: 12px;
+  width: 1.05in;
+  border-radius: 0.25in;
+  font-size: 1.5rem;
   z-index: 1;
 }
 
 .health {
   position: absolute;
-  bottom: -20px;
-  right: -3px;
+  bottom: -0.4in;
+  right: -0.075in;
   color: black;
   background-color: mediumseagreen;
   border: solid;
   border-color: black;
   border-width: 2px;
-  width: 42px;
-  border-radius: 10px;
-  font-size: 12px;
+  width: 1.05in;
+  border-radius: 0.25in;
+  font-size: 1.5rem;
   z-index: 1;
 }
 
 .cost {
   position: absolute;
-  top: -21px;
-  left: -8px;
+  top: -0.55in;
+  left: -0.15in;
   z-index: 1;
   color: black;
   background-color: skyblue;
   border: solid;
   border-color: black;
   border-width: 2px;
-  width: 18px;
-  height: 18px;
+  width: 0.45in;
+  height: 0.45in;
   border-radius: 50%;
-  font-size: 16px;
+  font-size: 0.4in;
   z-index: 1;
 }
 
@@ -95,18 +95,18 @@
   position: absolute;
   top: 0px;
   left: 0px;
-  width: 88px;
-  height: 136px;
+  width: 2.2in;
+  height: 3.4in;
   object-fit: cover;
   z-index: 0;
 }
 
 .mini-sprite {
   position: absolute;
-  top: 22px;
-  left: 4px;
-  width: 80px;
-  height: 50px;
+  top: 0.45in;
+  left: 0.1in;
+  width: 2in;
+  height: 1.25in;
   object-fit: cover;
   z-index: 0;
 }

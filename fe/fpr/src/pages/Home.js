@@ -29,7 +29,7 @@ export default function Home() {
       } else if (result === "wrong_password") {
         password = prompt("What is your favorite food? If you forgot, message Jeffrey.");
         socket.emit("login", user, password, (r2) => {
-          if (r2 == "success") {
+          if (r2 === "success") {
             setUsername(user);
             setPassphrase(password);
           } else {

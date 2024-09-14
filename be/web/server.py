@@ -1,5 +1,7 @@
-import socketio
+import os
 import json
+
+import socketio
 from gevent import pywsgi
 
 import web.room_api as room_api
@@ -157,6 +159,10 @@ def call(*args, sid):
   return response
 
 # init
-def run():
-  pywsgi.WSGIServer(("", 8443), app, certfile="/home/jeffr/.ssl/server.cert", keyfile="/home/jeffr/.ssl/server.key").serve_forever()
+def run(debug=True):
+  if os.path.exists("/home/jeffr/.ssl/server.cert") and not debug:
+    pywsgi.WSGIServer(("", 8443), app, certfile="/home/jeffr/.ssl/server.cert", keyfile="/home/jeffr/.ssl/server.key").serve_forever()
+  else:
+    # no https (ok for debugging)
+    pywsgi.WSGIServer(("", 9069), app).serve_forever()
 

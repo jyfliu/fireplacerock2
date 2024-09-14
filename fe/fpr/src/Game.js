@@ -36,6 +36,7 @@ import {
   ActivateBoard, ActivateFieldSpell,
 } from "./GatewayOut"
 
+import { vmin, inches } from './Utils.js';
 import './Game.css';
 
 const defaultHoverCard = {
@@ -316,11 +317,13 @@ function Game() {
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
           cardCache={cardCache}
           isDraggable={isDraggable}
-          setHoverCard={setHoverCard} />;
+          setHoverCard={setHoverCard}
+      />;
   const displayCardOnBoard = (card, onClick, isDraggable) =>
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
           cardCache={cardCache}
           onClick={onClick} isDraggable={isDraggable}
+          style={{scale: vmin(8.05) / inches(2.3) + "", transformOrigin: "top left"}}
           setHoverCard={setHoverCard} />;
   const displayCardsInModal = cards => {
     setModalVisible(true);
@@ -342,7 +345,7 @@ function Game() {
   const statusStyle = {
     "color": isConnected? "green" : "red"
   }
-  const URL = process.env.NODE_ENV === 'production' ? 'https://gamesby.jeffr.ee:8443' : 'http://localhost:9069';
+  const URL = process.env.NODE_ENV === 'production' ? 'https://gamesby.jeffr.ee:8443' : 'http://localhost:8443';
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} >
@@ -372,7 +375,7 @@ function Game() {
                modalVisible={modalVisible}
                setModalVisible={setModalVisible}
                cardCache={cardCache} />
-        <div class="oppon-hand">
+        <div class="oppon-hand" style={{scale: vmin(10) / inches(2.3) + ""}}>
           {
             Array.from(Array(opponHand).keys()).map(id => ({
               id: "oppon" + id,
@@ -388,7 +391,7 @@ function Game() {
             <Deck name="Extra Deck" cards={ownerCards.ownerExtraDeck} displayCards={displayCardsInModalFromExtraDeck}/>
             <Deck name="Deck" count={ownerCards.ownerMainDeck} />
           </div>
-          <div class="board-grid">
+          <div class="board-grid" >
             {containers.map((id) => {
               // We updated the Droppable component so it would accept an `id`
               // prop and pass it to `useDroppable`
@@ -449,7 +452,7 @@ function Game() {
             <Deck name="Graveyard" cards={ownerCards.ownerGraveyard} displayCards={displayCardsInModal}/>
           </div>
         </div>
-        <div class="owner-hand">
+        <div class="owner-hand" style={{scale: vmin(12) / inches(2.3) + ""}}>
           {ownerHand.filter(card => card.parent === null).map(card => displayCard(card, true))}
         </div>
       </div>
