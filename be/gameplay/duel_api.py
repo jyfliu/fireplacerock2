@@ -296,17 +296,17 @@ class Duel():
       self.other_p = self.p1
       self.cur_turn = 2
 
-    # both players draw 4
-    for _ in range(9):
-      self.draw(self.turn_p)
-      self.draw(self.other_p)
-
     # init extra decks
     for p in [self.turn_p, self.other_p]:
       p.io.init_game_state(
           owner_player=p,
           oppon_player=p.oppon,
       )
+
+    # both players draw 4
+    for _ in range(4):
+      self.draw(self.turn_p)
+      self.draw(self.other_p)
 
     self.is_first_turn = True
     self.start_turn()

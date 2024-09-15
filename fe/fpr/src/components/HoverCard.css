@@ -1,25 +1,28 @@
 .hc-card {
   position: absolute;
-  left: calc(80% - 184px);
-  top: 5%;
-  scale: 80%;
-  width: 368px;
-  height: 560px;
+  left: calc(80% - 2in);
+  top: 15%;
+  scale: 50%;
+  transform-origin: top left;
+  width: 9.6in;
+  height: 14.4in;
   background-color: lightgrey;
   z-index: 10001;
 }
 
 .hc-title {
   position: absolute;
-  top: 0px;
-  left: 20px;
+  top: -0.2in;
+  left: 0.5in;
   color: black;
   border: solid;
   border-color: black;
-  border-width: 2px;
-  width: 288px;
-  padding-left: 32px;
-  border-radius: 10px;
+  border-width: 0.05in;
+  width: 7.7in;
+  height: 1.0in;
+  font-size: 0.7in;
+  padding-left: 0.8in;
+  border-radius: 0.26in;
   overflow-wrap: anywhere;
   background-color: rgba(255,255,255,0.9);
   z-index: 10002;
@@ -27,70 +30,73 @@
 
 .hc-flavour {
   position: absolute;
-  bottom: 48px;
-  left: 24px;
-  font-size: 10px;
-  width: calc(368px - 48px);
+  bottom: 1.2in;
+  left: 0.62in;
+  padding-left: 0.2in;
+  padding-right: 0.2in;
+  font-size: 0.2in;
+  width: calc(9.6in - 1.65in);
   z-index: 10002;
 }
 
 .hc-description {
   position: absolute;
-  top: 300px;
-  left: 16px;
-  padding: 4px;
-  width: calc(368px - 40px);
-  height: 196px;
+  top: 7.7in;
+  left: 0.6in;
+  padding: 0.2in;
+  font-size: 0.3in;
+  width: calc(9.6in - 1.6in);
+  height: 4.9in;
   z-index: 10002;
   background-color: rgba(220,220,220,0.9);
 }
 
 .hc-attack {
   position: absolute;
-  bottom: -56px;
-  left: -12px;
+  bottom: -1.44in;
+  left: -0.3in;
   z-index: 10002;
   color: black;
   background-color: orange;
   border: solid;
   border-color: black;
-  border-width: 2px;
-  width: 128px;
-  border-radius: 24px;
-  font-size: 36px;
+  border-width: 0.05in;
+  width: 3.3in;
+  border-radius: 0.62in;
+  font-size: 0.8in;
   text-align: center;
 }
 
 .hc-health {
   position: absolute;
-  bottom: -56px;
-  right: -12px;
+  bottom: -1.44in;
+  right: -0.3in;
   z-index: 10002;
   color: black;
   background-color: mediumseagreen;
   border: solid;
   border-color: black;
-  border-width: 2px;
-  width: 128px;
-  border-radius: 24px;
-  font-size: 36px;
+  border-width: 0.05in;
+  width: 3.3in;
+  border-radius: 0.62in;
+  font-size: 0.8in;
   text-align: center;
 }
 
 .hc-cost {
   position: absolute;
-  top: -30px;
-  left: -12px;
+  top: -0.77in;
+  left: -0.3in;
   z-index: 10002;
   color: black;
   background-color: skyblue;
   border: solid;
   border-color: black;
-  border-width: 2px;
-  width: 48px;
-  height: 48px;
+  border-width: 0.05in;
+  width: 1.25in;
+  height: 1.25in;
   border-radius: 50%;
-  font-size: 32px;
+  font-size: 0.8in;
   text-align: center;
 }
 
@@ -98,18 +104,18 @@
   position: absolute;
   top: 0px;
   left: 0px;
-  width: 368px;
-  height: 560px;
+  width: 9.6in;
+  height: 14.4in;
   object-fit: cover;
   z-index: 10001;
 }
 
 .hc-mini-sprite {
   position: absolute;
-  top: 80px;
-  left: 20px;
-  width: 328px;
-  height: 207px;
+  top: 2.05in;
+  left: 0.51in;
+  width: 8.6in;
+  height: 5.34in;
   object-fit: cover;
   z-index: 10001;
 }

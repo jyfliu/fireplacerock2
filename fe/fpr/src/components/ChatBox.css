@@ -9,8 +9,12 @@
   white-space: pre-line;
   display: flex;
   flex-direction: column-reverse;
-  font-size: 12px;
+  font-size: 0.125in;
+  font-weight: 600;
+  color: #f8faf2;
   z-index: 100;
+  background-color: rgba(30, 40, 50, 0.8);
+  padding: 0.5vw;
 }
 
 

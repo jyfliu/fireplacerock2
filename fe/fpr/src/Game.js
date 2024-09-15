@@ -313,6 +313,7 @@ function Game() {
 
 
   // display helpers
+  const cardScale = {scale: vmin(8.05) / inches(4.6) + "", transformOrigin: "top left"};
   const displayCard = (card, isDraggable) =>
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
           cardCache={cardCache}
@@ -323,7 +324,7 @@ function Game() {
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
           cardCache={cardCache}
           onClick={onClick} isDraggable={isDraggable}
-          style={{scale: vmin(8.05) / inches(2.3) + "", transformOrigin: "top left"}}
+          style={cardScale}
           setHoverCard={setHoverCard} />;
   const displayCardsInModal = cards => {
     setModalVisible(true);
@@ -375,7 +376,7 @@ function Game() {
                modalVisible={modalVisible}
                setModalVisible={setModalVisible}
                cardCache={cardCache} />
-        <div class="oppon-hand" style={{scale: vmin(10) / inches(2.3) + ""}}>
+        <div class="oppon-hand" style={{scale: vmin(10) / inches(4.6) + ""}}>
           {
             Array.from(Array(opponHand).keys()).map(id => ({
               id: "oppon" + id,
@@ -386,10 +387,10 @@ function Game() {
         </div>
         <div class="board">
           <div class="decks">
-            <Deck name="Opponent's Graveyard" cards={opponCards.opponGraveyard} displayCards={displayCardsInModal}/>
-            <Deck name="Opponent's Banished" cards={opponCards.opponBanished} displayCards={displayCardsInModal}/>
-            <Deck name="Extra Deck" cards={ownerCards.ownerExtraDeck} displayCards={displayCardsInModalFromExtraDeck}/>
-            <Deck name="Deck" count={ownerCards.ownerMainDeck} />
+            <Deck name="Opponent's Graveyard" cards={opponCards.opponGraveyard} displayCards={displayCardsInModal} style={cardScale}/>
+            <Deck name="Opponent's Banished" cards={opponCards.opponBanished} displayCards={displayCardsInModal} style={cardScale}/>
+            <Deck name="Extra Deck" cards={ownerCards.ownerExtraDeck} displayCards={displayCardsInModalFromExtraDeck} style={cardScale}/>
+            <Deck name="Deck" count={ownerCards.ownerMainDeck} style={cardScale}/>
           </div>
           <div class="board-grid" >
             {containers.map((id) => {
@@ -446,16 +447,17 @@ function Game() {
             })}
           </div>
           <div class="decks">
-            <Deck name="Opponent's Deck" count={opponCards.opponMainDeck} />
-            <Deck name="Opponent's Extra Deck" count={opponCards.opponExtraDeck}/>
-            <Deck name="Banished" cards={ownerCards.ownerBanished} displayCards={displayCardsInModal}/>
-            <Deck name="Graveyard" cards={ownerCards.ownerGraveyard} displayCards={displayCardsInModal}/>
+            <Deck name="Opponent's Deck" count={opponCards.opponMainDeck} style={cardScale} />
+            <Deck name="Opponent's Extra Deck" count={opponCards.opponExtraDeck} style={cardScale}/>
+            <Deck name="Banished" cards={ownerCards.ownerBanished} displayCards={displayCardsInModal} style={cardScale}/>
+            <Deck name="Graveyard" cards={ownerCards.ownerGraveyard} displayCards={displayCardsInModal} style={cardScale}/>
           </div>
         </div>
-        <div class="owner-hand" style={{scale: vmin(12) / inches(2.3) + ""}}>
+        <div class="owner-hand" style={{scale: vmin(12) / inches(4.6) + ""}}>
           {ownerHand.filter(card => card.parent === null).map(card => displayCard(card, true))}
         </div>
       </div>
+      <img class="bkgd-img" src="/assets/images/tft.jpg" />
     </DndContext>
   );
 

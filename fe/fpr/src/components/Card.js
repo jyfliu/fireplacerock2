@@ -67,7 +67,7 @@ export function Card(props) {
 }
 
 export function Deck(props) {
-  let { name, count, cards, displayCards } = props;
+  let { name, count, cards, displayCards, style } = props;
   if (count === undefined && cards !== undefined) {
     count = cards.length;
   }
@@ -76,7 +76,7 @@ export function Deck(props) {
     onClick = () => displayCards(cards);
   }
   return (
-    <button class="deck" onClick={onClick} >
+    <button class="deck" onClick={onClick} style={style} >
       <h4>{name}</h4>
       <h2>{count}</h2>
     </button>

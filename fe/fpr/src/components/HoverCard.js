@@ -39,8 +39,12 @@ export function HoverCard(props) {
       <h4 class="hc-description" style={{backgroundColor: `${colour}`}}>{card.description}</h4>
       {hasSprite && renderSprite()}
       <i class="hc-flavour">{card.flavour}</i>
-      <h4 class="hc-attack">{card.attack}</h4>
-      <h4 class="hc-health">{card.health}</h4>
+      {card.type.includes("monster") &&
+        <>
+        <h4 class="hc-attack">{card.attack}</h4>
+        <h4 class="hc-health">{card.health}</h4>
+        </>
+      }
       <h4 class="hc-cost">{card.cost}</h4>
     </div>
   );
