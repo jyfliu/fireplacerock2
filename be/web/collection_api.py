@@ -18,12 +18,9 @@ class Collection:
 
         cards = cards.values()
         
-        with mp.Pool(16) as p:
+        with mp.Pool(1) as p:
             cards = p.map(card_api.Template, cards)
 
-        all_cards = [api_utils.serialize_card_info(card, {}) for card in cards]
-        se.emit(
-        "init_collection",
-        all_cards,
-        sid=sid,
-        )
+        all_cards = [api_utils.serialize_template(card) for card in cards]
+        
+        return all_cards

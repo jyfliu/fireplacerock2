@@ -1,16 +1,24 @@
 
-def serialize_card_info(card, sprite_cache):
-    if card is None:
+def serialize_template(template):
+    if template is None:
         return None
     dict = {}
-    print(card)
-    dict["name"] = card.name
-    dict["cost"] = card.cost
-    dict["type"] = card.type
-    if card.type == "monster":
-        dict["attack"] = card.attack
-        dict["health"] = card.health
-    dict["template_id"] = card.id
+    print(template)
+    dict["name"] = template.name
+    dict["cost"] = template.cost
+    dict["type"] = template.type
+    if template.type == "monster":
+        dict["attack"] = template.attack
+        dict["health"] = template.health
+    dict["template_id"] = template.id
+
+    if template.sprite:
+      dict["sprite"] = template.sprite
+    if template.mini_sprite:
+      dict["mini_sprite"] = template.mini_sprite
+    dict["bkgd_colour"] = template.bkgd_colour
+
+    return dict
 
 
 def serialize_card(card, sprite_cache):

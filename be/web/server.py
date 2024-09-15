@@ -116,7 +116,8 @@ def collection(sid, username):
   state.name_to_sid[username] = sid
   print(f"[EVENT-{sid}] collection")
   collection = collection_api.Collection()
-  collection.init_collection(sid)
+  return collection.init_collection(sid)
+
 
 @sio.event
 def challenge(sid, challengee):
