@@ -313,7 +313,7 @@ function Game() {
 
 
   // display helpers
-  const cardScale = {scale: vmin(8.05) / inches(4.6) + "", transformOrigin: "top left"};
+  const cardScale = {zoom: vmin(8.05) / inches(4.6) + "", transformOrigin: "top left"};
   const displayCard = (card, isDraggable) =>
     <Card id={card.id} key={"card"+card.id} card={card} inDroppable={false}
           cardCache={cardCache}
@@ -376,7 +376,7 @@ function Game() {
                modalVisible={modalVisible}
                setModalVisible={setModalVisible}
                cardCache={cardCache} />
-        <div class="oppon-hand" style={{scale: vmin(10) / inches(4.6) + ""}}>
+        <div class="oppon-hand" style={{zoom: vmin(10) / inches(4.6) + ""}}>
           {
             Array.from(Array(opponHand).keys()).map(id => ({
               id: "oppon" + id,
@@ -453,11 +453,11 @@ function Game() {
             <Deck name="Graveyard" cards={ownerCards.ownerGraveyard} displayCards={displayCardsInModal} style={cardScale}/>
           </div>
         </div>
-        <div class="owner-hand" style={{scale: vmin(12) / inches(4.6) + ""}}>
+        <div class="owner-hand" style={{zoom: vmin(12) / inches(4.6) + ""}}>
           {ownerHand.filter(card => card.parent === null).map(card => displayCard(card, true))}
         </div>
       </div>
-      <img class="bkgd-img" src="/assets/images/tft.jpg" />
+      <img class="bkgd-img" src="/assets/images/tft.jpg" alt="" />
     </DndContext>
   );
 

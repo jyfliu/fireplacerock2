@@ -34,7 +34,7 @@ export function Modal(props) {
             onClick={() => onClickCard(card)}
             highlight={highlightIds && highlightIds.includes(card.id)}
             isDraggable={isDraggable}
-            style={{margin: "20px", marginBottom: "35px", scale: "120%",
+            style={{margin: "20px", marginBottom: "35px", zoom: "40%",
                     visibility: visibleCardId === "modal"+card.id? "visible" : "inherit"}}
       />;
   return (
