@@ -1,6 +1,10 @@
 import os
 import json
+import multiprocessing as mp
+import gameplay.card_api as card_api
+from easydict import EasyDict as edict
 
+import yaml
 import socketio
 from gevent import pywsgi
 
@@ -23,7 +27,21 @@ class State:
     self.room_map = {}
 
     with open("database/accounts.json", "r") as f:
+      print("[ROOT] - loading account data")
       self.accounts = json.load(f)
+
+    with open("../res/cards/fireplacerock.yaml", "r", encoding="utf8") as f:
+      print("[ROOT] - loading card data")
+      cards = yaml.safe_load(f)
+      cards = edict(cards)
+
+
+    with mp.Pool(mp.cpu_count()) as p:
+      card_templates = dict(zip(
+        cards.keys(),
+        p.map(card_api.Template, cards.values()),
+      ))
+
 
   def login(self, username, password):
     if username in self.accounts:
@@ -134,10 +152,13 @@ def card_can(sid, card_uuid, action):
 
 @sio.event
 def disconnect(sid):
+  if sid not in state.sid_to_name:
+    print(f"[EVENT-{sid}] disconnect")
+    return
   username = state.sid_to_name[sid]
   print(f"[EVENT-{sid}] player {username} disconnect")
-  del state.sid_to_name[sid]
   del state.name_to_sid[username]
+  del state.sid_to_name[sid]
 
 # output
 def emit(*args, sid):

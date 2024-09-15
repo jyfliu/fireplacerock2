@@ -1,4 +1,3 @@
-import multiprocessing as mp
 import socketio
 import yaml
 from easydict import EasyDict as edict
@@ -224,11 +223,10 @@ class Room:
       cards = yaml.safe_load(f)
       cards = edict(cards)
 
-    with mp.Pool(64) as p:
-      card_templates = dict(zip(
-        cards.keys(),
-        p.map(card_api.Template, cards.values()),
-      ))
+    card_templates = dict(zip(
+      cards.keys(),
+      map(card_api.Template, cards.values()),
+    ))
 
     sd1, ed1 = deck1
     sd1 = [card_templates[name] for name in sd1]

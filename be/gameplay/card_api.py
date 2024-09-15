@@ -131,7 +131,7 @@ class SpriteCache:
 
   def load(self, path):
     if path not in self.sprites:
-      print(f"READ {path}")
+      print(f"[ROOT] loading {path}")
       with open(path, "rb") as f:
         self.sprites[path] = base64.b64encode(f.read()).decode("utf-8")
       r, g, b = plt.imread(path).mean(axis=0).mean(axis=0)
