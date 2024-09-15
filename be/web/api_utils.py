@@ -1,0 +1,48 @@
+
+def serialize_card_info(card, sprite_cache):
+    if card is None:
+        return None
+    dict = {}
+    print(card)
+    dict["name"] = card.name
+    dict["cost"] = card.cost
+    dict["type"] = card.type
+    if card.type == "monster":
+        dict["attack"] = card.attack
+        dict["health"] = card.health
+    dict["template_id"] = card.id
+
+
+def serialize_card(card, sprite_cache):
+    if card is None:
+      return None
+    dict = {}
+    print(card)
+    dict["name"] = card.name
+    dict["cost"] = card.cost
+    dict["type"] = card.type
+    if card.type == "monster":
+      dict["attack"] = card.attack
+      dict["health"] = card.health
+      dict["original_attack"] = card.original_attack
+      dict["original_health"] = card.original_health
+    dict["uuid"] = card.uuid
+    dict["template_id"] = card.id
+
+    dict["can_activate"] = card.can("activate")
+    dict["can_activate_hand"] = card.can("activate_hand")
+    dict["can_attack"] = card.can("attack")
+    dict["can_attack_directly"] = card.can("attack_directly")
+    dict["can_summon"] = card.can("summon")
+    dict["can_summon_extradeck"] = card.can("summon_extradeck")
+
+    dict["description"] = card.template.description
+    dict["flavour"] = card.template.flavour
+
+    if card.uuid not in sprite_cache and card.template.sprite:
+      dict["sprite"] = card.template.sprite
+    if card.uuid not in sprite_cache and card.template.mini_sprite:
+      dict["mini_sprite"] = card.template.mini_sprite
+    dict["bkgd_colour"] = card.template.bkgd_colour
+
+    return dict

@@ -10,6 +10,7 @@ from gevent import pywsgi
 
 import web.room_api as room_api
 import web.deck_api as deck_api
+import web.collection_api as collection_api
 
 sio = socketio.Server(async_mode='gevent', cors_allowed_origins='*')
 app = socketio.WSGIApp(sio)
@@ -108,6 +109,14 @@ def new_user(sid, username, password):
 
   return success
 
+
+@sio.event
+def collection(sid, username):
+  state.sid_to_name[sid] = username
+  state.name_to_sid[username] = sid
+  print(f"[EVENT-{sid}] collection")
+  collection = collection_api.Collection()
+  collection.init_collection(sid)
 
 @sio.event
 def challenge(sid, challengee):
