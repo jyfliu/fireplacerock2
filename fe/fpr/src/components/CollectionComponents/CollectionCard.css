@@ -1,0 +1,125 @@
+.cc-card {
+  left: calc(80% - 2in);
+  top: 15%;
+  transform: scale(0.3);
+  width: 9.6in; 
+  height: 14.4in;
+  margin-bottom: calc((0.3 - 1) * 14.4in);
+  margin-right: calc((0.3 - 1) * 9.6in);
+  /* margin-top: calc((0.3 - 1) * 14.4in);
+  margin-left: calc((0.3 - 1) * 9.6in); */
+  padding-bottom: 1in;
+  padding-right: 1in;
+  background-color: lightgrey;
+  z-index: 10001;
+}
+
+.cc-title {
+  position: absolute;
+  top: -0.2in;
+  left: 0.5in;
+  color: black;
+  border: solid;
+  border-color: black;
+  border-width: 0.05in;
+  width: 7.7in;
+  height: 1.0in;
+  font-size: 0.7in;
+  padding-left: 0.8in;
+  border-radius: 0.26in;
+  overflow-wrap: anywhere;
+  background-color: rgba(255,255,255,0.9);
+  z-index: 10002;
+}
+
+.cc-flavour {
+  position: absolute;
+  bottom: 1.2in;
+  left: 0.62in;
+  padding-left: 0.2in;
+  padding-right: 0.2in;
+  font-size: 0.2in;
+  width: calc(9.6in - 1.65in);
+  z-index: 10002;
+}
+
+.cc-description {
+  position: absolute;
+  top: 7.7in;
+  left: 0.6in;
+  padding: 0.2in;
+  font-size: 0.4in;
+  width: calc(9.6in - 1.6in);
+  height: 4.9in;
+  z-index: 10002;
+  background-color: rgba(220,220,220,0.9);
+}
+
+.cc-attack {
+  position: absolute;
+  bottom: -1.44in;
+  left: -0.3in;
+  z-index: 10002;
+  color: black;
+  background-color: orange;
+  border: solid;
+  border-color: black;
+  border-width: 0.05in;
+  width: 3.3in;
+  border-radius: 0.62in;
+  font-size: 0.8in;
+  text-align: center;
+}
+
+.cc-health {
+  position: absolute;
+  bottom: -1.44in;
+  right: -0.3in;
+  z-index: 10002;
+  color: black;
+  background-color: mediumseagreen;
+  border: solid;
+  border-color: black;
+  border-width: 0.05in;
+  width: 3.3in;
+  border-radius: 0.62in;
+  font-size: 0.8in;
+  text-align: center;
+}
+
+.cc-cost {
+  position: absolute;
+  top: -0.77in;
+  left: -0.3in;
+  z-index: 10002;
+  color: black;
+  background-color: skyblue;
+  border: solid;
+  border-color: black;
+  border-width: 0.05in;
+  width: 1.25in;
+  height: 1.25in;
+  border-radius: 50%;
+  font-size: 0.8in;
+  text-align: center;
+}
+
+.cc-sprite {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 9.6in;
+  height: 14.4in;
+  object-fit: cover;
+  z-index: 10001;
+}
+
+.cc-mini-sprite {
+  position: absolute;
+  top: 2.05in;
+  left: 0.51in;
+  width: 8.6in;
+  height: 5.34in;
+  object-fit: cover;
+  z-index: 10001;
+}

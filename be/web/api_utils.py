@@ -3,7 +3,6 @@ def serialize_template(template):
     if template is None:
         return None
     dict = {}
-    print(template)
     dict["name"] = template.name
     dict["cost"] = template.cost
     dict["type"] = template.type
@@ -11,6 +10,9 @@ def serialize_template(template):
         dict["attack"] = template.attack
         dict["health"] = template.health
     dict["template_id"] = template.id
+
+    dict["description"] = template.description
+    dict["flavour"] = template.flavour
 
     if template.sprite:
       dict["sprite"] = template.sprite
@@ -25,7 +27,6 @@ def serialize_card(card, sprite_cache):
     if card is None:
       return None
     dict = {}
-    print(card)
     dict["name"] = card.name
     dict["cost"] = card.cost
     dict["type"] = card.type

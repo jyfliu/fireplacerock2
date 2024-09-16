@@ -22,5 +22,4 @@ class Collection:
             cards = p.map(card_api.Template, cards)
 
         all_cards = [api_utils.serialize_template(card) for card in cards]
-        
         return all_cards

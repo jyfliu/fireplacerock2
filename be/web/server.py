@@ -36,12 +36,10 @@ class State:
       cards = yaml.safe_load(f)
       cards = edict(cards)
 
-
-    with mp.Pool(mp.cpu_count()) as p:
-      card_templates = dict(zip(
-        cards.keys(),
-        p.map(card_api.Template, cards.values()),
-      ))
+    card_templates = dict(zip(
+      cards.keys(),
+      map(card_api.Template, cards.values()),
+    ))
 
 
   def login(self, username, password):

@@ -4,15 +4,17 @@ export function unserializeTemplate(template) {
     return template;
   }
   if (template.sprite) {
-    let sprite_img = new Image();
-    sprite_img.src = `data:image/jpg;base64,${template.sprite}`;
-    template.sprite_img = sprite_img
+    let spriteImg = new Image();
+    spriteImg.src = `data:image/jpg;base64,${template.sprite}`;
+    template.spriteImg = spriteImg
+    template.is_mini = false
   }
 
   if (template.mini_sprite) {
-    let sprite_img = new Image();
-    sprite_img.src = `data:image/jpg;base64,${template.mini_sprite}`;
-    template.sprite_img = sprite_img
+    let spriteImg = new Image();
+    spriteImg.src = `data:image/jpg;base64,${template.mini_sprite}`;
+    template.spriteImg = spriteImg
+    template.isMini = true
   }
 
   return template;
