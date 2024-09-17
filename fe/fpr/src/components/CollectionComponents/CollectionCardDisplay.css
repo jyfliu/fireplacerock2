@@ -1,0 +1,32 @@
+
+.pageButtonLeft {
+  user-select: none;
+  margin-left: 1.5in;
+  margin-top: 6.5in;
+  z-index: 20001;
+}
+
+.pageButtonRight {
+  user-select: none;
+  margin-left: 0.7in;
+  margin-top: 6.5in;
+  z-index: 20001;
+}
+
+.mainContainer{
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.cardsDisplay {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 70%;
+  column-gap: 0.5in;
+  row-gap: 0.5in;
+}

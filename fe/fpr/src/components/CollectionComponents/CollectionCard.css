@@ -1,20 +1,20 @@
+
 .cc-card {
+  position: relative;
+  user-select: none;
   left: calc(80% - 2in);
   top: 15%;
-  transform: scale(0.3);
-  width: 9.6in; 
+  /* transform: scale(0.3); */
   height: 14.4in;
-  margin-bottom: calc((0.3 - 1) * 14.4in);
-  margin-right: calc((0.3 - 1) * 9.6in);
-  /* margin-top: calc((0.3 - 1) * 14.4in);
-  margin-left: calc((0.3 - 1) * 9.6in); */
-  padding-bottom: 1in;
-  padding-right: 1in;
+  width: 9.6in;
+  /* margin-bottom: calc((0.3 - 1) * 14.4in);
+  margin-right: calc((0.3 - 1) * 9.6in); */
   background-color: lightgrey;
   z-index: 10001;
 }
 
 .cc-title {
+  user-select: none;
   position: absolute;
   top: -0.2in;
   left: 0.5in;
@@ -23,7 +23,7 @@
   border-color: black;
   border-width: 0.05in;
   width: 7.7in;
-  height: 1.0in;
+  padding: 0.1in;
   font-size: 0.7in;
   padding-left: 0.8in;
   border-radius: 0.26in;
@@ -33,6 +33,7 @@
 }
 
 .cc-flavour {
+  user-select: none;
   position: absolute;
   bottom: 1.2in;
   left: 0.62in;
@@ -44,6 +45,7 @@
 }
 
 .cc-description {
+  user-select: none;
   position: absolute;
   top: 7.7in;
   left: 0.6in;
@@ -56,6 +58,7 @@
 }
 
 .cc-attack {
+  user-select: none;
   position: absolute;
   bottom: -1.44in;
   left: -0.3in;
@@ -72,6 +75,7 @@
 }
 
 .cc-health {
+  user-select: none;
   position: absolute;
   bottom: -1.44in;
   right: -0.3in;
@@ -88,6 +92,7 @@
 }
 
 .cc-cost {
+  user-select: none;
   position: absolute;
   top: -0.77in;
   left: -0.3in;
@@ -105,6 +110,7 @@
 }
 
 .cc-sprite {
+  user-select: none;
   position: absolute;
   top: 0px;
   left: 0px;
@@ -115,6 +121,7 @@
 }
 
 .cc-mini-sprite {
+  user-select: none;
   position: absolute;
   top: 2.05in;
   left: 0.51in;
