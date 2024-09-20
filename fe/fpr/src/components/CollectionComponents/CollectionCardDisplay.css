@@ -1,32 +1,35 @@
 
 .pageButtonLeft {
   user-select: none;
-  margin-left: 1.5in;
-  margin-top: 6.5in;
   z-index: 20001;
 }
 
 .pageButtonRight {
   user-select: none;
-  margin-left: 0.7in;
-  margin-top: 6.5in;
   z-index: 20001;
+  margin-left: -2.3in;
 }
 
 .mainContainer{
+  position: absolute;
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
+  width: 65%;
+  height: 100%;
+  padding-left: 1in; 
 }
 
 .cardsDisplay {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: center;
   flex-wrap: wrap;
-  width: 70%;
+  height: 80%;
+  width: 100%;
   column-gap: 0.5in;
   row-gap: 0.5in;
+  margin-top: 1.5in;
+  padding: 0.5in;
 }

@@ -1,9 +1,14 @@
 
+.cardButton{
+  padding: 0;
+  border: none;
+  background: none;
+}
+
 .cc-card {
   position: relative;
   user-select: none;
-  left: calc(80% - 2in);
-  top: 15%;
+  /* left: calc(80% - 2in); */
   /* transform: scale(0.3); */
   height: 14.4in;
   width: 9.6in;
