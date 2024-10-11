@@ -8,14 +8,31 @@ import CollectionDeckDisplay from "../../components/CollectionComponents/Collect
 
 export default function Collection() {
   const [cardArray, setCardArray] = useState(null)
+  const [deckSize, setDeckSize] = useState(0)
   const [deck, setDeck] = useState([])
 
   const addToDeck = (card) => {
-    if (deck[card.name] == null) {
-      deck[card.name] = 1;
-    } else if (deck[card.name] < 4) {
-      deck[card.name] = deck[card.name] + 1
+    if (deckSize < 40) {
+      if (deck[card.name] == null) {
+        deck[card.name] = [1, card];
+        setDeckSize(deckSize + 1)
+      } else if (deck[card.name][0] < 4) {
+        deck[card.name] = [deck[card.name][0] + 1, card]
+        setDeckSize(deckSize + 1)
+      }
     }
+    console.log(deck)
+  }
+
+  const removeFromDeck = (card) => {
+    if (deck[card.name] != null) {
+      if (deck[card.name][0] == 1) {
+        delete deck[card.name]
+      } else {
+        deck[card.name] = [deck[card.name][0] - 1, card]
+      }
+    }
+    setDeckSize(deckSize + 1)
     console.log(deck)
   }
 
@@ -32,12 +49,18 @@ export default function Collection() {
 
   // TODO: get deck from server side if not in new deck & pass into display
   const rightPanel = <>
-    {true ? <div>'deck loading'</div> : <CollectionDeckDisplay deck={deck} setDeck={setDeck} />}
+    {true === false ? <div>'deck loading'</div> : <CollectionDeckDisplay deck={deck} removeFromDeck={removeFromDeck} />}
   </>
 
   return (
     <>
-      {mainPanel}
+      <div>
+        {mainPanel}
+      </div>
+      <div>
+        {rightPanel}
+      </div>
+
     </>
   );
 }
